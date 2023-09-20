@@ -1,0 +1,8 @@
+.post {
+  text-decoration: none;
+  color: inherit;
+}
+
+.postContent {
+  flex: 1;
+}

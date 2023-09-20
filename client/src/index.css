@@ -1,0 +1,13 @@
+body {
+  background-color: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-9)
+  );
+  color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-gray-0));
+}
+
+html {
+  @media (max-width: 36em) {
+    font-size: 12px;
+  }
+}

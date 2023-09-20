@@ -1,0 +1,11 @@
+.line {
+  flex: 1;
+}
+
+.avatars {
+  position: relative;
+}
+
+.avatars div {
+  position: absolute;
+}

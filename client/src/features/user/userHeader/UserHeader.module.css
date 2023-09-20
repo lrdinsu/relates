@@ -1,0 +1,38 @@
+.net {
+  color: var(--mantine-color-gray-6);
+  border-radius: var(--mantine-radius-md);
+
+  background-color: light-dark(
+    var(--mantine-color-gray-4),
+    var(--mantine-color-gray-8)
+  );
+}
+
+.iconContainer {
+  border-radius: 50%;
+  padding: 0.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  transition: background-color 300ms ease-in-out;
+
+  @mixin hover {
+    background-color: light-dark(
+      var(--mantine-color-gray-4),
+      var(--mantine-color-gray-8)
+    );
+  }
+}
+
+.posts {
+  flex: 1;
+  cursor: pointer;
+  border-bottom: 1.5px solid
+    light-dark(var(--mantine-color-gray-4), var(--mantine-color-gray-6));
+}
+
+.replies {
+  flex: 1;
+  cursor: pointer;
+  border-bottom: 1px solid
+    light-dark(var(--mantine-color-gray-2), var(--mantine-color-gray-8));
+}
