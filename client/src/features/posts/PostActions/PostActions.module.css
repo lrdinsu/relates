@@ -1,0 +1,4 @@
+.liked {
+  fill: var(--mantine-color-red-5);
+  stroke: var(--mantine-color-red-5);
+}

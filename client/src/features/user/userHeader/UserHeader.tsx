@@ -1,4 +1,4 @@
-import { Anchor, Avatar, Box, Flex, Stack, Text } from '@mantine/core';
+import { Anchor, Avatar, Box, Flex, Stack, Tabs, Text } from '@mantine/core';
 import { IconCamera } from '@tabler/icons-react';
 
 import { UseMoreMenu } from '../userMoreMenu/useMoreMenu.tsx';
@@ -20,7 +20,18 @@ export function UserHeader() {
           </Flex>
         </Box>
         <Box>
-          <Avatar alt="Kellie Smith" src="/kellie-avatar.webp" size="xl" />
+          <Avatar
+            alt="Kellie Smith"
+            src="/kellie-avatar.webp"
+            hiddenFrom="sm"
+            size="lg"
+          />
+          <Avatar
+            alt="Kellie Smith"
+            src="/kellie-avatar.webp"
+            visibleFrom="sm"
+            size="xl"
+          />
         </Box>
       </Flex>
 
@@ -41,16 +52,22 @@ export function UserHeader() {
         </Flex>
       </Flex>
 
-      <Flex w="100%">
-        <Flex justify="center" pb={12} className={styles.posts}>
-          <Text fw="bold">Posts</Text>
-        </Flex>
-        <Flex justify="center" pb={12} className={styles.replies}>
-          <Text fw="bold" c="gray.6">
+      <Tabs defaultValue="posts" w="100%">
+        <Tabs.List>
+          <Tabs.Tab value="posts" className={styles.tab} py={12} fw="600">
+            Posts
+          </Tabs.Tab>
+          <Tabs.Tab
+            value="replies"
+            className={styles.tab}
+            py={12}
+            fw="600"
+            c="gray.6"
+          >
             Replies
-          </Text>
-        </Flex>
-      </Flex>
+          </Tabs.Tab>
+        </Tabs.List>
+      </Tabs>
     </Stack>
   );
 }
