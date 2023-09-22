@@ -1,0 +1,16 @@
+.replyContent {
+  flex: 1;
+}
+
+.replyContent textarea {
+  border: none;
+  font: inherit;
+  padding-left: 0;
+  background-color: light-dark(
+    var(--mantine-color-white),
+    var(--mantine-color-dark-9)
+  );
+}
+.reply {
+  align-self: flex-end;
+}

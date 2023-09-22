@@ -1,12 +1,13 @@
 import { useState } from 'react';
 
+import { AddComment } from '@/features/comments/AddComment/AddComment.tsx';
 import { CommentItem } from '@/features/comments/CommentItem/CommentItem.tsx';
 import { PostActions } from '@/features/posts/PostActions/PostActions.tsx';
 import { PostContent } from '@/features/posts/PostContent/PostContent.tsx';
 import { PostHeader } from '@/features/posts/PostHeader/PostHeader.tsx';
 import { PostMain } from '@/features/posts/PostMain/PostMain.tsx';
 import { PostStats } from '@/features/posts/PostStats/PostStats.tsx';
-import { Avatar, Button, Divider, Flex, Text } from '@mantine/core';
+import { Avatar, Flex } from '@mantine/core';
 
 function PostPage() {
   const [liked, setLiked] = useState(false);
@@ -23,17 +24,7 @@ function PostPage() {
         <PostStats replies={237} likes={146 + (liked ? 1 : 0)} />
       </PostMain>
 
-      <Divider my={16} />
-
-      <Flex justify="space-between">
-        <Flex gap={8} align="center">
-          <Text size="xxl">👋🏻</Text>
-          <Text c="gray.6">Reply...</Text>
-        </Flex>
-        <Button>Reply</Button>
-      </Flex>
-
-      <Divider my={16} />
+      <AddComment />
 
       <CommentItem
         comment="Looks really good!"
