@@ -13,19 +13,17 @@ import {
 import styles from '../userHeader/UserHeader.module.css';
 
 export function UseMoreMenu() {
-  function copyURL() {
+  async function copyURL() {
     const currentURL = window.location.href;
-    navigator.clipboard
-      .writeText(currentURL)
-      .then(() => {
-        showNotificationSuccess({
-          title: 'Link copied',
-          message: 'Link copied to clipboard',
-        });
-      })
-      .catch(() => {
-        showNotificationError({ title: 'Error', message: 'Copy failed' });
+    try {
+      await navigator.clipboard.writeText(currentURL);
+      showNotificationSuccess({
+        title: 'Link copied',
+        message: 'Link copied to clipboard',
       });
+    } catch (error) {
+      showNotificationError({ title: 'Error', message: 'Copy failed' });
+    }
   }
 
   return (
