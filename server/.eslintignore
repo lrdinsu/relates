@@ -1,0 +1,8 @@
+lib
+esm
+cjs
+dist
+.cache
+.eslintrc.cjs
+*.d.ts
+*.js
