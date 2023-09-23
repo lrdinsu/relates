@@ -1,0 +1,21 @@
+### signup user
+POST http://localhost:8000/api/users/signup
+Content-Type: application/json
+
+{
+"username": "kelliesmith",
+"name": "Kellie Smith",
+"email": "kelliesmith@email.com",
+"password": "123456"
+}
+
+### signup user2
+POST http://localhost:8000/api/users/signup
+Content-Type: application/json
+
+{
+"username": "kellie",
+"name": "Kellie",
+"email": "kellies@email.com",
+"password": "123456"
+}

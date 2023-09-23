@@ -1,9 +1,11 @@
 import express, { Router } from 'express';
 
-const router: Router = express.Router();
+import { login } from '@/controllers/userController/login.js';
+import { logout } from '@/controllers/userController/logout.js';
+import { signup } from '@/controllers/userController/signup.js';
 
-router.get('/signup', (_req, res) => {
-  res.send('Signed up successfully');
-});
+export const userRouter: Router = express.Router();
 
-export default router;
+userRouter.post('/signup', signup);
+userRouter.post('/login', login);
+userRouter.post('/logout', logout);

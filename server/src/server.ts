@@ -4,7 +4,7 @@ import express from 'express';
 
 import { connectDB } from '@/db/connectDB.js';
 
-import userRouter from './routes/userRouter.js';
+import { userRouter } from './routes/userRouter.js';
 
 dotenv.config();
 
@@ -15,7 +15,6 @@ const PORT = process.env.PORT || 8000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 app.use(cookieParser());
 
 // Routes
