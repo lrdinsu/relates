@@ -5,12 +5,11 @@
   "scripts": {
     "dev": "pnpm --parallel --stream -r run dev",
     "start": "pnpm --stream -r run start",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "pnpm --stream -r run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "pnpm --stream -r run clean"
   },
   "keywords": [],
   "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "nx": "^16.9.0"
-  }
+  "license": "MIT"
 }
