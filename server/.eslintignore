@@ -2,6 +2,10 @@ lib
 esm
 cjs
 dist
+public
+dev-data
+*.config.ts
+
 .cache
 .eslintrc.cjs
 *.d.ts

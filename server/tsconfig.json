@@ -1,16 +1,13 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Node LTS",
   "compilerOptions": {
-    "lib": ["es2023"],
-    "module": "node16",
-    "target": "es2022",
+    "lib": ["esnext"],
+    "module": "NodeNext",
+    "target": "ESNext",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node16",
-    "outDir": "dist",
-
+    "moduleResolution": "NodeNext",
+    "sourceMap": true,
     /* Linting */
     "strict": true,
     "noImplicitAny": true,
@@ -24,17 +21,13 @@
     "noImplicitThis": true,
     "alwaysStrict": true,
     "declaration": true,
-
     /* Path */
+    "outDir": "dist",
     "baseUrl": "src/",
     "paths": {
-      "@/db/*": ["db/*"],
-      "@/models/*": ["models/*"],
-      "@/routes/*": ["routes/*"],
-      "@/controllers/*": ["controllers/*"],
-      "@/utils/*": ["utils/*"]
-    }
+      "@/*": ["*"]
+    },
   },
   "include": ["src"],
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["dist", "node_modules"],
 }
