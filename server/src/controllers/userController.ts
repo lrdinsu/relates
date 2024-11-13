@@ -161,7 +161,9 @@ export async function followUnfollowUser(req: Request, res: Response) {
       return;
     }
 
-    const isFollowing = currentUser.following.includes(id);
+    const isFollowing = currentUser.following.includes(
+      new mongoose.Types.ObjectId(id),
+    );
     if (isFollowing) {
       // Unfollow user
       await UserModel.findByIdAndUpdate(currentUser._id, {
