@@ -14,7 +14,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "bcryptjs": "^2.4.3",
+    "@node-rs/argon2": "^2.0.0",
     "cookie-parser": "^1.4.7",
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
@@ -22,7 +22,6 @@
     "validation": "workspace:^"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.7",
     "@types/express": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.7",

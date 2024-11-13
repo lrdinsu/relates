@@ -1,0 +1,5 @@
+### Get all users
+GET {{api}}/users
+
+### follow/unfollow user
+POST {{api}}/users/follow/6734796f5af9cfe517f68e89

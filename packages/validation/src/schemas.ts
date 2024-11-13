@@ -1,6 +1,14 @@
+import mongoose from 'mongoose';
 import { z } from 'zod';
 
-const HasId = z.object({ _id: z.string() });
+const HasId = z.object({
+  _id: z.custom<mongoose.Types.ObjectId>(
+    (value) => value instanceof mongoose.Types.ObjectId,
+    {
+      message: 'Invalid MongoDB ObjectId',
+    },
+  ),
+});
 
 export const BaseUserSchema = z.object({
   username: z.string(),
@@ -10,6 +18,7 @@ export const BaseUserSchema = z.object({
   profilePic: z.string().default(''),
   followers: z.array(z.string()).default([]),
   following: z.array(z.string()).default([]),
+  biography: z.string().default(''),
 });
 
 export const UserLoginSchema = BaseUserSchema.pick({

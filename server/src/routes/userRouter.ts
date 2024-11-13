@@ -1,11 +1,21 @@
 import express, { Router } from 'express';
 
-import { login } from '@/controllers/userController/login.js';
-import { logout } from '@/controllers/userController/logout.js';
-import { signup } from '@/controllers/userController/signup.js';
+import {
+  followUnfollowUser,
+  getAllUsers,
+  getUserProfile,
+  loginUser,
+  logoutUser,
+  signupUser,
+} from '../controllers/userController.js';
+import { protectRoute } from '../middlewares/protectRoute.js';
 
 export const userRouter: Router = express.Router();
 
-userRouter.post('/signup', signup);
-userRouter.post('/login', login);
-userRouter.post('/logout', logout);
+userRouter.post('/signup', signupUser);
+userRouter.post('/login', loginUser);
+userRouter.post('/logout', logoutUser);
+userRouter.post('/follow/:id', protectRoute, followUnfollowUser);
+
+userRouter.get('/profile/:query', getUserProfile);
+userRouter.get('/', getAllUsers);
