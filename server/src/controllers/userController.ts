@@ -148,10 +148,13 @@ export function logoutUser(_req: Request, res: Response) {
 export async function followUnfollowUser(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const targetUser = await UserModel.findById(id);
-    const currentUser = req.user!;
+    const targetUserId = new mongoose.Types.ObjectId(id);
+    const targetUser = await UserModel.findById(targetUserId);
 
-    if (id === currentUser._id.toString()) {
+    const currentUser = req.user!;
+    const currentUserId = currentUser._id;
+
+    if (targetUserId === currentUserId) {
       res.status(400).json({ message: 'Cannot follow/unfollow yourself' });
       return;
     }
@@ -166,21 +169,21 @@ export async function followUnfollowUser(req: Request, res: Response) {
     );
     if (isFollowing) {
       // Unfollow user
-      await UserModel.findByIdAndUpdate(currentUser._id, {
+      await UserModel.findByIdAndUpdate(currentUserId, {
         $pull: { following: id },
       });
       await UserModel.findByIdAndUpdate(id, {
-        $pull: { followers: currentUser._id },
+        $pull: { followers: currentUserId },
       });
       res.status(200).json({ message: 'Unfollowed user' });
       return;
     } else {
       // Follow user
-      await UserModel.findByIdAndUpdate(currentUser._id, {
+      await UserModel.findByIdAndUpdate(currentUserId, {
         $push: { following: id },
       });
       await UserModel.findByIdAndUpdate(id, {
-        $push: { followers: currentUser._id },
+        $push: { followers: currentUserId },
       });
       res.status(200).json({ message: 'Followed user' });
       return;
