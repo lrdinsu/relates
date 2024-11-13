@@ -154,7 +154,7 @@ export async function followUnfollowUser(req: Request, res: Response) {
     const currentUser = req.user!;
     const currentUserId = currentUser._id;
 
-    if (targetUserId === currentUserId) {
+    if (targetUserId.equals(currentUserId)) {
       res.status(400).json({ message: 'Cannot follow/unfollow yourself' });
       return;
     }
@@ -164,15 +164,13 @@ export async function followUnfollowUser(req: Request, res: Response) {
       return;
     }
 
-    const isFollowing = currentUser.following.includes(
-      new mongoose.Types.ObjectId(id),
-    );
+    const isFollowing = currentUser.following.includes(targetUserId);
     if (isFollowing) {
       // Unfollow user
       await UserModel.findByIdAndUpdate(currentUserId, {
-        $pull: { following: id },
+        $pull: { following: targetUserId },
       });
-      await UserModel.findByIdAndUpdate(id, {
+      await UserModel.findByIdAndUpdate(targetUserId, {
         $pull: { followers: currentUserId },
       });
       res.status(200).json({ message: 'Unfollowed user' });
@@ -180,9 +178,9 @@ export async function followUnfollowUser(req: Request, res: Response) {
     } else {
       // Follow user
       await UserModel.findByIdAndUpdate(currentUserId, {
-        $push: { following: id },
+        $push: { following: targetUserId },
       });
-      await UserModel.findByIdAndUpdate(id, {
+      await UserModel.findByIdAndUpdate(targetUserId, {
         $push: { followers: currentUserId },
       });
       res.status(200).json({ message: 'Followed user' });

@@ -2,4 +2,7 @@
 GET {{api}}/users
 
 ### follow/unfollow user
-POST {{api}}/users/follow/6734796f5af9cfe517f68e89
+POST {{api}}/users/follow/67350cccc484013fa1087ce3
+
+### Test follow self
+POST {{api}}/users/follow/67350ccac484013fa1087ce0
