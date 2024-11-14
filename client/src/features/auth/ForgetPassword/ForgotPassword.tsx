@@ -1,3 +1,6 @@
+import { useNavigate } from 'react-router-dom';
+
+import { useAuthStore } from '@/stores/authStore.ts';
 import {
   Anchor,
   Button,
@@ -10,11 +13,10 @@ import {
 
 import classes from './ForgotPassword.module.css';
 
-type ForgotPasswordProps = {
-  onBackToLogin: () => void;
-};
+export function ForgotPassword() {
+  const { setView } = useAuthStore();
+  const navigate = useNavigate();
 
-export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
   const handleResetPassword = () => {
     alert('A password reset link has been sent to your email.');
   };
@@ -25,7 +27,11 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
       </Title>
       <Text c="dimmed" size="sm" ta="center" mt={5}>
         Back to login page{' '}
-        <Anchor size="sm" component="button" onClick={onBackToLogin}>
+        <Anchor
+          size="sm"
+          component="button"
+          onClick={() => setView('login', navigate)}
+        >
           Sign in
         </Anchor>
       </Text>

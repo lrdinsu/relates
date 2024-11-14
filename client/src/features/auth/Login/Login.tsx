@@ -1,3 +1,6 @@
+import { useNavigate } from 'react-router-dom';
+
+import { useAuthStore } from '@/stores/authStore.ts';
 import {
   Anchor,
   Button,
@@ -13,12 +16,10 @@ import {
 
 import classes from './Login.module.css';
 
-type LoginProps = {
-  onSwitchPage: () => void;
-  onForgotPassword: () => void;
-};
+export function Login() {
+  const { setView } = useAuthStore();
+  const navigate = useNavigate();
 
-export function Login({ onSwitchPage, onForgotPassword }: LoginProps) {
   return (
     <Container size={420} my={40}>
       <Title ta="center" className={classes.title}>
@@ -26,7 +27,11 @@ export function Login({ onSwitchPage, onForgotPassword }: LoginProps) {
       </Title>
       <Text c="dimmed" size="sm" ta="center" mt={5}>
         Do not have an account yet?{' '}
-        <Anchor size="sm" component="button" onClick={onSwitchPage}>
+        <Anchor
+          size="sm"
+          component="button"
+          onClick={() => setView('signup', navigate)}
+        >
           Create account
         </Anchor>
       </Text>
@@ -41,7 +46,11 @@ export function Login({ onSwitchPage, onForgotPassword }: LoginProps) {
         />
         <Group justify="space-between" mt="lg">
           <Checkbox label="Remember me" />
-          <Anchor component="button" size="sm" onClick={onForgotPassword}>
+          <Anchor
+            component="button"
+            size="sm"
+            onClick={() => setView('forgotpassword', navigate)}
+          >
             Forgot password?
           </Anchor>
         </Group>

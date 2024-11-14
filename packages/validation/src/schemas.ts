@@ -11,10 +11,12 @@ const HasId = z.object({
 
 // UserSchema
 export const BaseUserSchema = z.object({
-  username: z.string(),
-  email: z.string().email(),
-  name: z.string(),
-  password: z.string().min(6),
+  username: z
+    .string()
+    .min(3, 'Username must be at least 3 characters long')
+    .max(20, 'Username must be at most 20 characters long'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters long'),
   profilePic: z.string().nullable().default(null),
   followers: z.array(ObjectIdSchema).default([]),
   following: z.array(ObjectIdSchema).default([]),
@@ -22,19 +24,31 @@ export const BaseUserSchema = z.object({
   active: z.boolean().default(true),
 });
 
-export const UserLoginSchema = BaseUserSchema.pick({
+export const UserSchema = BaseUserSchema.merge(HasId);
+
+export const UserCreateSchema = BaseUserSchema.pick({
+  username: true,
   email: true,
   password: true,
 });
-
-export const UserSchema = BaseUserSchema.merge(HasId);
-
-export const UserSignupSchema = BaseUserSchema;
 
 export const UserUpdateSchema = BaseUserSchema.partial().omit({
   password: true,
   followers: true,
   following: true,
+});
+
+// AuthSchema
+export const LoginSchema = BaseUserSchema.pick({
+  email: true,
+  password: true,
+});
+
+export const SignupSchema = UserCreateSchema.extend({
+  confirmPassword: z.string(),
+}).refine((data) => data.confirmPassword === data.password, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
 });
 
 // PostSchema

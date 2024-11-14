@@ -30,7 +30,9 @@
       "@/hooks/*": ["hooks/*"],
       "@/types/*": ["types/*"],
       "@/utils/*": ["utils/*"],
-      "@/theme/*": ["theme/*"]
+      "@/theme/*": ["theme/*"],
+      "@/stores/*": ["stores/*"],
+      "@/api/*": ["api/*"],
     }
   },
   "include": ["src"],
