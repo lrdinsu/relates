@@ -1,25 +1,25 @@
-import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
-import express from 'express';
+import { app } from './app.js';
 
-import { connectDB } from '@/db/connectDB.js';
+// Handle outside express unhandled promise rejections (e.g. database connection error)
+process.on('unhandledRejection', (err) => {
+  console.error('UNHANDLED REJECTION! 💥 Shutting down...');
+  console.error(err);
+  server.close(() => {
+    process.exit(1);
+  });
+});
 
-import { userRouter } from './routes/userRouter.js';
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION! 💥 Shutting down...');
+  console.error(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
+});
 
-dotenv.config();
+const PORT = process.env.PORT ?? 3000;
 
-void connectDB();
-const app = express();
-
-const PORT = process.env.PORT || 8000;
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
-// Routes
-app.use('/api/users', userRouter);
-
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server started at http://localhost:${PORT}`);
 });

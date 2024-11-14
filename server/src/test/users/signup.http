@@ -1,5 +1,5 @@
 ### signup user
-POST http://localhost:8000/api/users/signup
+POST {{api}}/users/signup
 Content-Type: application/json
 
 {
@@ -10,12 +10,21 @@ Content-Type: application/json
 }
 
 ### signup user2
-POST http://localhost:8000/api/users/signup
+POST {{api}}/users/signup
 Content-Type: application/json
 
 {
-"username": "kellie",
-"name": "Kellie",
-"email": "kellies@email.com",
+"username": "kelly2",
+"name": "Kelly2",
+"email": "kelly2@email.com",
 "password": "123456"
+}
+
+### signup user3 fail
+POST {{api}}/users/signup
+Content-Type: application/json
+
+{
+"username": "janedoe",
+"email": "janedoe@email.com"
 }
