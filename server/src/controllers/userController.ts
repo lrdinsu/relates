@@ -78,8 +78,8 @@ export async function loginUser(req: Request, res: Response) {
       return;
     }
 
-    const { username, password } = input.data;
-    const user = await UserModel.findOne({ username }).select('+password');
+    const { email, password } = input.data;
+    const user = await UserModel.findOne({ email }).select('+password');
 
     // Check if password is correct
     const isPasswordCorrect = await checkPassword(user?.password, password);

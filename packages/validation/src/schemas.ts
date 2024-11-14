@@ -23,7 +23,7 @@ export const BaseUserSchema = z.object({
 });
 
 export const UserLoginSchema = BaseUserSchema.pick({
-  username: true,
+  email: true,
   password: true,
 });
 
