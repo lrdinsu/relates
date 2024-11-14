@@ -42,6 +42,8 @@ export const postSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toObject: { versionKey: false },
+    toJSON: { versionKey: false },
   },
 );
 

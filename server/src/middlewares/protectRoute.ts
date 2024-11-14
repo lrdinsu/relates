@@ -21,7 +21,7 @@ export async function protectRoute(
     // verify token
     const decoded = await jwtVerify(token, process.env.JWT_SECRET!);
 
-    const user = await UserModel.findById(decoded.userId).select('-password');
+    const user = await UserModel.findById(decoded.userId);
 
     if (!user) {
       res.status(404).json({ message: 'User not found' });

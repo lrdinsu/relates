@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       minLength: 6,
       required: true,
+      select: false,
     },
     profilePic: {
       type: String,
@@ -39,9 +40,16 @@ const userSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
+    },
   },
   {
     timestamps: true,
+    toObject: { versionKey: false },
+    toJSON: { versionKey: false },
   },
 );
 

@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { BaseUserSchema, UserLoginSchema } from 'validation';
+import {
+  UserLoginSchema,
+  UserSignupSchema,
+  UserUpdateSchema,
+} from 'validation';
 
 import argon2 from '@node-rs/argon2';
 
@@ -22,41 +26,10 @@ export async function getAllUsers(_: Request, res: Response) {
   }
 }
 
-export async function getUserProfile(req: Request, res: Response) {
-  const { query } = req.params;
-
-  try {
-    let user;
-    if (mongoose.Types.ObjectId.isValid(query)) {
-      user = await UserModel.findById({ _id: query })
-        .select('-password')
-        .select('-updatedAt');
-    } else {
-      user = await UserModel.findOne({ username: query })
-        .select('-password')
-        .select('-updatedAt');
-    }
-
-    if (!user) {
-      res.status(404).json({ message: 'User not found' });
-      return;
-    }
-
-    res.status(200).json(user);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-      console.log('Error in signupUser:', error.message);
-    } else {
-      console.error('Error in signupUser:', error);
-    }
-  }
-}
-
 export async function signupUser(req: Request, res: Response) {
   try {
     // Validate user data
-    const input = BaseUserSchema.safeParse(req.body);
+    const input = UserSignupSchema.safeParse(req.body);
 
     if (!input.success) {
       res.status(400).json({ message: 'Invalid user data' });
@@ -91,12 +64,6 @@ export async function signupUser(req: Request, res: Response) {
       username: newUser.username,
     });
   } catch (error) {
-    // if (error instanceof Error) {
-    //   res.status(500).json({ message: error.message });
-    //   console.log('Error in signupUser:', error.message);
-    // } else {
-    //   console.error('Error in signupUser:', error);
-    // }
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in signupUser:', error);
   }
@@ -112,7 +79,7 @@ export async function loginUser(req: Request, res: Response) {
     }
 
     const { username, password } = input.data;
-    const user = await UserModel.findOne({ username });
+    const user = await UserModel.findOne({ username }).select('+password');
 
     // Check if password is correct
     const isPasswordCorrect = await checkPassword(user?.password, password);
@@ -189,5 +156,42 @@ export async function followUnfollowUser(req: Request, res: Response) {
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in followUnfollowUser:', error);
+  }
+}
+
+export async function updateUser(req: Request, res: Response) {
+  try {
+    const input = UserUpdateSchema.safeParse(req.body);
+    if (!input.success) {
+      res.status(400).json({ message: 'Invalid update data' });
+      return;
+    }
+
+    const currentUser = req.user!;
+    const currentUserId = currentUser._id;
+
+    await UserModel.findByIdAndUpdate(currentUserId, input.data);
+
+    res.status(200).json({ message: 'User updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Unknown error occurred!' });
+    console.error('Error in updateUser:', error);
+  }
+}
+
+export async function getUserProfile(req: Request, res: Response) {
+  try {
+    const { username } = req.params;
+    const user = await UserModel.findOne({ username }).select('-updatedAt');
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Unknown error occurred!' });
+    console.error('Error in getUserProfile:', error);
   }
 }

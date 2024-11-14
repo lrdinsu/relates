@@ -2,7 +2,18 @@
 GET {{api}}/users
 
 ### follow/unfollow user
-POST {{api}}/users/follow/67350cccc484013fa1087ce3
+PUT {{api}}/users/follow/673536107029211c0f788f08
 
 ### Test follow self
-POST {{api}}/users/follow/67350ccac484013fa1087ce0
+PUT {{api}}/users/follow/6735360c7029211c0f788f05
+
+### Update user
+PUT {{api}}/users/me/profile
+Content-Type: application/json
+
+{
+"name": "Kelly Smith 3"
+}
+
+### Get user profile by username
+GET {{api}}/users/kelliesmith
