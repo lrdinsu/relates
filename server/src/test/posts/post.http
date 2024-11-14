@@ -22,4 +22,7 @@ Content-Type: application/json
 GET {{api}}/posts/6735559de173fe70f1a9343d
 
 ### delete post by id
-DELETE {{api}}/posts/67355684e173fe70f1a93441
+DELETE {{api}}/posts/673560ebdcd6fd89543ed215
+
+### like post
+PUT {{api}}/posts/67357c0bcd447543789839cb/like

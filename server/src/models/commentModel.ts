@@ -1,24 +1,32 @@
 import mongoose from 'mongoose';
 
-export const postSchema = new mongoose.Schema(
+const commentSchema = new mongoose.Schema(
   {
-    postedBy: {
+    postId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'PostModel',
+      required: true,
+    },
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'UserModel',
       required: true,
     },
     text: {
       type: String,
-      maxLength: 500,
-    },
-    img: {
-      type: String,
+      maxLength: 280,
+      required: true,
     },
     likes: {
       type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'UserModel' }],
       default: [],
     },
-    commentsCount: {
+    parentCommentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'CommentModel',
+      default: null,
+    },
+    repliesCount: {
       type: Number,
       default: 0,
     },
@@ -30,4 +38,4 @@ export const postSchema = new mongoose.Schema(
   },
 );
 
-export const PostModel = mongoose.model('Post', postSchema);
+export const CommentModel = mongoose.model('Comment', commentSchema);

@@ -83,3 +83,35 @@ export async function deletePostById(
     console.error('Error in delete post by id:', error);
   }
 }
+
+export async function likeUnlikePost(req: Request, res: Response) {
+  try {
+    const postId = stringToObjectId(req.params.postId);
+    const post = await PostModel.findById(postId);
+    if (!post) {
+      res.status(404).json({ message: 'Post not found' });
+      return;
+    }
+
+    const currentUser = req.user!;
+    const currentUserId = currentUser._id;
+    const isLiked = post.likes.includes(currentUserId);
+
+    if (isLiked) {
+      // Unlike post
+      await PostModel.findByIdAndUpdate(postId, {
+        $pull: { likes: currentUserId },
+      });
+      res.status(200).json({ message: 'Unliked post' });
+    } else {
+      // Like post
+      await PostModel.findByIdAndUpdate(postId, {
+        $push: { likes: currentUserId },
+      });
+      res.status(200).json({ message: 'Liked post' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Unknown error occurred!' });
+    console.error('Error in like/unlike post:', error);
+  }
+}
