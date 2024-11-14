@@ -35,3 +35,36 @@ export const UserUpdateSchema = BaseUserSchema.partial().omit({
   followers: true,
   following: true,
 });
+
+export const ReplySchema = z.object({
+  userId: ObjectIdSchema,
+  text: z.string().min(2).max(280),
+  userProfilePic: z.string().optional(),
+  likes: z.number().default(0),
+  username: z.string(),
+});
+
+export const PostSchema = z.object({
+  postedBy: ObjectIdSchema,
+  text: z.string().max(500).optional(),
+  img: z.string().optional(),
+  likes: z.number().default(0),
+  replies: z.array(ReplySchema),
+});
+
+export const PostCreateSchema = PostSchema.omit({
+  postedBy: true,
+  likes: true,
+  replies: true,
+}).refine((data) => Boolean(data.text) || Boolean(data.img), {
+  message: "At least 'text' or 'img' must be provided.",
+  path: ['text', 'img'],
+});
+
+export const PostUpdateSchema = PostSchema.partial().refine(
+  (data) => Boolean(data.text) || Boolean(data.img),
+  {
+    message: "At least 'text' or 'img' must be provided.",
+    path: ['text', 'img'],
+  },
+);

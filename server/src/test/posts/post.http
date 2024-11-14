@@ -1,0 +1,25 @@
+### Get all posts
+GET {{api}}/posts
+
+### Create post
+POST {{api}}/posts
+Content-Type: application/json
+
+{
+  "text": "This is a post",
+    "img": "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png"
+}
+
+### Create post2
+POST {{api}}/posts
+Content-Type: application/json
+
+{
+    "text": "This is a post2"
+}
+
+### get post by id
+GET {{api}}/posts/6735559de173fe70f1a9343d
+
+### delete post by id
+DELETE {{api}}/posts/67355684e173fe70f1a93441

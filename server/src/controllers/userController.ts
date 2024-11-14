@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import mongoose from 'mongoose';
 import {
   UserLoginSchema,
   UserSignupSchema,
@@ -11,6 +10,7 @@ import argon2 from '@node-rs/argon2';
 import { UserModel } from '../models/userModel.js';
 import { checkPassword } from '../utils/checkPassword.js';
 import { generateTokenAndSetCookie } from '../utils/generateTokenAndSetCookie.js';
+import { stringToObjectId } from '../utils/stringToObjectId.js';
 
 export async function getAllUsers(_: Request, res: Response) {
   try {
@@ -115,7 +115,7 @@ export function logoutUser(_req: Request, res: Response) {
 export async function followUnfollowUser(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const targetUserId = new mongoose.Types.ObjectId(id);
+    const targetUserId = stringToObjectId(id);
     const targetUser = await UserModel.findById(targetUserId);
 
     const currentUser = req.user!;
