@@ -67,13 +67,18 @@ export const PostUpdateSchema = BasePostSchema.partial().refine(
 export const BaseCommentSchema = z.object({
   postId: ObjectIdSchema,
   userId: ObjectIdSchema,
+  username: z.string(),
+  profilePic: z.string().nullable().default(null),
   text: z.string().min(2).max(280),
-  userProfilePic: z.string().optional(),
   likes: z.array(ObjectIdSchema).default([]),
   parentCommentId: ObjectIdSchema.nullable().optional(),
   repliesCount: z.number().default(0),
 });
 
-export const CommentCreateSchema = BaseCommentSchema;
+export const CommentCreateSchema = BaseCommentSchema.pick({
+  text: true,
+});
 
-export const CommentUpdateSchema = BaseCommentSchema.partial();
+export const CommentUpdateSchema = BaseCommentSchema.pick({
+  text: true,
+});

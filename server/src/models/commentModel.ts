@@ -12,6 +12,14 @@ const commentSchema = new mongoose.Schema(
       ref: 'UserModel',
       required: true,
     },
+    username: {
+      type: String,
+      required: true,
+    },
+    profilePic: {
+      type: String,
+      default: null,
+    },
     text: {
       type: String,
       maxLength: 280,

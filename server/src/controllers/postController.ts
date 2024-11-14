@@ -4,7 +4,7 @@ import { PostCreateSchema } from 'validation';
 import { PostModel } from '../models/postModel.js';
 import { stringToObjectId } from '../utils/stringToObjectId.js';
 
-export async function getPosts(_: Request, res: Response): Promise<void> {
+export async function getAllPosts(_: Request, res: Response): Promise<void> {
   try {
     const posts = await PostModel.find();
     res.status(200).json(posts);
@@ -113,5 +113,20 @@ export async function likeUnlikePost(req: Request, res: Response) {
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in like/unlike post:', error);
+  }
+}
+
+export async function getFeedPosts(req: Request, res: Response) {
+  try {
+    const currentUser = req.user!;
+    const following = currentUser.following;
+    const feedPosts = await PostModel.find({
+      postedBy: { $in: [currentUser._id, ...following] },
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({ message: 'Feed posts found!', feedPosts });
+  } catch (error) {
+    res.status(500).json({ message: 'Unknown error occurred!' });
+    console.error('Error in get feed posts:', error);
   }
 }
