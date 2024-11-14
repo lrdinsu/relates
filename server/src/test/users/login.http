@@ -7,12 +7,12 @@ Content-Type: application/json
 "password": "123456"
 }
 
-### login with wrong username
-POST http://localhost:8000/api/users/login
+### login user2
+POST {{api}}/users/login
 Content-Type: application/json
 
 {
-"username": "kellie8888",
+"username": "kelly2",
 "password": "123456"
 }
 

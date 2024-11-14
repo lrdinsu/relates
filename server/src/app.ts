@@ -3,7 +3,8 @@ import express, { Express } from 'express';
 
 import { connectDB } from '@/db/connectDB.js';
 
-import { userRouter } from './routes/userRouter.js';
+import { postRouter } from './routes/postRoutes.js';
+import { userRouter } from './routes/userRoutes.js';
 
 void connectDB();
 export const app: Express = express();
@@ -16,3 +17,4 @@ app.use(cookieParser());
 
 // Routes
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/posts', postRouter);
