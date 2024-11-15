@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
 import { signupUser } from '@/api/authApi.ts';
+import { FormError } from '@/components/FormError.tsx';
 import { SignupSchema } from '@/types/schemas.ts';
 import { SignupType } from '@/types/types.ts';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,11 +33,7 @@ export function Signup() {
   const mutation = useMutation({
     mutationFn: signupUser,
     onSuccess: () => {
-      alert('Account created successfully');
-    },
-    onError: (error) => {
-      alert('Failed to create account');
-      console.error(error);
+      navigate('/');
     },
   });
 
@@ -58,6 +55,7 @@ export function Signup() {
 
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
         <form onSubmit={handleSubmit(onSubmit)}>
+          {mutation.isError && <FormError error={mutation.error} />}
           <TextInput
             label="Username"
             placeholder="your username"
@@ -85,7 +83,7 @@ export function Signup() {
             {...register('confirmPassword')}
             error={errors.confirmPassword?.message}
           />
-          <Button type="submit" fullWidth mt="xl">
+          <Button type="submit" fullWidth mt="xl" loading={mutation.isPending}>
             Sign up
           </Button>
         </form>

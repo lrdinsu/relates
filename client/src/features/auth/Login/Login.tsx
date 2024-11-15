@@ -2,6 +2,8 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { LoginSchema, LoginType } from 'validation';
 
+import { loginUser } from '@/api/authApi.ts';
+import { FormError } from '@/components/FormError.tsx';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Anchor,
@@ -14,6 +16,7 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
+import { useMutation } from '@tanstack/react-query';
 
 import classes from './Login.module.css';
 
@@ -28,8 +31,15 @@ export function Login() {
     resolver: zodResolver(LoginSchema),
   });
 
+  const mutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: () => {
+      navigate('/');
+    },
+  });
+
   const onSubmit = (data: LoginType) => {
-    console.log(data);
+    mutation.mutate(data);
   };
 
   return (
@@ -50,6 +60,7 @@ export function Login() {
 
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
         <form onSubmit={handleSubmit(onSubmit)}>
+          {mutation.isError && <FormError error={mutation.error} />}
           <TextInput
             label="Email"
             placeholder="email@relates.com"
@@ -74,7 +85,7 @@ export function Login() {
               Forgot password?
             </Anchor>
           </Group>
-          <Button fullWidth mt="xl" type="submit">
+          <Button fullWidth mt="xl" type="submit" loading={mutation.isPending}>
             Sign in
           </Button>
         </form>

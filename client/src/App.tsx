@@ -28,6 +28,9 @@ function App() {
         {/* User Pages */}
         <Route path="/:username" element={<UserPage />} />
         <Route path="/:username/post/:pid" element={<PostPage />} />
+
+        {/* 404 Page */}
+        <Route path="*" element={<div>404 Page</div>} />
       </Routes>
     </Container>
   );

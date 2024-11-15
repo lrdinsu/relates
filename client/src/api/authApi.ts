@@ -1,19 +1,20 @@
+import axios from 'axios';
+import { LoginType } from 'validation';
+
 import { SignupType } from '@/types/types.ts';
 
-export async function signupUser(data: SignupType) {
-  const response = await fetch('/api/signup', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  // Check if the response is successful
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Signup request failed');
-  }
+axios.defaults.withCredentials = true;
 
-  // Return the response data as JSON
-  return response.json();
+export type ApiResponse = {
+  message: string;
+};
+
+export async function signupUser(data: SignupType) {
+  const response = await axios.post('/api/signup', data);
+  return response.data as ApiResponse;
+}
+
+export async function loginUser(data: LoginType) {
+  const response = await axios.post('/api/login', data);
+  return response.data as ApiResponse;
 }
