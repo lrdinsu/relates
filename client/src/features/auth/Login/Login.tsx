@@ -1,11 +1,12 @@
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { LoginSchema, LoginType } from 'validation';
 
-import { useAuthStore } from '@/stores/authStore.ts';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Anchor,
   Button,
   Checkbox,
-  Container,
   Group,
   Paper,
   PasswordInput,
@@ -17,11 +18,22 @@ import {
 import classes from './Login.module.css';
 
 export function Login() {
-  const { setView } = useAuthStore();
   const navigate = useNavigate();
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginType>({
+    resolver: zodResolver(LoginSchema),
+  });
+
+  const onSubmit = (data: LoginType) => {
+    console.log(data);
+  };
+
   return (
-    <Container size={420} my={40}>
+    <>
       <Title ta="center" className={classes.title}>
         Welcome To Relates!
       </Title>
@@ -30,34 +42,43 @@ export function Login() {
         <Anchor
           size="sm"
           component="button"
-          onClick={() => setView('signup', navigate)}
+          onClick={() => navigate('/signup')}
         >
           Create account
         </Anchor>
       </Text>
 
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-        <TextInput label="Email" placeholder="email@relates.com" required />
-        <PasswordInput
-          label="Password"
-          placeholder="Your password"
-          required
-          mt="md"
-        />
-        <Group justify="space-between" mt="lg">
-          <Checkbox label="Remember me" />
-          <Anchor
-            component="button"
-            size="sm"
-            onClick={() => setView('forgotpassword', navigate)}
-          >
-            Forgot password?
-          </Anchor>
-        </Group>
-        <Button fullWidth mt="xl">
-          Sign in
-        </Button>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <TextInput
+            label="Email"
+            placeholder="email@relates.com"
+            {...register('email')}
+            error={errors.email?.message}
+          />
+          <PasswordInput
+            label="Password"
+            placeholder="Your password"
+            mt="md"
+            {...register('password')}
+            error={errors.password?.message}
+          />
+          <Group justify="space-between" mt="lg">
+            <Checkbox label="Remember me" />
+            <Anchor
+              component="button"
+              type="button"
+              size="sm"
+              onClick={() => navigate('/forgot-password')}
+            >
+              Forgot password?
+            </Anchor>
+          </Group>
+          <Button fullWidth mt="xl" type="submit">
+            Sign in
+          </Button>
+        </form>
       </Paper>
-    </Container>
+    </>
   );
 }

@@ -38,17 +38,9 @@ export const UserUpdateSchema = BaseUserSchema.partial().omit({
   following: true,
 });
 
-// AuthSchema
 export const LoginSchema = BaseUserSchema.pick({
   email: true,
   password: true,
-});
-
-export const SignupSchema = UserCreateSchema.extend({
-  confirmPassword: z.string(),
-}).refine((data) => data.confirmPassword === data.password, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
 });
 
 // PostSchema

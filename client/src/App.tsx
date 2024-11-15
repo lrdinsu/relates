@@ -1,6 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
 
 import { Header } from '@/components/Header.tsx';
+import { ForgotPassword } from '@/features/auth/ForgetPassword/ForgotPassword.tsx';
+import { Login } from '@/features/auth/Login/Login.tsx';
+import { Signup } from '@/features/auth/Signup/Signup.tsx';
 import AuthPage from '@/pages/AuthPage.tsx';
 import HomePage from '@/pages/HomePage.tsx';
 import PostPage from '@/pages/PostPage.tsx';
@@ -12,10 +15,17 @@ function App() {
     <Container size={620}>
       <Header />
       <Routes>
+        {/* Home Page */}
         <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<AuthPage />} />
-        <Route path="/signup" element={<AuthPage />} />
-        <Route path="/forgotpassword" element={<AuthPage />} />
+
+        {/* Nested Auth Routes */}
+        <Route path="/" element={<AuthPage />}>
+          <Route path="login" element={<Login />} />
+          <Route path="signup" element={<Signup />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+        </Route>
+
+        {/* User Pages */}
         <Route path="/:username" element={<UserPage />} />
         <Route path="/:username/post/:pid" element={<PostPage />} />
       </Routes>

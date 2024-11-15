@@ -1,24 +1,24 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { SignupSchema, SignupType } from 'validation';
 
-import { useAuthStore } from '@/stores/authStore.ts';
+import { signupUser } from '@/api/authApi.ts';
+import { SignupSchema } from '@/types/schemas.ts';
+import { SignupType } from '@/types/types.ts';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Anchor,
   Button,
-  Container,
   Paper,
   PasswordInput,
   Text,
   TextInput,
   Title,
 } from '@mantine/core';
+import { useMutation } from '@tanstack/react-query';
 
 import classes from './Signup.module.css';
 
 export function Signup() {
-  const { setView } = useAuthStore();
   const navigate = useNavigate();
 
   const {
@@ -29,23 +29,29 @@ export function Signup() {
     resolver: zodResolver(SignupSchema),
   });
 
+  const mutation = useMutation({
+    mutationFn: signupUser,
+    onSuccess: () => {
+      alert('Account created successfully');
+    },
+    onError: (error) => {
+      alert('Failed to create account');
+      console.error(error);
+    },
+  });
+
   const onSubmit = (data: SignupType) => {
-    alert(`Account created successfully for ${data.username}`);
-    console.log(data);
+    mutation.mutate(data);
   };
 
   return (
-    <Container size={420} my={40}>
+    <>
       <Title ta="center" className={classes.title}>
         Create Your Account
       </Title>
       <Text c="dimmed" size="sm" ta="center" mt={5}>
         Already have an account?{' '}
-        <Anchor
-          size="sm"
-          component="button"
-          onClick={() => setView('login', navigate)}
-        >
+        <Anchor size="sm" component="button" onClick={() => navigate('/login')}>
           Sign in
         </Anchor>
       </Text>
@@ -84,6 +90,6 @@ export function Signup() {
           </Button>
         </form>
       </Paper>
-    </Container>
+    </>
   );
 }
