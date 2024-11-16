@@ -7,9 +7,11 @@ import { FormError } from '@/components/FormError.tsx';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Anchor,
+  Box,
   Button,
   Checkbox,
   Group,
+  LoadingOverlay,
   Paper,
   PasswordInput,
   Text,
@@ -58,38 +60,50 @@ export function Login() {
         </Anchor>
       </Text>
 
-      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {mutation.isError && <FormError error={mutation.error} />}
-          <TextInput
-            label="Email"
-            placeholder="email@relates.com"
-            {...register('email')}
-            error={errors.email?.message}
-          />
-          <PasswordInput
-            label="Password"
-            placeholder="Your password"
-            mt="md"
-            {...register('password')}
-            error={errors.password?.message}
-          />
-          <Group justify="space-between" mt="lg">
-            <Checkbox label="Remember me" />
-            <Anchor
-              component="button"
-              type="button"
-              size="sm"
-              onClick={() => navigate('/forgot-password')}
+      <Box pos="relative">
+        <LoadingOverlay
+          visible={mutation.isPending}
+          zIndex={1000}
+          overlayProps={{ radius: 'sm', blur: 2 }}
+        />
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {mutation.isError && <FormError error={mutation.error} />}
+            <TextInput
+              label="Email"
+              placeholder="email@relates.com"
+              {...register('email')}
+              error={errors.email?.message}
+            />
+            <PasswordInput
+              label="Password"
+              placeholder="Your password"
+              mt="md"
+              {...register('password')}
+              error={errors.password?.message}
+            />
+            <Group justify="space-between" mt="lg">
+              <Checkbox label="Remember me" />
+              <Anchor
+                component="button"
+                type="button"
+                size="sm"
+                onClick={() => navigate('/forgot-password')}
+              >
+                Forgot password?
+              </Anchor>
+            </Group>
+            <Button
+              fullWidth
+              mt="xl"
+              type="submit"
+              loading={mutation.isPending}
             >
-              Forgot password?
-            </Anchor>
-          </Group>
-          <Button fullWidth mt="xl" type="submit" loading={mutation.isPending}>
-            Sign in
-          </Button>
-        </form>
-      </Paper>
+              Sign in
+            </Button>
+          </form>
+        </Paper>
+      </Box>
     </>
   );
 }

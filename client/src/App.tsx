@@ -6,6 +6,7 @@ import { Login } from '@/features/auth/Login/Login.tsx';
 import { Signup } from '@/features/auth/Signup/Signup.tsx';
 import AuthPage from '@/pages/AuthPage.tsx';
 import HomePage from '@/pages/HomePage.tsx';
+import NotFoundPage from '@/pages/NotFoundPage/NotFoundPage.tsx';
 import PostPage from '@/pages/PostPage.tsx';
 import UserPage from '@/pages/UserPage.tsx';
 import { Container } from '@mantine/core';
@@ -30,7 +31,7 @@ function App() {
         <Route path="/:username/post/:pid" element={<PostPage />} />
 
         {/* 404 Page */}
-        <Route path="*" element={<div>404 Page</div>} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Container>
   );

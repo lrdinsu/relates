@@ -10,11 +10,11 @@ export type ApiResponse = {
 };
 
 export async function signupUser(data: SignupType) {
-  const response = await axios.post('/api/signup', data);
+  const response = await axios.post('/api/auth/signup', data);
   return response.data as ApiResponse;
 }
 
 export async function loginUser(data: LoginType) {
-  const response = await axios.post('/api/login', data);
+  const response = await axios.post('/api/auth/login', data);
   return response.data as ApiResponse;
 }

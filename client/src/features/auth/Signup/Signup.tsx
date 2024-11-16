@@ -8,7 +8,9 @@ import { SignupType } from '@/types/types.ts';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Anchor,
+  Box,
   Button,
+  LoadingOverlay,
   Paper,
   PasswordInput,
   Text,
@@ -53,41 +55,53 @@ export function Signup() {
         </Anchor>
       </Text>
 
-      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {mutation.isError && <FormError error={mutation.error} />}
-          <TextInput
-            label="Username"
-            placeholder="your username"
-            {...register('username')}
-            error={errors.username?.message}
-          />
-          <TextInput
-            label="Email"
-            placeholder="email@relates.com"
-            mt="md"
-            {...register('email')}
-            error={errors.email?.message}
-          />
-          <PasswordInput
-            label="Password"
-            placeholder="Your password"
-            mt="md"
-            {...register('password')}
-            error={errors.password?.message}
-          />
-          <PasswordInput
-            label="Confirm Password"
-            placeholder="Confirm your password"
-            mt="md"
-            {...register('confirmPassword')}
-            error={errors.confirmPassword?.message}
-          />
-          <Button type="submit" fullWidth mt="xl" loading={mutation.isPending}>
-            Sign up
-          </Button>
-        </form>
-      </Paper>
+      <Box pos="relative">
+        <LoadingOverlay
+          visible={mutation.isPending}
+          zIndex={1000}
+          overlayProps={{ radius: 'sm', blur: 2 }}
+        />
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {mutation.isError && <FormError error={mutation.error} />}
+            <TextInput
+              label="Username"
+              placeholder="your username"
+              {...register('username')}
+              error={errors.username?.message}
+            />
+            <TextInput
+              label="Email"
+              placeholder="email@relates.com"
+              mt="md"
+              {...register('email')}
+              error={errors.email?.message}
+            />
+            <PasswordInput
+              label="Password"
+              placeholder="Your password"
+              mt="md"
+              {...register('password')}
+              error={errors.password?.message}
+            />
+            <PasswordInput
+              label="Confirm Password"
+              placeholder="Confirm your password"
+              mt="md"
+              {...register('confirmPassword')}
+              error={errors.confirmPassword?.message}
+            />
+            <Button
+              type="submit"
+              fullWidth
+              mt="xl"
+              loading={mutation.isPending}
+            >
+              Sign up
+            </Button>
+          </form>
+        </Paper>
+      </Box>
     </>
   );
 }
