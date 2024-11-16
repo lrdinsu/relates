@@ -21,7 +21,7 @@ export function UseMoreMenu() {
         title: 'Link copied',
         message: 'Link copied to clipboard',
       });
-    } catch (error) {
+    } catch {
       showNotificationError({ title: 'Error', message: 'Copy failed' });
     }
   }

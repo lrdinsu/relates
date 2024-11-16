@@ -1,26 +1,26 @@
 ### login user
-POST {{api}}/users/login
+POST {{api}}/login
 Content-Type: application/json
 
 {
-"username": "kelliesmith",
+"email": "kellysmith@email.com",
 "password": "123456"
 }
 
 ### login user2
-POST {{api}}/users/login
+POST {{api}}/login
 Content-Type: application/json
 
 {
-"username": "kelly2",
+"email": "kelly2@email.com",
 "password": "123456"
 }
 
 ### login with wrong password
-POST http://localhost:8000/api/users/login
+POST {{api}}/login
 Content-Type: application/json
 
 {
-"username": "kelliesmith",
+"username": "kellysmith",
 "password": "1234567"
 }

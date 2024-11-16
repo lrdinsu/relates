@@ -1,27 +1,25 @@
 ### signup user
-POST {{api}}/users/signup
+POST {{api}}/signup
 Content-Type: application/json
 
 {
-"username": "kelliesmith",
-"name": "Kellie Smith",
-"email": "kelliesmith@email.com",
+"username": "kellysmith",
+"email": "kellysmith@email.com",
 "password": "123456"
 }
 
 ### signup user2
-POST {{api}}/users/signup
+POST {{api}}/signup
 Content-Type: application/json
 
 {
 "username": "kelly2",
-"name": "Kelly2",
 "email": "kelly2@email.com",
 "password": "123456"
 }
 
 ### signup user3 fail
-POST {{api}}/users/signup
+POST {{api}}/signup
 Content-Type: application/json
 
 {

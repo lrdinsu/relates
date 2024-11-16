@@ -6,7 +6,7 @@
     "dev": "pnpm --parallel --stream -r run dev",
     "start": "pnpm --stream -r run start",
     "build": "pnpm --stream -r run build",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "pnpm --stream -r run lint",
     "clean": "pnpm --stream -r run clean"
   },
   "keywords": [],

@@ -1,15 +1,12 @@
 import express, { Router } from 'express';
 
 import {
-  createComment,
-  getPostComments,
-} from '../controllers/commentController.js';
-import {
   createPost,
   deletePostById,
   getAllPosts,
   getFeedPosts,
   getPostById,
+  getPostComments,
   likeUnlikePost,
 } from '../controllers/postController.js';
 import { protectRoute } from '../middlewares/protectRoute.js';
@@ -22,11 +19,8 @@ postRouter.put('/:postId/like', protectRoute, likeUnlikePost);
 postRouter
   .route('/:postId')
   .get(getPostById)
+  .post(protectRoute, createPost) // for create comment under post
   .delete(protectRoute, deletePostById);
+// get comments of a post
+postRouter.get('/:postId/comments', protectRoute, getPostComments);
 postRouter.route('/').get(getAllPosts).post(protectRoute, createPost);
-
-// comments
-postRouter
-  .route('/:postId/comments')
-  .get(protectRoute, getPostComments)
-  .post(protectRoute, createComment);
