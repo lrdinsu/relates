@@ -1,5 +1,5 @@
 ### login user
-POST {{api}}/login
+POST {{api}}/auth/login
 Content-Type: application/json
 
 {
@@ -24,3 +24,6 @@ Content-Type: application/json
 "username": "kellysmith",
 "password": "1234567"
 }
+
+### refresh token
+POST {{api}}/auth/refresh-token

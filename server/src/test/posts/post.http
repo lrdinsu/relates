@@ -12,6 +12,7 @@ Content-Type: application/json
 
 ### Create post2
 POST {{api}}/posts
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NzM2NTVmNWIyZjc4ZDkxNDVkZmMwYzAiLCJpYXQiOjE3MzE3MzUwMDMsImV4cCI6MTczMTczNTkwM30.frnrVibmTOGrL94T7Eh2unSkimT7pIy-GO_ajBNDbyM
 Content-Type: application/json
 
 {
@@ -27,7 +28,7 @@ Content-Type: application/json
 }
 
 ### get post/comment by id
-GET {{api}}/posts/673715267c50865401d8b922
+GET {{api}}/posts/67370f73a6d54c074a6320e2
 
 ### delete post/comment by id
 DELETE {{api}}/posts/673715267c50865401d8b922
