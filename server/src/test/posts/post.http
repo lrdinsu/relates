@@ -18,14 +18,25 @@ Content-Type: application/json
     "text": "This is a post2"
 }
 
-### get post by id
-GET {{api}}/posts/67358b53b86a90543ff5aa81
+### Create Comment
+POST {{api}}/posts/67370f73a6d54c074a6320e2
+Content-Type: application/json
 
-### delete post by id
-DELETE {{api}}/posts/67358b53b86a90543ff5aa81
+{
+    "text": "This is a comment2"
+}
+
+### get post/comment by id
+GET {{api}}/posts/673715267c50865401d8b922
+
+### delete post/comment by id
+DELETE {{api}}/posts/673715267c50865401d8b922
 
 ### like post
 PUT {{api}}/posts/67358b53b86a90543ff5aa81/like
 
 ### get feed posts
 GET {{api}}/posts/feed
+
+### get comments of a post
+GET {{api}}/posts/67370f73a6d54c074a6320e2/comments

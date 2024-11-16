@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export const postSchema = new mongoose.Schema(
+const postSchema = new mongoose.Schema(
   {
     postedBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -18,9 +18,18 @@ export const postSchema = new mongoose.Schema(
       type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'UserModel' }],
       default: [],
     },
+    parentPost: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Post',
+      default: null,
+    },
     commentsCount: {
       type: Number,
       default: 0,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {
