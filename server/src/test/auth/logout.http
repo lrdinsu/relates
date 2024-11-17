@@ -1,2 +1,2 @@
 ### User log out
-POST {{api}}/logout
+POST {{api}}/auth/logout

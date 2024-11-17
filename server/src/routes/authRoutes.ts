@@ -13,4 +13,4 @@ export const authRouter: Router = express.Router();
 authRouter.post('/signup', signupUser);
 authRouter.post('/login', loginUser);
 authRouter.post('/logout', logoutUser);
-authRouter.post('/refresh-token', refreshAccessToken);
+authRouter.get('/refresh-token', refreshAccessToken);

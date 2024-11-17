@@ -1,16 +1,14 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { LoginSchema, LoginType } from 'validation';
 
-import { loginUser } from '@/api/authApi.ts';
-import { FormError } from '@/components/FormError.tsx';
+import { FormError } from '@/components/FormError/FormError.tsx';
+import { SignupSchema } from '@/types/schemas.ts';
+import { SignupType } from '@/types/types.ts';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Anchor,
   Box,
   Button,
-  Checkbox,
-  Group,
   LoadingOverlay,
   Paper,
   PasswordInput,
@@ -18,45 +16,35 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
-import { useMutation } from '@tanstack/react-query';
 
-import classes from './Login.module.css';
+import { useSignupMutation } from '../../hooks/useSignupMutation.ts';
+import classes from './Signup.module.css';
 
-export function Login() {
+export function Signup() {
   const navigate = useNavigate();
+  const mutation = useSignupMutation();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginType>({
-    resolver: zodResolver(LoginSchema),
+  } = useForm<SignupType>({
+    resolver: zodResolver(SignupSchema),
   });
 
-  const mutation = useMutation({
-    mutationFn: loginUser,
-    onSuccess: () => {
-      navigate('/');
-    },
-  });
-
-  const onSubmit = (data: LoginType) => {
+  const onSubmit = (data: SignupType) => {
     mutation.mutate(data);
   };
 
   return (
     <>
       <Title ta="center" className={classes.title}>
-        Welcome To Relates!
+        Create Your Account
       </Title>
       <Text c="dimmed" size="sm" ta="center" mt={5}>
-        Do not have an account yet?{' '}
-        <Anchor
-          size="sm"
-          component="button"
-          onClick={() => navigate('/signup')}
-        >
-          Create account
+        Already have an account?{' '}
+        <Anchor size="sm" component="button" onClick={() => navigate('/login')}>
+          Sign in
         </Anchor>
       </Text>
 
@@ -70,8 +58,15 @@ export function Login() {
           <form onSubmit={handleSubmit(onSubmit)}>
             {mutation.isError && <FormError error={mutation.error} />}
             <TextInput
+              label="Username"
+              placeholder="your username"
+              {...register('username')}
+              error={errors.username?.message}
+            />
+            <TextInput
               label="Email"
               placeholder="email@relates.com"
+              mt="md"
               {...register('email')}
               error={errors.email?.message}
             />
@@ -82,24 +77,20 @@ export function Login() {
               {...register('password')}
               error={errors.password?.message}
             />
-            <Group justify="space-between" mt="lg">
-              <Checkbox label="Remember me" />
-              <Anchor
-                component="button"
-                type="button"
-                size="sm"
-                onClick={() => navigate('/forgot-password')}
-              >
-                Forgot password?
-              </Anchor>
-            </Group>
+            <PasswordInput
+              label="Confirm Password"
+              placeholder="Confirm your password"
+              mt="md"
+              {...register('confirmPassword')}
+              error={errors.confirmPassword?.message}
+            />
             <Button
+              type="submit"
               fullWidth
               mt="xl"
-              type="submit"
               loading={mutation.isPending}
             >
-              Sign in
+              Sign up
             </Button>
           </form>
         </Paper>

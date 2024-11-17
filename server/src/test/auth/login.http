@@ -26,4 +26,4 @@ Content-Type: application/json
 }
 
 ### refresh token
-POST {{api}}/auth/refresh-token
+GET {{api}}/auth/refresh-token

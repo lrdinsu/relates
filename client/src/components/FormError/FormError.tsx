@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios';
 
-import { ApiResponse } from '@/api/authApi.ts';
+import { ApiResponse } from '@/api/axiosConfig.ts';
 import { Text } from '@mantine/core';
 
 export function FormError({ error }: { error: Error }) {

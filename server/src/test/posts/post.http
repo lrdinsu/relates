@@ -1,7 +1,7 @@
 ### Get all posts
 GET {{api}}/posts
 
-### Create post
+### Create post (protected)
 POST {{api}}/posts
 Content-Type: application/json
 
@@ -10,7 +10,7 @@ Content-Type: application/json
     "img": "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png"
 }
 
-### Create post2
+### Create post2 (protected)
 POST {{api}}/posts
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NzM2NTVmNWIyZjc4ZDkxNDVkZmMwYzAiLCJpYXQiOjE3MzE3MzUwMDMsImV4cCI6MTczMTczNTkwM30.frnrVibmTOGrL94T7Eh2unSkimT7pIy-GO_ajBNDbyM
 Content-Type: application/json
@@ -19,7 +19,7 @@ Content-Type: application/json
     "text": "This is a post2"
 }
 
-### Create Comment
+### Create Comment (protected)
 POST {{api}}/posts/67370f73a6d54c074a6320e2
 Content-Type: application/json
 
@@ -30,14 +30,15 @@ Content-Type: application/json
 ### get post/comment by id
 GET {{api}}/posts/67370f73a6d54c074a6320e2
 
-### delete post/comment by id
-DELETE {{api}}/posts/673715267c50865401d8b922
+### delete post/comment by id (protected)
+DELETE {{api}}/posts/:postId
 
-### like post
-PUT {{api}}/posts/67358b53b86a90543ff5aa81/like
+### like post (protected)
+PUT {{api}}/posts/:postId/like
 
-### get feed posts
+### get feed posts (protected)
 GET {{api}}/posts/feed
 
-### get comments of a post
+### get comments of a post (protected)
 GET {{api}}/posts/67370f73a6d54c074a6320e2/comments
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NzM2NTVmNWIyZjc4ZDkxNDVkZmMwYzAiLCJpYXQiOjE3MzE4MTAzNjgsImV4cCI6MTczMTgxMDM3M30.LmJyns1nkV0LPRZOVuZlDJD8J3UyxZa2jInt2kvU3-w

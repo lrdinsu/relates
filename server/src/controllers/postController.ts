@@ -14,6 +14,31 @@ export async function getAllPosts(_: Request, res: Response): Promise<void> {
   }
 }
 
+export async function getFeedPosts(req: Request, res: Response) {
+  try {
+    const currentUser = req.user!;
+    const following = currentUser.following;
+    const posts = await PostModel.find({
+      postedBy: { $in: [currentUser._id, ...following] },
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({ message: 'Feed posts found!', posts });
+  } catch (error) {
+    res.status(500).json({ message: 'Unknown error occurred!' });
+    console.error('Error in get feed posts:', error);
+  }
+}
+
+export async function getHotPosts(_: Request, res: Response) {
+  try {
+    const posts = await PostModel.find().sort({ likes: -1, createdAt: -1 });
+    res.status(200).json({ message: 'Hot posts found!', posts });
+  } catch (error) {
+    res.status(500).json({ message: 'Unknown error occurred!' });
+    console.error('Error in get hot posts:', error);
+  }
+}
+
 export async function createPost(req: Request, res: Response): Promise<void> {
   try {
     const input = PostCreateSchema.safeParse(req.body);
@@ -131,21 +156,6 @@ export async function likeUnlikePost(req: Request, res: Response) {
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in like/unlike post:', error);
-  }
-}
-
-export async function getFeedPosts(req: Request, res: Response) {
-  try {
-    const currentUser = req.user!;
-    const following = currentUser.following;
-    const feedPosts = await PostModel.find({
-      postedBy: { $in: [currentUser._id, ...following] },
-    }).sort({ createdAt: -1 });
-
-    res.status(200).json({ message: 'Feed posts found!', feedPosts });
-  } catch (error) {
-    res.status(500).json({ message: 'Unknown error occurred!' });
-    console.error('Error in get feed posts:', error);
   }
 }
 

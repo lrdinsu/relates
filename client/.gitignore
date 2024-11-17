@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 *.local.md
+.env
 
 # Editor directories and files
 .vscode/*
@@ -23,4 +24,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
 
