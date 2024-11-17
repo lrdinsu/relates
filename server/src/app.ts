@@ -19,4 +19,4 @@ app.use(cookieParser());
 // Routes
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/posts', postRouter);
-app.use('/api/v1', authRouter);
+app.use('/api/v1/auth', authRouter);

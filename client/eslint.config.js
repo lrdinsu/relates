@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint';
 import js from '@eslint/js';
 
 export default tseslint.config(
-  { ignores: ['dist'] },
+  { ignores: ['dist', '**/*.d.ts', '*.config.*'] },
   {
     extends: [
       js.configs.recommended,

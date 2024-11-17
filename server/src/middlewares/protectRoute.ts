@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 
 import { UserModel } from '../models/userModel.js';
 import { jwtVerify } from '../utils/jwtVerify.js';
@@ -10,18 +11,17 @@ export async function protectRoute(
 ) {
   try {
     // Get token from headers
-    const token =
-      typeof req.cookies.jwt === 'string' ? req.cookies.jwt : undefined;
+    const token = req.headers.authorization?.split(' ')[1];
 
     if (!token) {
-      res.status(401).json({ message: 'Not authorized' });
+      res.status(401).json({ message: 'Not authorized, please log in' });
       return;
     }
 
     // verify token
-    const decoded = await jwtVerify(token, process.env.JWT_SECRET!);
+    const { userId } = await jwtVerify(token, process.env.ACCESS_TOKEN_SECRET!);
 
-    const user = await UserModel.findById(decoded.userId);
+    const user = await UserModel.findById(userId);
 
     if (!user) {
       res.status(404).json({ message: 'User not found' });
@@ -33,7 +33,15 @@ export async function protectRoute(
 
     next();
   } catch (error) {
-    res.status(500).json({ message: 'Unknown error occurred!' });
-    console.error('Error in protectRoute:', error);
+    if (error instanceof jwt.TokenExpiredError) {
+      res.status(401).json({ message: 'Token expired, please log in' });
+      return;
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({ message: 'Invalid token, please log in' });
+      return;
+    } else {
+      res.status(500).json({ message: 'Unknown error occurred!' });
+      console.error('Error in protectRoute:', error);
+    }
   }
 }

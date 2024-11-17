@@ -5,6 +5,7 @@ import {
   deletePostById,
   getAllPosts,
   getFeedPosts,
+  getHotPosts,
   getPostById,
   getPostComments,
   likeUnlikePost,
@@ -15,6 +16,8 @@ export const postRouter: Router = express.Router();
 
 // posts
 postRouter.get('/feed', protectRoute, getFeedPosts);
+postRouter.get('/hot', getHotPosts);
+
 postRouter.put('/:postId/like', protectRoute, likeUnlikePost);
 postRouter
   .route('/:postId')
@@ -23,4 +26,4 @@ postRouter
   .delete(protectRoute, deletePostById);
 // get comments of a post
 postRouter.get('/:postId/comments', protectRoute, getPostComments);
-postRouter.route('/').get(getAllPosts).post(protectRoute, createPost);
+postRouter.route('/').get(getAllPosts).post(protectRoute, createPost); // for create post

@@ -1,19 +1,9 @@
 import { Link } from 'react-router-dom';
 
+import { PostList } from '@/features/posts/PostList/PostList.tsx';
 import { Button, Flex } from '@mantine/core';
 
 function HomePage() {
-  function handleClick() {
-    fetch('/api/posts')
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }
-
   return (
     <>
       <Link to={'/kelliesmith'}>
@@ -21,7 +11,7 @@ function HomePage() {
           <Button mx={'auto'}>Visit Profile Page</Button>
         </Flex>
       </Link>
-      <button onClick={handleClick}>Click me</button>
+      <PostList />
     </>
   );
 }

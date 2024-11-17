@@ -6,7 +6,7 @@ import {
   useMantineColorScheme,
 } from '@mantine/core';
 
-export function Header() {
+export function Logo() {
   const { setColorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme('dark');
   const toggleColorScheme = () => {
