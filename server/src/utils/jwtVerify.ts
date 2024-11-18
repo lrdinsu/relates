@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
 
 type JwtPayload = {
-  userId: mongoose.Types.ObjectId;
+  userId: number;
   iat: number;
   exp: number;
 };
