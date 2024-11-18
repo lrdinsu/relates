@@ -1,62 +1,81 @@
 import { Request, Response } from 'express';
 import { UserUpdateSchema } from 'validation';
 
-import { UserModel } from '../models/userModel.js';
-import { stringToObjectId } from '../utils/stringToObjectId.js';
-
-export async function getAllUsers(_: Request, res: Response) {
-  try {
-    const users = await UserModel.find();
-    res.status(200).json(users);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-      console.log('Error in getUsers:', error.message);
-    } else {
-      console.error('Error in getUsers:', error);
-    }
-  }
-}
+import { prisma } from '../db/index.js';
+import { prepareUserResponse } from '../utils/prepareUserResponse.js';
 
 export async function followUnfollowUser(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const targetUserId = stringToObjectId(id);
-    const targetUser = await UserModel.findById(targetUserId);
+    const targetUserId = Number.parseInt(id, 10);
 
-    const currentUser = req.user!;
-    const currentUserId = currentUser._id;
+    const currentUserId = req.user!.id;
 
-    if (targetUserId.equals(currentUserId)) {
+    if (targetUserId === currentUserId) {
       res.status(400).json({ message: 'Cannot follow/unfollow yourself' });
       return;
     }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: targetUserId },
+    });
 
     if (!targetUser) {
       res.status(404).json({ message: 'User not found' });
       return;
     }
 
-    const isFollowing = currentUser.following.includes(targetUserId);
+    // check if user is already following
+    const isFollowing = await prisma.userFollows.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId: currentUserId,
+          followingId: targetUserId,
+        },
+      },
+    });
+
     if (isFollowing) {
       // Unfollow user
-      await UserModel.findByIdAndUpdate(currentUserId, {
-        $pull: { following: targetUserId },
+      await prisma.userFollows.delete({
+        where: {
+          followerId_followingId: {
+            followerId: currentUserId,
+            followingId: targetUserId,
+          },
+        },
       });
-      await UserModel.findByIdAndUpdate(targetUserId, {
-        $pull: { followers: currentUserId },
+      // update followers and following count
+      await prisma.user.update({
+        where: { id: targetUserId },
+        data: { followersCount: { decrement: 1 } },
       });
-      res.status(200).json({ message: 'Unfollowed user' });
+      await prisma.user.update({
+        where: { id: currentUserId },
+        data: { followingCount: { decrement: 1 } },
+      });
+
+      res.status(204).send();
       return;
     } else {
       // Follow user
-      await UserModel.findByIdAndUpdate(currentUserId, {
-        $push: { following: targetUserId },
+      await prisma.userFollows.create({
+        data: {
+          followerId: currentUserId,
+          followingId: targetUserId,
+        },
       });
-      await UserModel.findByIdAndUpdate(targetUserId, {
-        $push: { followers: currentUserId },
+      // update followers and following count
+      await prisma.user.update({
+        where: { id: targetUserId },
+        data: { followersCount: { increment: 1 } },
       });
-      res.status(200).json({ message: 'Followed user' });
+      await prisma.user.update({
+        where: { id: currentUserId },
+        data: { followingCount: { increment: 1 } },
+      });
+
+      res.status(204).send();
       return;
     }
   } catch (error) {
@@ -73,12 +92,14 @@ export async function updateUser(req: Request, res: Response) {
       return;
     }
 
-    const currentUser = req.user!;
-    const currentUserId = currentUser._id;
+    const currentUserId = req.user!.id;
 
-    await UserModel.findByIdAndUpdate(currentUserId, input.data);
+    await prisma.user.update({
+      where: { id: currentUserId },
+      data: input.data,
+    });
 
-    res.status(200).json({ message: 'User updated successfully' });
+    res.status(204).send();
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in updateUser:', error);
@@ -88,14 +109,16 @@ export async function updateUser(req: Request, res: Response) {
 export async function getUserProfile(req: Request, res: Response) {
   try {
     const { username } = req.params;
-    const user = await UserModel.findOne({ username }).select('-updatedAt');
+    const user = await prisma.user.findUnique({
+      where: { username },
+    });
 
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
     }
 
-    res.status(200).json(user);
+    res.status(200).json({ user: prepareUserResponse(user) });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in getUserProfile:', error);

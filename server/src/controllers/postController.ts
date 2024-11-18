@@ -1,28 +1,25 @@
 import { Request, Response } from 'express';
-import { PostCreateSchema } from 'validation';
+import { PostCreateSchema, PostType } from 'validation';
 
-import { PostModel } from '../models/postModel.js';
-import { stringToObjectId } from '../utils/stringToObjectId.js';
+import { selectFeedPosts } from '@prisma/client/sql';
 
-export async function getAllPosts(_: Request, res: Response): Promise<void> {
-  try {
-    const posts = await PostModel.find();
-    res.status(200).json(posts);
-  } catch (error) {
-    res.status(500).json({ message: 'Unknown error occurred!' });
-    console.error('Error in get posts:', error);
-  }
-}
+import { prisma } from '../db/index.js';
 
 export async function getFeedPosts(req: Request, res: Response) {
   try {
-    const currentUser = req.user!;
-    const following = currentUser.following;
-    const posts = await PostModel.find({
-      postedBy: { $in: [currentUser._id, ...following] },
-    }).sort({ createdAt: -1 });
+    const currentUserId = req.user!.id;
+    const { cursor, limit = 10 } = req.query;
 
-    res.status(200).json({ message: 'Feed posts found!', posts });
+    // Use raw SQL query with cursor-based pagination
+    const posts = (await prisma.$queryRawTyped(
+      selectFeedPosts(
+        currentUserId,
+        cursor ? Number(cursor) : 0,
+        Number(limit),
+      ),
+    )) as PostType[];
+
+    res.status(200).json({ posts });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get feed posts:', error);
@@ -31,8 +28,10 @@ export async function getFeedPosts(req: Request, res: Response) {
 
 export async function getHotPosts(_: Request, res: Response) {
   try {
-    const posts = await PostModel.find().sort({ likes: -1, createdAt: -1 });
-    res.status(200).json({ message: 'Hot posts found!', posts });
+    const posts = await prisma.post.findMany({
+      orderBy: { likesCount: 'desc', commentsCount: 'desc' },
+    });
+    res.status(200).json({ posts });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get hot posts:', error);
@@ -48,7 +47,7 @@ export async function createPost(req: Request, res: Response): Promise<void> {
     }
 
     const currentUser = req.user!;
-    const { text, img } = input.data;
+    const { text, images } = input.data;
     const parentPostId = req.params.postId || null;
 
     // determine if this is a root-level post or a comment
@@ -70,7 +69,7 @@ export async function createPost(req: Request, res: Response): Promise<void> {
     const newPost = await PostModel.create({
       postedBy: currentUser._id,
       text,
-      img,
+      images,
       parentPost: isComment ? parentPostId : null,
     });
 
@@ -85,14 +84,26 @@ export async function createPost(req: Request, res: Response): Promise<void> {
 
 export async function getPostById(req: Request, res: Response): Promise<void> {
   try {
-    const postId = stringToObjectId(req.params.postId);
-    const post = await PostModel.findById(postId);
+    const postId = Number.parseInt(req.params.postId);
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        postedBy: {
+          select: {
+            id: true,
+            username: true,
+            profilePic: true,
+          },
+        },
+      },
+    });
+
     if (!post) {
       res.status(404).json({ message: 'Post not found' });
       return;
     }
 
-    res.status(200).json({ message: 'Post found', post });
+    res.status(200).json({ post });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get post by id:', error);
@@ -104,8 +115,10 @@ export async function deletePostById(
   res: Response,
 ): Promise<void> {
   try {
-    const postId = stringToObjectId(req.params.postId);
-    const post = await PostModel.findById(postId);
+    const postId = Number.parseInt(req.params.postId);
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+    });
     if (!post) {
       res.status(404).json({ message: 'Post not found' });
       return;
@@ -113,14 +126,17 @@ export async function deletePostById(
 
     // check if user is authorized to delete post
     const currentUser = req.user!;
-    if (!post.postedBy.equals(currentUser._id)) {
+    if (!(post.postedById === currentUser.id)) {
       res.status(403).json({ message: 'Unauthorized to delete post' });
       return;
     }
 
     // Mark the post as deleted
-    await PostModel.findByIdAndUpdate(postId, { isDeleted: true });
-    res.status(200).json({ message: 'Post deleted successfully' });
+    await prisma.post.update({
+      where: { id: postId },
+      data: { isDeleted: true },
+    });
+    res.status(204).send();
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in delete post by id:', error);

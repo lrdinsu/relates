@@ -3,7 +3,6 @@ import express, { Router } from 'express';
 import {
   createPost,
   deletePostById,
-  getAllPosts,
   getFeedPosts,
   getHotPosts,
   getPostById,
@@ -26,4 +25,4 @@ postRouter
   .delete(protectRoute, deletePostById);
 // get comments of a post
 postRouter.get('/:postId/comments', protectRoute, getPostComments);
-postRouter.route('/').get(getAllPosts).post(protectRoute, createPost); // for create post
+postRouter.route('/').post(protectRoute, createPost); // for create post
