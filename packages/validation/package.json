@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsc -w --incremental",
-    "build": "tsc --incremental",
+    "build": "tsc",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "clean": "rm -rf dist tsconfig.json.tsbuildinfo",
     "test": "echo \"Error: no test specified\" && exit 1"
