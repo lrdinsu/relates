@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tsx watch --clear-screen=false --env-file=.env src/server.ts",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
-    "build": "tsc --incremental",
+    "build": "tsc",
     "start": "node --env-file=.prod.env dist/server.js",
     "test": "echo \\\"Error: no src/test specified\\\" && exit 1"
   },

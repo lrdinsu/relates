@@ -1,8 +1,7 @@
 import cookieParser from 'cookie-parser';
 import express, { Express } from 'express';
 
-import { connectDB } from '@/db/connectDB.js';
-
+import { connectDB } from './db/connectDB.js';
 import { authRouter } from './routes/authRoutes.js';
 import { postRouter } from './routes/postRoutes.js';
 import { userRouter } from './routes/userRoutes.js';
