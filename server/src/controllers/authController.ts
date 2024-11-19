@@ -69,7 +69,10 @@ export async function loginUser(req: Request, res: Response) {
     }
 
     const { email, password } = input.data;
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, password: true },
+    });
 
     // Check if password is correct
     const isPasswordCorrect = await checkPassword(user?.password, password);

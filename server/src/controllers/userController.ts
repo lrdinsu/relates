@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { UserUpdateSchema } from 'validation';
 
 import { prisma } from '../db/index.js';
-import { prepareUserResponse } from '../utils/prepareUserResponse.js';
 
 export async function followUnfollowUser(req: Request, res: Response) {
   try {
@@ -118,7 +117,7 @@ export async function getUserProfile(req: Request, res: Response) {
       return;
     }
 
-    res.status(200).json({ user: prepareUserResponse(user) });
+    res.status(200).json({ user });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in getUserProfile:', error);

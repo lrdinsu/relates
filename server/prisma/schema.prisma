@@ -6,7 +6,7 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["typedSql"]
+  previewFeatures = ["typedSql", "omitApi"]
 }
 
 datasource db {
@@ -53,7 +53,7 @@ model Post {
   postedById    Int
   parentPostId  Int?
   text          String?
-  images        Json?
+  images        String[]
   likesCount    Int      @default(0)
   commentsCount Int      @default(0)
   repostsCount  Int      @default(0)
@@ -82,19 +82,15 @@ model Like {
 }
 
 model Repost {
-  id             Int      @id @default(autoincrement())
-  userId         Int
-  postId         Int
-  originalPostId Int
-  originalUserId Int
-  createdAt      DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  postId    Int
+  createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
   post Post @relation(fields: [postId], references: [id])
 
   @@unique([userId, postId])
-  @@unique(originalPostId)
-  @@unique(originalUserId)
 }
 
 model Save {
