@@ -25,4 +25,8 @@ dist-ssr
 *.sln
 *.sw?
 
+# typescript build info
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js
 

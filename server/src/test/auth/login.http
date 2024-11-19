@@ -4,16 +4,16 @@ Content-Type: application/json
 
 {
 "email": "kellysmith@email.com",
-"password": "123456"
+"password": "12345678"
 }
 
 ### login user2
-POST {{api}}/login
+POST {{api}}/auth/login
 Content-Type: application/json
 
 {
 "email": "kelly2@email.com",
-"password": "123456"
+"password": "12345678"
 }
 
 ### login with wrong password

@@ -1,0 +1,11 @@
+### delete post/comment by id (protected)
+DELETE {{api}}/posts/2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTczMTk4NzU5NSwiZXhwIjoxNzMxOTg4NDk1fQ.nxr8PFP73kUcbnzXVZPB6QYbhFgXJU3MmpgGgTvJam8
+
+### like post (protected)
+PUT {{api}}/posts/1/like
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTczMTk4NzU5NSwiZXhwIjoxNzMxOTg4NDk1fQ.nxr8PFP73kUcbnzXVZPB6QYbhFgXJU3MmpgGgTvJam8
+
+### repost post (protected)
+PUT {{api}}/posts/6/repost
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTczMTk4NzU5NSwiZXhwIjoxNzMxOTg4NDk1fQ.nxr8PFP73kUcbnzXVZPB6QYbhFgXJU3MmpgGgTvJam8

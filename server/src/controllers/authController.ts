@@ -4,7 +4,7 @@ import { LoginSchema, UserCreateSchema } from 'validation';
 
 import argon2 from '@node-rs/argon2';
 
-import { UserModel } from '../models/userModel.js';
+import { prisma } from '../db/index.js';
 import { checkPassword } from '../utils/checkPassword.js';
 import {
   generateAccessToken,
@@ -23,8 +23,12 @@ export async function signupUser(req: Request, res: Response) {
     }
 
     // Check if user exists
-    const { email, username, password } = input.data;
-    const user = await UserModel.findOne({ $or: [{ email }, { username }] });
+    const { email, username, name, password } = input.data;
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { username }],
+      },
+    });
 
     if (user) {
       res.status(400).json({ message: 'User already exists' });
@@ -35,17 +39,19 @@ export async function signupUser(req: Request, res: Response) {
     const hashedPassword = await argon2.hash(password);
 
     // Create user
-    const newUser = await UserModel.create({
-      email,
-      username,
-      password: hashedPassword,
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        username,
+        name,
+        password: hashedPassword,
+      },
     });
 
-    generateTokenAndSetCookie(newUser._id, res);
+    generateTokenAndSetCookie(newUser.id, res);
 
     res.status(201).json({
-      accessToken: generateAccessToken(newUser._id),
-      message: 'User created successfully',
+      accessToken: generateAccessToken(newUser.id),
     });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
@@ -63,7 +69,10 @@ export async function loginUser(req: Request, res: Response) {
     }
 
     const { email, password } = input.data;
-    const user = await UserModel.findOne({ email }).select('+password');
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, password: true },
+    });
 
     // Check if password is correct
     const isPasswordCorrect = await checkPassword(user?.password, password);
@@ -74,10 +83,9 @@ export async function loginUser(req: Request, res: Response) {
     }
 
     // generate token and set cookie
-    generateTokenAndSetCookie(user._id, res);
+    generateTokenAndSetCookie(user.id, res);
     res.status(200).json({
-      accessToken: generateAccessToken(user._id),
-      message: 'Logged in successfully',
+      accessToken: generateAccessToken(user.id),
     });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
@@ -88,7 +96,7 @@ export async function loginUser(req: Request, res: Response) {
 export function logoutUser(_req: Request, res: Response) {
   try {
     res.clearCookie('refreshToken');
-    res.status(200).json({ message: 'Logged out successfully' });
+    res.status(204).send();
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in logoutUser:', error);

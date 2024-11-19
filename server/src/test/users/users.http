@@ -2,18 +2,21 @@
 GET {{api}}/users
 
 ### follow/unfollow user
-PUT {{api}}/users/follow/673536107029211c0f788f08
+PUT {{api}}/users/follow/2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTczMTk4MzA0MSwiZXhwIjoxNzMxOTgzOTQxfQ.xpIA5v10J2ADW5XwPe_i09X-FxQk5xLdGESuLWVklTI
 
 ### Test follow self
-PUT {{api}}/users/follow/6735360c7029211c0f788f05
+PUT {{api}}/users/follow/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTczMTk4MzA0MSwiZXhwIjoxNzMxOTgzOTQxfQ.xpIA5v10J2ADW5XwPe_i09X-FxQk5xLdGESuLWVklTI
 
 ### Update user
 PUT {{api}}/users/me/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTczMTk4MzA0MSwiZXhwIjoxNzMxOTgzOTQxfQ.xpIA5v10J2ADW5XwPe_i09X-FxQk5xLdGESuLWVklTI
 Content-Type: application/json
 
 {
-"name": "Kelly Smith 3"
+"name": "Kelly 1"
 }
 
 ### Get user profile by username
-GET {{api}}/users/kelliesmith
+GET {{api}}/users/kellysmith

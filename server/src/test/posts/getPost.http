@@ -1,0 +1,12 @@
+### Get feed posts(protected)
+GET {{api}}/posts/feed
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTczMTk4NjI2MSwiZXhwIjoxNzMxOTg3MTYxfQ.a8sIzGbJbc5e0kyR-GEwzo451o8uTKDE9wjiiHmtwoQ
+
+### Get hot posts
+GET {{api}}/posts/hot
+
+### get post/comment by id
+GET {{api}}/posts/1
+
+### get comments of a post (protected)
+GET {{api}}/posts/1/comments

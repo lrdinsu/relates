@@ -2,7 +2,6 @@ import express, { Router } from 'express';
 
 import {
   followUnfollowUser,
-  getAllUsers,
   getUserProfile,
   updateUser,
 } from '../controllers/userController.js';
@@ -14,5 +13,3 @@ export const userRouter: Router = express.Router();
 userRouter.put('/follow/:id', protectRoute, followUnfollowUser);
 userRouter.put('/me/profile', protectRoute, updateUser);
 userRouter.get('/:username', getUserProfile);
-
-userRouter.get('/', getAllUsers);

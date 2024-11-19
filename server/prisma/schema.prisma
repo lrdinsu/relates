@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["typedSql", "omitApi"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  username       String   @unique
+  email          String   @unique
+  name           String
+  password       String
+  role           Role     @default(USER)
+  active         Boolean  @default(true)
+  profilePic     String?
+  biography      String?
+  followingCount Int      @default(0)
+  followersCount Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  posts     Post[]
+  likes     Like[]
+  reposts   Repost[]
+  saves     Save[]
+  followers UserFollows[] @relation("Followers")
+  following UserFollows[] @relation("Following")
+}
+
+model UserFollows {
+  id          Int @id @default(autoincrement())
+  followerId  Int
+  followingId Int
+
+  follower  User @relation("Following", fields: [followerId], references: [id])
+  following User @relation("Followers", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+}
+
+model Post {
+  id            Int      @id @default(autoincrement())
+  postedById    Int
+  parentPostId  Int?
+  text          String?
+  images        String[]
+  likesCount    Int      @default(0)
+  commentsCount Int      @default(0)
+  repostsCount  Int      @default(0)
+  isDeleted     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  postedBy   User     @relation(fields: [postedById], references: [id])
+  parentPost Post?    @relation("ParentPost", fields: [parentPostId], references: [id])
+  childPosts Post[]   @relation("ParentPost")
+  likes      Like[]
+  reposts    Repost[]
+  saves      Save[]
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  postId    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+}
+
+model Repost {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  postId    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+}
+
+model Save {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  postId    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
