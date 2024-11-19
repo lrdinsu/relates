@@ -52,8 +52,8 @@ export const PostSchema = z.object({
   id: z.number().int(),
   postedById: z.number().int(),
   parentPostId: z.number().int().nullable(),
-  text: z.string().max(280).nullable(),
-  images: z.array(z.string().url()).nullable(),
+  text: z.string().max(280).optional(),
+  images: z.array(z.string().url()).optional(),
   likesCount: z.number().default(0),
   commentsCount: z.number().default(0),
   repostsCount: z.number().default(0),
@@ -65,20 +65,27 @@ export const PostSchema = z.object({
 export const PostCreateSchema = PostSchema.pick({
   text: true,
   images: true,
-  parentPostId: true,
-}).refine((data) => Boolean(data.text) || Boolean(data.images), {
-  message: "At least 'text' or 'images' must be provided.",
-  path: ['text', 'images'],
-});
+}).refine(
+  (data) =>
+    Boolean(data.text) || data.images === undefined || data.images.length > 0,
+  {
+    message: "At least 'text' or 'images' must be provided.",
+    path: ['text', 'images'],
+  },
+);
 
 export const PostUpdateSchema = PostSchema.partial()
   .pick({
     text: true,
     images: true,
   })
-  .refine((data) => Boolean(data.text) || Boolean(data.images), {
-    message: "At least 'text' or 'images' must be provided.",
-  });
+  .refine(
+    (data) =>
+      Boolean(data.text) || data.images === undefined || data.images.length > 0,
+    {
+      message: "At least 'text' or 'images' must be provided.",
+    },
+  );
 
 // User Follows Schema
 export const UserFollowsSchema = z.object({

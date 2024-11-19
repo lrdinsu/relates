@@ -8,7 +8,7 @@ export async function deletePostById(
   res: Response,
 ): Promise<void> {
   try {
-    const params = PostParamsSchema.safeParse(req.params.postId);
+    const params = PostParamsSchema.safeParse(req.params);
     if (!params.success) {
       res.status(400).json({ message: 'Invalid post params' });
       return;
@@ -43,7 +43,7 @@ export async function deletePostById(
 
 export async function likeUnlikePost(req: Request, res: Response) {
   try {
-    const params = PostParamsSchema.safeParse(req.params.postId);
+    const params = PostParamsSchema.safeParse(req.params);
     if (!params.success) {
       res.status(400).json({ message: 'Invalid post params' });
       return;
@@ -104,7 +104,7 @@ export async function likeUnlikePost(req: Request, res: Response) {
 
 export async function saveUnsavePost(req: Request, res: Response) {
   try {
-    const params = PostParamsSchema.safeParse(req.params.postId);
+    const params = PostParamsSchema.safeParse(req.params);
     if (!params.success) {
       res.status(400).json({ message: 'Invalid post params' });
       return;
@@ -157,7 +157,7 @@ export async function saveUnsavePost(req: Request, res: Response) {
 
 export async function repostUnrepost(req: Request, res: Response) {
   try {
-    const params = PostParamsSchema.safeParse(req.params.postId);
+    const params = PostParamsSchema.safeParse(req.params);
     if (!params.success) {
       res.status(400).json({ message: 'Invalid post params' });
       return;
@@ -208,6 +208,7 @@ export async function repostUnrepost(req: Request, res: Response) {
         data: { repostsCount: { increment: 1 } },
       });
     }
+    res.status(204).send();
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in repost post:', error);

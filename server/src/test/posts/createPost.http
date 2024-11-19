@@ -1,0 +1,27 @@
+### Create post (protected)
+POST {{api}}/posts
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTczMTk4NjI2MSwiZXhwIjoxNzMxOTg3MTYxfQ.a8sIzGbJbc5e0kyR-GEwzo451o8uTKDE9wjiiHmtwoQ
+
+{
+  "text": "kelly 2 post",
+  "images": ["https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png"]
+}
+
+### Create post2 (protected)
+POST {{api}}/posts
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTczMTk4NTUyMiwiZXhwIjoxNzMxOTg2NDIyfQ.xyPwhGK4XX6aGrzFU6zXj0d61M96ty7UeVIP8wBP4TI
+Content-Type: application/json
+
+{
+    "text": "This is a post2"
+}
+
+### Create Comment (protected)
+POST {{api}}/posts/5
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTczMTk4NjI2MSwiZXhwIjoxNzMxOTg3MTYxfQ.a8sIzGbJbc5e0kyR-GEwzo451o8uTKDE9wjiiHmtwoQ
+Content-Type: application/json
+
+{
+    "text": "comment for kelly 2"
+}

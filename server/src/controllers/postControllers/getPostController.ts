@@ -21,11 +21,10 @@ export async function getFeedPosts(req: Request, res: Response) {
 
     // Use raw SQL query with cursor-based pagination
     const posts = await prisma.$queryRawTyped(
-      selectFeedPosts(currentUserId, cursor, limit),
+      selectFeedPosts(currentUserId, cursor ?? 0, limit),
     );
 
-    const nextCursor =
-      posts.length > 0 ? posts[posts.length - 1]?.id : undefined;
+    const nextCursor = posts.length > 0 ? posts[posts.length - 1]?.id : null;
 
     res.status(200).json({ posts, nextCursor });
   } catch (error) {
@@ -45,13 +44,16 @@ export async function getHotPosts(req: Request, res: Response) {
     const { cursor, limit } = input.data;
 
     const posts = await prisma.post.findMany({
-      orderBy: { likesCount: 'desc', commentsCount: 'desc', createdAt: 'desc' },
+      orderBy: [
+        { likesCount: 'desc' },
+        { commentsCount: 'desc' },
+        { createdAt: 'desc' },
+      ],
       take: limit,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { id: cursor } : undefined,
     });
-    const nextCursor =
-      posts.length > 0 ? posts[posts.length - 1].id : undefined;
+    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
 
     res.status(200).json({ posts, nextCursor });
   } catch (error) {
@@ -112,7 +114,7 @@ export async function getPostById(req: Request, res: Response): Promise<void> {
     });
 
     const nextCursor =
-      comments.length > 0 ? comments[comments.length - 1].id : undefined;
+      comments.length > 0 ? comments[comments.length - 1].id : null;
 
     res.status(200).json({ post, comments, nextCursor });
   } catch (error) {
@@ -130,7 +132,7 @@ export async function getPostComments(req: Request, res: Response) {
     }
     const { cursor, limit } = input.data;
 
-    const params = PostParamsSchema.safeParse(req.params.postId);
+    const params = PostParamsSchema.safeParse(req.params);
     if (!params.success) {
       res.status(400).json({ message: 'Invalid post params' });
       return;
@@ -155,7 +157,7 @@ export async function getPostComments(req: Request, res: Response) {
     });
 
     const nextCursor =
-      comments.length > 0 ? comments[comments.length - 1].id : undefined;
+      comments.length > 0 ? comments[comments.length - 1].id : null;
     res.status(200).json({ comments, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });

@@ -20,7 +20,7 @@ export const postRouter: Router = express.Router();
 // posts
 postRouter.get('/feed', protectRoute, getFeedPosts);
 postRouter.get('/hot', getHotPosts);
-postRouter.get('/:postId/comments', protectRoute, getPostComments);
+postRouter.get('/:postId/comments', getPostComments);
 postRouter.get('/:postId', getPostById);
 
 postRouter.delete('/:postId', protectRoute, deletePostById);

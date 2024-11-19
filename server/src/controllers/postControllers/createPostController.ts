@@ -22,7 +22,7 @@ export async function createPost(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const parentPostId = params.data.postId;
+    const parentPostId = params.data.parentPostId;
 
     // If it's a comment, verify that the parent post exists and increment `commentsCount`
     if (parentPostId) {
