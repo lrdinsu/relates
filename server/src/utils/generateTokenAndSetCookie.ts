@@ -13,7 +13,7 @@ export function generateTokenAndSetCookie(userId: number, res: Response) {
     httpOnly: true, // client-side JS cannot access the cookie
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     sameSite: 'strict', // CSRF
-    path: '/api/v1/auth/refresh_token',
+    path: '/api/v1/auth/refresh-token',
   });
 
   return token;

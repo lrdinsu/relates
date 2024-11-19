@@ -5,7 +5,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhd
 
 {
   "text": "kelly 2 post",
-  "images": ["https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png"]
+  "images": ["https://i.imgur.com/aLjEaou.png"]
 }
 
 ### Create post2 (protected)
