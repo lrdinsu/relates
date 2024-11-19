@@ -1,16 +1,18 @@
 import express, { Router } from 'express';
 
+import { createPost } from '../controllers/postControllers/createPostController.js';
 import {
-  createPost,
-  deletePostById,
   getFeedPosts,
   getHotPosts,
   getPostById,
   getPostComments,
+} from '../controllers/postControllers/getPostController.js';
+import {
+  deletePostById,
   likeUnlikePost,
   repostUnrepost,
   saveUnsavePost,
-} from '../controllers/postController.js';
+} from '../controllers/postControllers/updatePostController.js';
 import { protectRoute } from '../middlewares/protectRoute.js';
 
 export const postRouter: Router = express.Router();
