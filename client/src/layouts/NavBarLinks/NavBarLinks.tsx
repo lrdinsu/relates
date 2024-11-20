@@ -9,9 +9,10 @@ export function NavBarLinks() {
   return actions.map((link, index) => (
     <NavBarLink
       {...link}
-      key={link.label}
+      key={link.path}
       active={index === active}
       onClick={() => setActive(index)}
+      needAuth={link.needAuth}
     />
   ));
 }

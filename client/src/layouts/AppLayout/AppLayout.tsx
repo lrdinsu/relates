@@ -18,6 +18,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <AppShell
       layout="alt"
       padding="md"
+      header={{ height: 60 }}
       transitionDuration={500}
       transitionTimingFunction="ease"
     >

@@ -9,8 +9,8 @@ import {
 } from '@mantine/core';
 import { IconLogout, IconSun } from '@tabler/icons-react';
 
-import { NavBarLink } from '../NavBarLinks/NavBarLink.tsx';
 import { NavBarLinks } from '../NavBarLinks/NavBarLinks.tsx';
+import { NavBarButtons } from './NavBarButtons.tsx';
 
 export function NavBar() {
   const { setColorScheme } = useMantineColorScheme();
@@ -34,13 +34,9 @@ export function NavBar() {
         <NavBarLinks />
       </Stack>
       <Stack justify="center" gap={0}>
-        <NavBarLink icon={IconSun} label="theme" onClick={toggleColorScheme} />
+        <NavBarButtons icon={IconSun} onClick={toggleColorScheme} />
         {isAuthenticated && (
-          <NavBarLink
-            icon={IconLogout}
-            label="Log out"
-            onClick={handleLogout}
-          />
+          <NavBarButtons icon={IconLogout} onClick={handleLogout} />
         )}
       </Stack>
     </>

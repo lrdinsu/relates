@@ -9,6 +9,10 @@
   border-radius: var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0;
   box-shadow: var(--mantine-shadow-lg);
   margin-top: 60px;
+  padding: var(--mantine-spacing-md);
+  @media (max-width: 48em) {
+    border-radius: 0;
+  }
 }
 
 .navbar {
@@ -19,9 +23,6 @@
 
 /*responsive design*/
 @media (max-width: 48em) {
-  .main {
-    border-radius: 0;
-  }
   .container {
     padding: 0;
     max-width: none;

@@ -19,7 +19,6 @@ import {
 } from '@mantine/core';
 
 import { useLoginMutation } from '../../hooks/useLoginMutation.ts';
-import classes from './Login.module.css';
 
 export function Login() {
   const navigate = useNavigate();
@@ -39,10 +38,10 @@ export function Login() {
 
   return (
     <>
-      <Title ta="center" className={classes.title}>
+      <Title ta="center" p={15} size="h1">
         Welcome To Relates!
       </Title>
-      <Text c="dimmed" size="sm" ta="center" mt={5}>
+      <Text c="dimmed" size="sm" ta="center">
         Do not have an account yet?{' '}
         <Anchor
           size="sm"
@@ -86,12 +85,7 @@ export function Login() {
                 Forgot password?
               </Anchor>
             </Group>
-            <Button
-              fullWidth
-              mt="xl"
-              type="submit"
-              loading={mutation.isPending}
-            >
+            <Button fullWidth mt="xl" type="submit">
               Sign in
             </Button>
           </form>

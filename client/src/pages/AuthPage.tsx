@@ -4,9 +4,11 @@ import { Container } from '@mantine/core';
 
 function AuthPage() {
   return (
-    <Container size={420} my={40}>
-      <Outlet />
-    </Container>
+    <>
+      <Container size={420}>
+        <Outlet />
+      </Container>
+    </>
   );
 }
 
