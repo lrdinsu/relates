@@ -26,7 +26,7 @@ export function BackButton() {
   return (
     showButton && (
       <ActionIcon onClick={handleBack} className={classes.backButton}>
-        <IconArrowLeft />
+        <IconArrowLeft size={20} />
       </ActionIcon>
     )
   );

@@ -1,5 +1,6 @@
 import { Logo } from '@/components/Logo/Logo.tsx';
 import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation.ts';
+import { useAuthStore } from '@/stores/authStore.ts';
 import {
   Center,
   Stack,
@@ -14,6 +15,8 @@ import { NavBarLinks } from '../NavBarLinks/NavBarLinks.tsx';
 export function NavBar() {
   const { setColorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme('dark');
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   const toggleColorScheme = () => {
     setColorScheme(computedColorScheme === 'dark' ? 'light' : 'dark');
   };
@@ -32,7 +35,13 @@ export function NavBar() {
       </Stack>
       <Stack justify="center" gap={0}>
         <NavBarLink icon={IconSun} label="theme" onClick={toggleColorScheme} />
-        <NavBarLink icon={IconLogout} label="Log out" onClick={handleLogout} />
+        {isAuthenticated && (
+          <NavBarLink
+            icon={IconLogout}
+            label="Log out"
+            onClick={handleLogout}
+          />
+        )}
       </Stack>
     </>
   );

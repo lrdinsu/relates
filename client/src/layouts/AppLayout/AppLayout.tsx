@@ -1,4 +1,5 @@
 import { LoginButton } from '@/components/LoginButton/LoginButton.tsx';
+import { useAuthStore } from '@/stores/authStore.ts';
 import { AppShell, Container } from '@mantine/core';
 
 import { Footer } from '../Footer/Footer.tsx';
@@ -11,7 +12,7 @@ type AppLayoutProps = {
 };
 
 export function AppLayout({ children }: AppLayoutProps) {
-  // const [opened, { toggle }] = useDisclosure();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   return (
     <AppShell
@@ -21,14 +22,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       transitionTimingFunction="ease"
     >
       <AppShell.Header className={classes.header} withBorder={false}>
-        {/*<Group h="100%" px="md">*/}
-        {/*  <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />*/}
-        {/*  <Text>Home</Text>*/}
-        {/*  <Text>Log in</Text>*/}
-        {/*</Group>*/}
         <Header />
       </AppShell.Header>
-      <LoginButton />
+      {!isAuthenticated && <LoginButton />}
       <AppShell.Navbar
         p="md"
         visibleFrom="sm"

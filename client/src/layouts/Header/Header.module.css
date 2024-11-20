@@ -1,3 +1,13 @@
 .header {
   position: relative;
 }
+
+.dropdownIcon {
+  background-color: var(--main-bg-color);
+  color: var(--text-color);
+}
+
+.burger {
+  position: absolute;
+  right: 24px;
+}
