@@ -1,7 +1,28 @@
+:root {
+  --bg-color-light: #fafafa;
+  --bg-color-dark: #0a0a0a;
+  --text-color-light: var(--mantine-color-gray-9);
+  --text-color-dark: var(--mantine-color-gray-0);
+  --main-bg-color-light: #fff;
+  --main-bg-color-dark: #181818;
+}
+
+[data-mantine-color-scheme='light'] {
+  --bg-color: var(--bg-color-light);
+  --text-color: var(--text-color-light);
+  --main-bg-color: var(--main-bg-color-light);
+}
+
+[data-mantine-color-scheme='dark'] {
+  --bg-color: var(--bg-color-dark);
+  --text-color: var(--text-color-dark);
+  --main-bg-color: var(--main-bg-color-dark);
+}
+
 body {
-  background-color: light-dark(
-    var(--mantine-color-white),
-    var(--mantine-color-dark-9)
-  );
-  color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-gray-0));
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  @media (max-width: 48em) {
+    background-color: var(--main-bg-color);
+  }
 }

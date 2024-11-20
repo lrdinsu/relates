@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-import { AppLayout } from '@/components/AppLayout/AppLayout.tsx';
 import { ForgotPassword } from '@/features/auth/components/ForgetPassword/ForgotPassword.tsx';
 import { Login } from '@/features/auth/components/Login/Login.tsx';
 import { Signup } from '@/features/auth/components/Signup/Signup.tsx';
@@ -13,6 +12,8 @@ import PostPage from '@/pages/PostPage.tsx';
 import UserPage from '@/pages/UserPage.tsx';
 import { useAuthStore } from '@/stores/authStore.ts';
 import { Loader } from '@mantine/core';
+
+import { AppLayout } from './layouts/AppLayout/AppLayout.tsx';
 
 function App() {
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
