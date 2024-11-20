@@ -1,3 +1,4 @@
+import { LoginButton } from '@/components/LoginButton/LoginButton.tsx';
 import { AppShell, Container } from '@mantine/core';
 
 import { Footer } from '../Footer/Footer.tsx';
@@ -27,6 +28,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/*</Group>*/}
         <Header />
       </AppShell.Header>
+      <LoginButton />
       <AppShell.Navbar
         p="md"
         visibleFrom="sm"

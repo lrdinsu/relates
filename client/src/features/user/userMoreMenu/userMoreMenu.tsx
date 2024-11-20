@@ -12,7 +12,7 @@ import {
 
 import styles from '../userHeader/UserHeader.module.css';
 
-export function UseMoreMenu() {
+export function UserMoreMenu() {
   async function copyURL() {
     const currentURL = window.location.href;
     try {

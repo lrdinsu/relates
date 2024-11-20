@@ -1,7 +1,7 @@
 import { BackButton } from '@/components/BackButton/BackButton.tsx';
 import { Flex, UnstyledButton } from '@mantine/core';
 
-import classes from './HeaderDesktop.module.css';
+import classes from './Header.module.css';
 
 export function HeaderDesktop() {
   return (
