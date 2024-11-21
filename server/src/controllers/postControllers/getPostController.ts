@@ -231,9 +231,8 @@ export async function getPostById(req: Request, res: Response): Promise<void> {
       res.status(400).json({ message: 'Invalid query params' });
       return;
     }
-    const { cursor, limit } = input.data;
 
-    const params = PostParamsSchema.safeParse(req.params.postId);
+    const params = PostParamsSchema.safeParse(req.params);
     if (!params.success) {
       res.status(400).json({ message: 'Invalid post params' });
       return;
@@ -257,28 +256,7 @@ export async function getPostById(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // get children posts for this post
-    const comments = await prisma.post.findMany({
-      where: { parentPostId: postId },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            username: true,
-            profilePic: true,
-          },
-        },
-      },
-    });
-
-    const nextCursor =
-      comments.length > 0 ? comments[comments.length - 1].id : null;
-
-    res.status(200).json({ post, comments, nextCursor });
+    res.status(200).json({ post });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get post by id:', error);

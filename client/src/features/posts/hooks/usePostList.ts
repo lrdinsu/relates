@@ -10,7 +10,7 @@ type PostsResponse = {
   nextCursor: number | null;
 };
 
-type Post = PostType & {
+export type Post = PostType & {
   postedBy: {
     id: number;
     username: string;
