@@ -10,7 +10,7 @@ import {
   IconMessage2,
 } from '@tabler/icons-react';
 
-import styles from '../userHeader/UserHeader.module.css';
+import classes from '../userHeader/UserHeader.module.css';
 
 export function UserMoreMenu() {
   async function copyURL() {
@@ -29,7 +29,7 @@ export function UserMoreMenu() {
   return (
     <Menu>
       <Menu.Target>
-        <Box className={styles.iconContainer}>
+        <Box className={classes.iconContainer}>
           <IconDotsCircleHorizontal size={24} cursor="pointer" />
         </Box>
       </Menu.Target>

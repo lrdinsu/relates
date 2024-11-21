@@ -1,6 +1,7 @@
 import { BackButton } from '@/components/BackButton/BackButton.tsx';
 import { DropdownMenu } from '@/components/DropdownMenu/DropdownMenu.tsx';
 import { useAuthStore } from '@/stores/authStore.ts';
+import { useTitleStore } from '@/stores/titleStore.ts';
 import { ActionIcon, Flex, UnstyledButton } from '@mantine/core';
 import { IconArrowDown } from '@tabler/icons-react';
 
@@ -8,6 +9,7 @@ import classes from './Header.module.css';
 
 export function HeaderDesktop() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const title = useTitleStore((state) => state.title);
 
   return (
     <Flex
@@ -18,7 +20,7 @@ export function HeaderDesktop() {
       className={classes.header}
     >
       <BackButton />
-      <UnstyledButton>Home</UnstyledButton>
+      <UnstyledButton>{title}</UnstyledButton>
       {isAuthenticated && (
         <DropdownMenu
           target={

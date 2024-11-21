@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
 import { useAuthStore } from '@/stores/authStore.ts';
+import { useTitleStore } from '@/stores/titleStore.ts';
 import { UnstyledButton, rem } from '@mantine/core';
 import { IconHome } from '@tabler/icons-react';
 
@@ -23,6 +24,7 @@ export function NavBarLink({
 }: NavbarLinkProps) {
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const setTitle = useTitleStore((state) => state.setTitle);
 
   const handleClick = () => {
     onClick();
@@ -32,6 +34,9 @@ export function NavBarLink({
     } else {
       if (path) {
         navigate(path);
+        if (path !== '/') {
+          setTitle(path[1].toUpperCase() + path.slice(2));
+        }
       }
     }
   };

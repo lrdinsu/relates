@@ -1,6 +1,6 @@
-import { Flex } from '@mantine/core';
+import { Stack } from '@mantine/core';
 
-import styles from './PostMain.module.css';
+import classes from './PostMain.module.css';
 
 type PostMainProps = {
   children: React.ReactNode;
@@ -9,8 +9,8 @@ type PostMainProps = {
 
 export function PostMain({ children, gap = 8 }: PostMainProps) {
   return (
-    <Flex direction="column" gap={gap} className={styles.postMain}>
+    <Stack gap={gap} className={classes.postMain}>
       {children}
-    </Flex>
+    </Stack>
   );
 }

@@ -83,7 +83,9 @@ function App() {
 
           {/* User Pages */}
           {/*<Route path="/:username" element={<UserPage />} />*/}
-          <Route path="/:username/post/:pid" element={<PostPage />} />
+          {/*<Route path="/:username/posts/:pid" element={<PostPage />} />*/}
+
+          <Route path="/posts/:pid" element={<PostPage />} />
 
           {/* 404 Page */}
           <Route path="*" element={<NotFoundPage />} />

@@ -6,8 +6,16 @@ import { useAuthStore } from '@/stores/authStore.ts';
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 type PostsResponse = {
-  posts: PostType[];
+  posts: Post[];
   nextCursor: number | null;
+};
+
+type Post = PostType & {
+  postedBy: {
+    id: number;
+    username: string;
+    profilePic: string | null;
+  };
 };
 
 export function usePostsList() {

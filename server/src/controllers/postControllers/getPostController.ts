@@ -22,6 +22,15 @@ export async function getHotPosts(req: Request, res: Response) {
         { commentsCount: 'desc' },
         { createdAt: 'desc' },
       ],
+      include: {
+        postedBy: {
+          select: {
+            id: true,
+            username: true,
+            profilePic: true,
+          },
+        },
+      },
       take: limit,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { id: cursor } : undefined,

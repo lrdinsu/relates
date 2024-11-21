@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
+import { useTitleStore } from '@/stores/titleStore.ts';
 import { Menu } from '@mantine/core';
 
 import classes from './DropdownMenu.module.css';
@@ -16,6 +17,7 @@ export function DropdownMenu({
   itemsAfterDivider,
 }: DropDownMenuProps) {
   const navigate = useNavigate();
+  const setTitle = useTitleStore((state) => state.setTitle);
 
   return (
     <Menu
@@ -24,7 +26,6 @@ export function DropdownMenu({
       transitionProps={{ transition: 'fade-down', duration: 200 }}
       openDelay={200}
       closeDelay={200}
-      trigger="click-hover"
     >
       <Menu.Target>{target}</Menu.Target>
 
@@ -34,7 +35,10 @@ export function DropdownMenu({
             className={classes.dropdownItem}
             key={item.name}
             color={item.color}
-            onClick={() => navigate(item.path, { replace: true })}
+            onClick={() => {
+              navigate(item.path, { replace: true });
+              setTitle(item.name);
+            }}
           >
             {item.name}
           </Menu.Item>

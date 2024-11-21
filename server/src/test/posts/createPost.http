@@ -1,11 +1,10 @@
 ### Create post (protected)
 POST {{api}}/posts
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTczMTk4NjI2MSwiZXhwIjoxNzMxOTg3MTYxfQ.a8sIzGbJbc5e0kyR-GEwzo451o8uTKDE9wjiiHmtwoQ
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsImlhdCI6MTczMjE3MDI1NCwiZXhwIjoxNzMyMTcxMTU0fQ.aq0Ve30MFgbJLq7modnzIhRTzRcPESXDuR8FdV-1hMY
 
 {
-  "text": "kelly 2 post",
-  "images": ["https://i.imgur.com/aLjEaou.png"]
+  "text": "bark bark bark"
 }
 
 ### Create post2 (protected)

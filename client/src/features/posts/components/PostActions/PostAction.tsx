@@ -23,7 +23,7 @@ export function PostAction({ children, color, onClick }: PostActionProps) {
         w={32}
         h={32}
         variant="subtle"
-        color={hovered ? color : 'gray.6'}
+        color={hovered ? color : 'gray.7'}
       >
         {children}
       </ActionIcon>
