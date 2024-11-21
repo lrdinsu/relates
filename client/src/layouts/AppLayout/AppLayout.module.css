@@ -9,7 +9,9 @@
   border-radius: var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0;
   box-shadow: var(--mantine-shadow-lg);
   margin-top: 60px;
-  padding: var(--mantine-spacing-md);
+  padding-bottom: 0;
+  min-height: calc(100vh - 60px);
+
   @media (max-width: 48em) {
     border-radius: 0;
   }
@@ -21,10 +23,10 @@
   width: rem(80px);
 }
 
-/*responsive design*/
-@media (max-width: 48em) {
-  .container {
-    padding: 0;
+.container {
+  padding: 0;
+
+  @media (max-width: 48em) {
     max-width: none;
   }
 }

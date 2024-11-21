@@ -1,4 +1,4 @@
-import { PostItem } from '@/features/posts/PostItem/PostItem.tsx';
+import { PostItem } from '@/features/posts/components/PostItem/PostItem.tsx';
 import { UserHeader } from '@/features/user/userHeader/UserHeader.tsx';
 
 function UserPage() {

@@ -1,19 +1,18 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
 
-import { PostList } from '@/features/posts/PostList/PostList.tsx';
-import { Button, Flex } from '@mantine/core';
+import { PostList } from '@/features/posts/components/PostList/PostList.tsx';
+import { useAuthStore } from '@/stores/authStore.ts';
+import { useTitleStore } from '@/stores/titleStore.ts';
 
 function HomePage() {
-  return (
-    <>
-      <Link to={'/kelliesmith'}>
-        <Flex w={'100%'} align={'center'} justify={'center'}>
-          <Button mx={'auto'}>Visit Profile Page</Button>
-        </Flex>
-      </Link>
-      <PostList />
-    </>
-  );
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const setTitle = useTitleStore((state) => state.setTitle);
+
+  useEffect(() => {
+    setTitle(isAuthenticated ? 'For you' : 'Home');
+  }, [setTitle, isAuthenticated]);
+
+  return <PostList />;
 }
 
 export default HomePage;

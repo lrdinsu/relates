@@ -1,5 +1,5 @@
-### Get feed posts(protected)
-GET {{api}}/posts/feed
+### Get following posts(protected)
+GET {{api}}/posts/following
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTczMTk4NjI2MSwiZXhwIjoxNzMxOTg3MTYxfQ.a8sIzGbJbc5e0kyR-GEwzo451o8uTKDE9wjiiHmtwoQ
 
 ### Get hot posts

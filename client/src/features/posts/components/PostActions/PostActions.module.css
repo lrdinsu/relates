@@ -2,3 +2,8 @@
   fill: var(--mantine-color-red-5);
   stroke: var(--mantine-color-red-5);
 }
+
+.count {
+  margin-bottom: 4px;
+  color: var(--mantine-color-gray-7);
+}

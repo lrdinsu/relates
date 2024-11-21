@@ -1,11 +1,14 @@
+import { useNavigate } from 'react-router-dom';
+
+import { useTitleStore } from '@/stores/titleStore.ts';
 import { Menu } from '@mantine/core';
 
 import classes from './DropdownMenu.module.css';
 
 type DropDownMenuProps = {
   target: React.ReactNode;
-  itemsBeforeDivider: { name: string; color?: string }[];
-  itemsAfterDivider: { name: string; color?: string }[];
+  itemsBeforeDivider: { name: string; color?: string; path: string }[];
+  itemsAfterDivider: { name: string; color?: string; onClick: () => void }[];
 };
 
 export function DropdownMenu({
@@ -13,6 +16,9 @@ export function DropdownMenu({
   itemsBeforeDivider,
   itemsAfterDivider,
 }: DropDownMenuProps) {
+  const navigate = useNavigate();
+  const setTitle = useTitleStore((state) => state.setTitle);
+
   return (
     <Menu
       shadow="md"
@@ -20,7 +26,6 @@ export function DropdownMenu({
       transitionProps={{ transition: 'fade-down', duration: 200 }}
       openDelay={200}
       closeDelay={200}
-      trigger="click-hover"
     >
       <Menu.Target>{target}</Menu.Target>
 
@@ -30,6 +35,10 @@ export function DropdownMenu({
             className={classes.dropdownItem}
             key={item.name}
             color={item.color}
+            onClick={() => {
+              navigate(item.path, { replace: true });
+              setTitle(item.name);
+            }}
           >
             {item.name}
           </Menu.Item>
@@ -42,6 +51,7 @@ export function DropdownMenu({
             className={classes.dropdownItem}
             key={item.name}
             color={item.color}
+            onClick={item.onClick}
           >
             {item.name}
           </Menu.Item>

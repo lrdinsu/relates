@@ -2,7 +2,7 @@ import { Anchor, Avatar, Box, Flex, Stack, Tabs, Text } from '@mantine/core';
 import { IconCamera } from '@tabler/icons-react';
 
 import { UserMoreMenu } from '../userMoreMenu/userMoreMenu.tsx';
-import styles from './UserHeader.module.css';
+import classes from './UserHeader.module.css';
 
 export function UserHeader() {
   return (
@@ -14,7 +14,7 @@ export function UserHeader() {
           </Text>
           <Flex gap={8} align="center">
             <Text size="sm">kelliesmith</Text>
-            <Text size="xs" p={4} className={styles.net}>
+            <Text size="xs" p={4} className={classes.net}>
               relates.net
             </Text>
           </Flex>
@@ -45,7 +45,7 @@ export function UserHeader() {
         </Flex>
 
         <Flex>
-          <Box className={styles.iconContainer}>
+          <Box className={classes.iconContainer}>
             <IconCamera size={24} cursor="pointer" />
           </Box>
           <UserMoreMenu />
@@ -54,12 +54,12 @@ export function UserHeader() {
 
       <Tabs defaultValue="posts" w="100%">
         <Tabs.List>
-          <Tabs.Tab value="posts" className={styles.tab} py={12} fw="600">
+          <Tabs.Tab value="posts" className={classes.tab} py={12} fw="600">
             Posts
           </Tabs.Tab>
           <Tabs.Tab
             value="replies"
-            className={styles.tab}
+            className={classes.tab}
             py={12}
             fw="600"
             c="gray.6"

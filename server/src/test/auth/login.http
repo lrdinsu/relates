@@ -16,13 +16,13 @@ Content-Type: application/json
 "password": "12345678"
 }
 
-### login with wrong password
-POST {{api}}/login
+### login with user3
+POST {{api}}/auth/login
 Content-Type: application/json
 
 {
-"username": "kellysmith",
-"password": "1234567"
+"email": "dog@email.com",
+"password": "12345678"
 }
 
 ### refresh token
