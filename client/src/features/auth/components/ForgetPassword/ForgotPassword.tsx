@@ -7,8 +7,6 @@ import { showNotificationSuccess } from '@/utils/showNotifications.tsx';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Anchor, Button, Paper, Text, TextInput, Title } from '@mantine/core';
 
-import classes from './ForgotPassword.module.css';
-
 export function ForgotPassword() {
   const navigate = useNavigate();
 
@@ -28,7 +26,7 @@ export function ForgotPassword() {
   };
   return (
     <>
-      <Title ta="center" className={classes.title}>
+      <Title ta="center" size="h1" p={15}>
         Reset Your Password
       </Title>
       <Text c="dimmed" size="sm" ta="center" mt={5}>

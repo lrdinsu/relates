@@ -16,7 +16,7 @@ export const useSignupMutation = () => {
     },
     onSuccess: ({ accessToken }) => {
       setAccessToken(accessToken);
-      navigate(-1);
+      navigate('/');
     },
   });
 };

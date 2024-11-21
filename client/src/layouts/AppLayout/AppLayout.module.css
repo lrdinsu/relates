@@ -1,0 +1,30 @@
+.header {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.main {
+  background-color: var(--main-bg-color);
+  color: var(--text-color);
+  border-radius: var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0;
+  box-shadow: var(--mantine-shadow-lg);
+  margin-top: 60px;
+  padding: var(--mantine-spacing-md);
+  @media (max-width: 48em) {
+    border-radius: 0;
+  }
+}
+
+.navbar {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  width: rem(80px);
+}
+
+/*responsive design*/
+@media (max-width: 48em) {
+  .container {
+    padding: 0;
+    max-width: none;
+  }
+}

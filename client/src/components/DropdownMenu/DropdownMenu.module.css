@@ -1,0 +1,8 @@
+.dropdown {
+  border-radius: var(--mantine-radius-md);
+  padding: 8px;
+}
+
+.dropdownItem:hover {
+  border-radius: var(--mantine-radius-md);
+}

@@ -18,7 +18,6 @@ import {
 } from '@mantine/core';
 
 import { useSignupMutation } from '../../hooks/useSignupMutation.ts';
-import classes from './Signup.module.css';
 
 export function Signup() {
   const navigate = useNavigate();
@@ -38,13 +37,13 @@ export function Signup() {
 
   return (
     <>
-      <Title ta="center" className={classes.title}>
+      <Title ta="center" size="h1" p={15}>
         Create Your Account
       </Title>
-      <Text c="dimmed" size="sm" ta="center" mt={5}>
+      <Text c="dimmed" size="sm" ta="center">
         Already have an account?{' '}
         <Anchor size="sm" component="button" onClick={() => navigate('/login')}>
-          Sign in
+          Log in
         </Anchor>
       </Text>
 
@@ -62,6 +61,13 @@ export function Signup() {
               placeholder="your username"
               {...register('username')}
               error={errors.username?.message}
+            />
+            <TextInput
+              label="name"
+              placeholder="your name"
+              mt="md"
+              {...register('name')}
+              error={errors.name?.message}
             />
             <TextInput
               label="Email"
@@ -84,12 +90,7 @@ export function Signup() {
               {...register('confirmPassword')}
               error={errors.confirmPassword?.message}
             />
-            <Button
-              type="submit"
-              fullWidth
-              mt="xl"
-              loading={mutation.isPending}
-            >
+            <Button type="submit" fullWidth mt="xl">
               Sign up
             </Button>
           </form>

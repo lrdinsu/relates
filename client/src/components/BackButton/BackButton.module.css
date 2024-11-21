@@ -1,0 +1,7 @@
+.backButton {
+  position: absolute;
+  left: 1rem;
+  border-radius: 50%;
+  background-color: var(--main-bg-color);
+  color: var(--text-color);
+}

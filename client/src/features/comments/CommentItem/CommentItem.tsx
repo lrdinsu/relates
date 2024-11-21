@@ -26,6 +26,7 @@ export function CommentItem({
 
   return (
     <>
+      <Divider mt={16} mx={-16} />
       <Flex gap={16} py={8} w="100%">
         <Avatar size="sm" src={userAvatar} alt={userName}>
           {userName.slice(0, 2).toUpperCase()}
@@ -39,7 +40,6 @@ export function CommentItem({
           </Text>
         </PostMain>
       </Flex>
-      <Divider my={16} />
     </>
   );
 }

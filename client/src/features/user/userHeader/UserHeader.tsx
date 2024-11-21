@@ -1,7 +1,7 @@
 import { Anchor, Avatar, Box, Flex, Stack, Tabs, Text } from '@mantine/core';
 import { IconCamera } from '@tabler/icons-react';
 
-import { UseMoreMenu } from '../userMoreMenu/useMoreMenu.tsx';
+import { UserMoreMenu } from '../userMoreMenu/userMoreMenu.tsx';
 import styles from './UserHeader.module.css';
 
 export function UserHeader() {
@@ -48,7 +48,7 @@ export function UserHeader() {
           <Box className={styles.iconContainer}>
             <IconCamera size={24} cursor="pointer" />
           </Box>
-          <UseMoreMenu />
+          <UserMoreMenu />
         </Flex>
       </Flex>
 
