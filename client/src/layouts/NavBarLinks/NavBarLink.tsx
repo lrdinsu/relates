@@ -28,7 +28,7 @@ export function NavBarLink({
     onClick();
 
     if (needAuth && !isAuthenticated) {
-      navigate('/login');
+      navigate('/login', { replace: true });
     } else {
       if (path) {
         navigate(path);

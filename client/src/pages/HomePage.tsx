@@ -1,19 +1,7 @@
-import { Link } from 'react-router-dom';
-
-import { PostList } from '@/features/posts/PostList/PostList.tsx';
-import { Button, Flex } from '@mantine/core';
+import { PostList } from '@/features/posts/components/PostList/PostList.tsx';
 
 function HomePage() {
-  return (
-    <>
-      <Link to={'/kelliesmith'}>
-        <Flex w={'100%'} align={'center'} justify={'center'}>
-          <Button mx={'auto'}>Visit Profile Page</Button>
-        </Flex>
-      </Link>
-      <PostList />
-    </>
-  );
+  return <PostList />;
 }
 
 export default HomePage;

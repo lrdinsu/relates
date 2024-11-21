@@ -27,12 +27,19 @@ export function HeaderDesktop() {
             </ActionIcon>
           }
           itemsBeforeDivider={[
-            { name: 'For you' },
-            { name: 'Following' },
-            { name: 'Liked' },
-            { name: 'Saved' },
+            { name: 'For you', path: '/for-you' },
+            { name: 'Following', path: '/following' },
+            { name: 'Liked', path: '/liked' },
+            { name: 'Saved', path: '/saved' },
           ]}
-          itemsAfterDivider={[{ name: 'Create new post' }]}
+          itemsAfterDivider={[
+            {
+              name: 'Create new post',
+              onClick: () => {
+                /*TODO*/
+              },
+            },
+          ]}
         />
       )}
     </Flex>

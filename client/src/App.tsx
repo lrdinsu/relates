@@ -1,15 +1,16 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
+import { ProtectedRoute } from '@/components/ProtectedRoute/ProtectedRoute.tsx';
 import { ForgotPassword } from '@/features/auth/components/ForgetPassword/ForgotPassword.tsx';
 import { Login } from '@/features/auth/components/Login/Login.tsx';
 import { Signup } from '@/features/auth/components/Signup/Signup.tsx';
+import { PostList } from '@/features/posts/components/PostList/PostList.tsx';
 import { useAccessToken } from '@/hooks/useAccessToken.ts';
 import AuthPage from '@/pages/AuthPage.tsx';
 import HomePage from '@/pages/HomePage.tsx';
 import NotFoundPage from '@/pages/NotFoundPage/NotFoundPage.tsx';
 import PostPage from '@/pages/PostPage.tsx';
-import UserPage from '@/pages/UserPage.tsx';
 import { useAuthStore } from '@/stores/authStore.ts';
 import { Loader } from '@mantine/core';
 
@@ -35,8 +36,43 @@ function App() {
     >
       <AppLayout>
         <Routes>
-          {/* Home Page */}
+          {/*Home Page*/}
           <Route path="/" element={<HomePage />} />
+
+          {/*Posts Page*/}
+          <Route path="/hot" element={<PostList />} />
+          <Route
+            path="/for-you"
+            element={
+              <ProtectedRoute>
+                <PostList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/following"
+            element={
+              <ProtectedRoute>
+                <PostList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/liked"
+            element={
+              <ProtectedRoute>
+                <PostList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/saved"
+            element={
+              <ProtectedRoute>
+                <PostList />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Nested Auth Routes */}
           <Route path="/" element={<AuthPage />}>
@@ -46,7 +82,7 @@ function App() {
           </Route>
 
           {/* User Pages */}
-          <Route path="/:username" element={<UserPage />} />
+          {/*<Route path="/:username" element={<UserPage />} />*/}
           <Route path="/:username/post/:pid" element={<PostPage />} />
 
           {/* 404 Page */}

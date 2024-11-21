@@ -2,10 +2,13 @@ import express, { Router } from 'express';
 
 import { createPost } from '../controllers/postControllers/createPostController.js';
 import {
-  getFeedPosts,
+  getFollowingPosts,
+  getForYouPosts,
   getHotPosts,
+  getLikedPosts,
   getPostById,
   getPostComments,
+  getSavedPosts,
 } from '../controllers/postControllers/getPostController.js';
 import {
   deletePostById,
@@ -18,8 +21,12 @@ import { protectRoute } from '../middlewares/protectRoute.js';
 export const postRouter: Router = express.Router();
 
 // posts
-postRouter.get('/feed', protectRoute, getFeedPosts);
 postRouter.get('/hot', getHotPosts);
+postRouter.get('/for-you', protectRoute, getForYouPosts);
+postRouter.get('/following', protectRoute, getFollowingPosts);
+postRouter.get('/liked', protectRoute, getLikedPosts);
+postRouter.get('/saved', protectRoute, getSavedPosts);
+
 postRouter.get('/:postId/comments', getPostComments);
 postRouter.get('/:postId', getPostById);
 

@@ -2,11 +2,11 @@ import { useState } from 'react';
 
 import { AddComment } from '@/features/comments/AddComment/AddComment.tsx';
 import { CommentItem } from '@/features/comments/CommentItem/CommentItem.tsx';
-import { PostActions } from '@/features/posts/PostActions/PostActions.tsx';
-import { PostContent } from '@/features/posts/PostContent/PostContent.tsx';
-import { PostHeader } from '@/features/posts/PostHeader/PostHeader.tsx';
-import { PostMain } from '@/features/posts/PostMain/PostMain.tsx';
-import { PostStats } from '@/features/posts/PostStats/PostStats.tsx';
+import { PostActions } from '@/features/posts/components/PostActions/PostActions.tsx';
+import { PostContent } from '@/features/posts/components/PostContent/PostContent.tsx';
+import { PostHeader } from '@/features/posts/components/PostHeader/PostHeader.tsx';
+import { PostMain } from '@/features/posts/components/PostMain/PostMain.tsx';
+import { PostStats } from '@/features/posts/components/PostStats/PostStats.tsx';
 import { Avatar, Flex } from '@mantine/core';
 
 function PostPage() {

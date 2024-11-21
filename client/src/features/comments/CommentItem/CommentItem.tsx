@@ -2,10 +2,10 @@ import { useState } from 'react';
 
 import { Avatar, Divider, Flex, Text } from '@mantine/core';
 
-import { PostActions } from '../../posts/PostActions/PostActions.tsx';
-import { PostContent } from '../../posts/PostContent/PostContent.tsx';
-import { PostHeader } from '../../posts/PostHeader/PostHeader.tsx';
-import { PostMain } from '../../posts/PostMain/PostMain.tsx';
+import { PostActions } from '../../posts/components/PostActions/PostActions.tsx';
+import { PostContent } from '../../posts/components/PostContent/PostContent.tsx';
+import { PostHeader } from '../../posts/components/PostHeader/PostHeader.tsx';
+import { PostMain } from '../../posts/components/PostMain/PostMain.tsx';
 
 type CommentItemProps = {
   comment: string;
