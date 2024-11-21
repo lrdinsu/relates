@@ -37,7 +37,7 @@ export function PostList() {
             commentsCount={post.commentsCount}
             repostsCount={post.repostsCount}
             postText={post.text ?? ''}
-            postImg={post?.images?.[0]}
+            postImages={post?.images?.[0]}
             postTime={post.createdAt}
             postAuthor={post.postedBy.username}
             postAuthorId={post.postedBy.id}

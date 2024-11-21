@@ -9,6 +9,7 @@ export type ApiResponse = {
 
 export type AuthResponse = ApiResponse & {
   accessToken: string;
+  userId: number | null;
 };
 
 // Create an Axios instance

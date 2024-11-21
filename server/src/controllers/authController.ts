@@ -52,6 +52,7 @@ export async function signupUser(req: Request, res: Response) {
 
     res.status(201).json({
       accessToken: generateAccessToken(newUser.id),
+      userId: newUser.id,
     });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
@@ -86,6 +87,7 @@ export async function loginUser(req: Request, res: Response) {
     generateTokenAndSetCookie(user.id, res);
     res.status(200).json({
       accessToken: generateAccessToken(user.id),
+      userId: user.id,
     });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
@@ -123,7 +125,7 @@ export async function refreshAccessToken(req: Request, res: Response) {
     );
 
     const accessToken = generateAccessToken(userId);
-    res.status(200).json({ accessToken });
+    res.status(200).json({ accessToken, userId });
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       res.status(401).json({ message: 'Token expired, please log in' });

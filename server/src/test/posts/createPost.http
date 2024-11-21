@@ -18,9 +18,9 @@ Content-Type: application/json
 
 ### Create Comment (protected)
 POST {{api}}/posts/5
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTczMTk4NjI2MSwiZXhwIjoxNzMxOTg3MTYxfQ.a8sIzGbJbc5e0kyR-GEwzo451o8uTKDE9wjiiHmtwoQ
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsImlhdCI6MTczMjE4MDU0NSwiZXhwIjoxNzMyMTgxNDQ1fQ.RpJvRWjs13arvlSz2AfD7PGfWK9Ph28cJFQJiDC8q-Y
 Content-Type: application/json
 
 {
-    "text": "comment for kelly 2"
+    "text": "comment from dog 4"
 }

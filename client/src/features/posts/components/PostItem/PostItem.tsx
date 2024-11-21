@@ -12,8 +12,8 @@ import classes from './PostItem.module.css';
 
 type postProps = {
   postId: number;
-  postImg?: string;
-  postText: string;
+  postImages?: string;
+  postText?: string;
   postTime: Date;
   postAuthor: string;
   postAuthorId: number;
@@ -24,7 +24,7 @@ type postProps = {
 };
 
 export function PostItem({
-  postImg,
+  postImages,
   postText,
   postTime,
   postId,
@@ -44,7 +44,7 @@ export function PostItem({
               userName={postAuthor}
               postTime={convertPostTime(new Date(postTime))}
             />
-            <PostContent postText={postText} postImg={postImg} />
+            <PostContent postText={postText} postImages={postImages} />
             <PostActions
               likesCount={likesCount}
               commentsCount={commentsCount}
