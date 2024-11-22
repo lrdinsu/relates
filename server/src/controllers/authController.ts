@@ -48,11 +48,18 @@ export async function signupUser(req: Request, res: Response) {
       },
     });
 
-    generateTokenAndSetCookie(newUser.id, res);
+    generateTokenAndSetCookie(
+      newUser.id,
+      res,
+      newUser.username,
+      newUser.profilePic,
+    );
 
     res.status(201).json({
       accessToken: generateAccessToken(newUser.id),
       userId: newUser.id,
+      username: newUser.username,
+      profilePic: newUser.profilePic,
     });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
@@ -72,7 +79,7 @@ export async function loginUser(req: Request, res: Response) {
     const { email, password } = input.data;
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, password: true },
+      select: { id: true, password: true, username: true, profilePic: true },
     });
 
     // Check if password is correct
@@ -84,10 +91,12 @@ export async function loginUser(req: Request, res: Response) {
     }
 
     // generate token and set cookie
-    generateTokenAndSetCookie(user.id, res);
+    generateTokenAndSetCookie(user.id, res, user.username, user.profilePic);
     res.status(200).json({
       accessToken: generateAccessToken(user.id),
       userId: user.id,
+      username: user.username,
+      profilePic: user.profilePic,
     });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
@@ -119,13 +128,13 @@ export async function refreshAccessToken(req: Request, res: Response) {
       return;
     }
 
-    const { userId } = await jwtVerify(
+    const { userId, username, profilePic } = await jwtVerify(
       token,
       process.env.REFRESH_TOKEN_SECRET!,
     );
 
     const accessToken = generateAccessToken(userId);
-    res.status(200).json({ accessToken, userId });
+    res.status(200).json({ accessToken, userId, username, profilePic });
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       res.status(401).json({ message: 'Token expired, please log in' });

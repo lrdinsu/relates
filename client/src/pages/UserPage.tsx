@@ -1,4 +1,4 @@
-import { UserHeader } from '@/features/user/userHeader/UserHeader.tsx';
+import { UserHeader } from '@/features/user/components/UserHeader/UserHeader.tsx';
 
 export function UserPage() {
   return (

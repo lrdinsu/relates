@@ -10,7 +10,7 @@ import {
   IconMessage2,
 } from '@tabler/icons-react';
 
-import classes from '../userHeader/UserHeader.module.css';
+import classes from '../UserHeader/UserHeader.module.css';
 
 export function UserMoreMenu() {
   async function copyURL() {

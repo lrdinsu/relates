@@ -6,11 +6,13 @@ export async function refreshAccessToken() {
     const response = await axiosInstance.get<AuthResponse>(
       '/auth/refresh-token',
     );
-    const { accessToken, userId } = response.data;
-    useAuthStore.getState().setAccessToken(accessToken, userId);
+    const { accessToken, userId, username, profilePic } = response.data;
+    useAuthStore
+      .getState()
+      .setAccessToken(accessToken, { userId, username, profilePic });
     return response.data.accessToken;
   } catch {
-    useAuthStore.getState().setAccessToken(null, null);
+    useAuthStore.getState().setAccessToken(null);
     return null;
   }
 }

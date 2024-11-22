@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
+import { useLoginModal } from '@/hooks/useLoginModal.tsx';
 import { useAuthStore } from '@/stores/authStore.ts';
 import { useTitleStore } from '@/stores/titleStore.ts';
 import { UnstyledButton, rem } from '@mantine/core';
@@ -25,12 +26,13 @@ export function NavBarLink({
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const setTitle = useTitleStore((state) => state.setTitle);
+  const openLoginModal = useLoginModal();
 
   const handleClick = () => {
     onClick();
 
     if (needAuth && !isAuthenticated) {
-      navigate('/login', { replace: true });
+      openLoginModal();
     } else {
       if (path) {
         navigate(path);
