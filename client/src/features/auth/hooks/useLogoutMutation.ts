@@ -15,7 +15,7 @@ export const useLogoutMutation = () => {
     },
     onSuccess: () => {
       setAccessToken(null, null);
-      navigate('/');
+      navigate('/', { replace: true });
     },
   });
 };

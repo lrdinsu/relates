@@ -1,6 +1,6 @@
 import { UserHeader } from '@/features/user/userHeader/UserHeader.tsx';
 
-function UserPage() {
+export function UserPage() {
   return (
     <>
       <UserHeader />
@@ -30,5 +30,3 @@ function UserPage() {
     </>
   );
 }
-
-export default UserPage;

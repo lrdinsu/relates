@@ -4,6 +4,7 @@ import { Loading } from '@/components/Loading/Loading.tsx';
 
 import AuthRoutes from './AuthRoutes.tsx';
 import PostsRoutes from './PostsRoutes.tsx';
+import { UserRoutes } from './UserRoutes.tsx';
 
 const router = createBrowserRouter(
   [
@@ -25,14 +26,7 @@ const router = createBrowserRouter(
           },
         },
         ...PostsRoutes(),
-        ...AuthRoutes(),
-        {
-          path: 'posts/:postId',
-          async lazy() {
-            const { PostPage } = await import('../pages/PostPage.tsx');
-            return { Component: PostPage };
-          },
-        },
+        ...UserRoutes(),
         {
           path: '*',
           async lazy() {
@@ -44,6 +38,7 @@ const router = createBrowserRouter(
         },
       ],
     },
+    ...AuthRoutes(),
   ],
   {
     future: {
