@@ -8,7 +8,7 @@ import { usePostsList } from '../../hooks/usePostList.ts';
 import { PostItem } from '../PostItem/PostItem.tsx';
 
 export function PostList() {
-  const { data, isPending, isError, hasNextPage, fetchNextPage, isFetching } =
+  const { data, isPending, isError, hasNextPage, fetchNextPage } =
     usePostsList();
   const { ref, inView } = useInView();
 
@@ -48,11 +48,9 @@ export function PostList() {
 
       {hasNextPage && (
         <div ref={ref}>
-          {isFetching && (
-            <Center>
-              <Loader type="bars" />
-            </Center>
-          )}
+          <Center>
+            <Loader type="dots" />
+          </Center>
         </div>
       )}
     </Stack>
