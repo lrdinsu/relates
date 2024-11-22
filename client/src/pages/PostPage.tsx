@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { PostWithComments } from '@/features/comments/PostWithComments/PostWithComments.tsx';
 import { useTitleStore } from '@/stores/titleStore.ts';
 
-function PostPage() {
+export function PostPage() {
   const setTitle = useTitleStore((state) => state.setTitle);
 
   useEffect(() => {
@@ -12,5 +12,3 @@ function PostPage() {
 
   return <PostWithComments />;
 }
-
-export default PostPage;

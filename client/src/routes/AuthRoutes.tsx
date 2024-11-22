@@ -1,18 +1,38 @@
-import { RouteObject } from 'react-router-dom';
-
-import { ForgotPassword } from '@/features/auth/components/ForgetPassword/ForgotPassword.tsx';
-import { Login } from '@/features/auth/components/Login/Login.tsx';
-import { Signup } from '@/features/auth/components/Signup/Signup.tsx';
-import AuthPage from '@/pages/AuthPage';
-
-const AuthRoutes = (): RouteObject[] => [
+const AuthRoutes = () => [
   {
     path: '/',
-    element: <AuthPage />,
+    async lazy() {
+      const { AuthPage } = await import('../pages/AuthPage.tsx');
+      return { Component: AuthPage };
+    },
     children: [
-      { path: 'login', element: <Login /> },
-      { path: 'signup', element: <Signup /> },
-      { path: 'forgot-password', element: <ForgotPassword /> },
+      {
+        path: 'login',
+        async lazy() {
+          const { Login } = await import(
+            '../features/auth/components/Login/Login.tsx'
+          );
+          return { Component: Login };
+        },
+      },
+      {
+        path: 'signup',
+        async lazy() {
+          const { Signup } = await import(
+            '../features/auth/components/Signup/Signup.tsx'
+          );
+          return { Component: Signup };
+        },
+      },
+      {
+        path: 'forgot-password',
+        async lazy() {
+          const { ForgotPassword } = await import(
+            '../features/auth/components/ForgetPassword/ForgotPassword.tsx'
+          );
+          return { Component: ForgotPassword };
+        },
+      },
     ],
   },
 ];

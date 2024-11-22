@@ -2,7 +2,7 @@ import { Outlet } from 'react-router-dom';
 
 import { Container } from '@mantine/core';
 
-function AuthPage() {
+export function AuthPage() {
   return (
     <>
       <Container size={420}>
@@ -11,5 +11,3 @@ function AuthPage() {
     </>
   );
 }
-
-export default AuthPage;

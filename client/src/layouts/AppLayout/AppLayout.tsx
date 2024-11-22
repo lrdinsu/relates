@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { Outlet, useLocation, useNavigation } from 'react-router-dom';
 
 import { Loading } from '@/components/Loading/Loading.tsx';
@@ -43,9 +42,7 @@ export function AppLayout() {
 
         <Container size={640} className={classes.container}>
           <AppShell.Main className={classes.main}>
-            <Suspense fallback={<Loading />}>
-              <Outlet />
-            </Suspense>
+            <Outlet />
           </AppShell.Main>
         </Container>
 
