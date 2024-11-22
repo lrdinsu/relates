@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
+import { Loading } from '@/components/Loading/Loading.tsx';
 import { useAuthStore } from '@/stores/authStore.ts';
 import { Center, Divider, Loader, Stack } from '@mantine/core';
 
@@ -33,7 +34,7 @@ export function PostWithComments() {
   }, [inView, hasNextPage, fetchNextPage]);
 
   if (isParentLoading) {
-    return <Loader />;
+    return <Loading />;
   }
 
   if (isParentError) {

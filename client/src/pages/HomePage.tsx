@@ -4,7 +4,7 @@ import { PostList } from '@/features/posts/components/PostList/PostList.tsx';
 import { useAuthStore } from '@/stores/authStore.ts';
 import { useTitleStore } from '@/stores/titleStore.ts';
 
-function HomePage() {
+export function HomePage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const setTitle = useTitleStore((state) => state.setTitle);
 
@@ -14,5 +14,3 @@ function HomePage() {
 
   return <PostList />;
 }
-
-export default HomePage;

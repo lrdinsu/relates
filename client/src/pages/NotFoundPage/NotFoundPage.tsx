@@ -4,7 +4,7 @@ import { Button, Container, Group, Text, Title } from '@mantine/core';
 
 import classes from './NotFoundPage.module.css';
 
-function NotFoundPage() {
+export function NotFoundPage() {
   const navigate = useNavigate();
 
   return (
@@ -23,5 +23,3 @@ function NotFoundPage() {
     </Container>
   );
 }
-
-export default NotFoundPage;
