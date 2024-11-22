@@ -1,10 +1,10 @@
 import { AxiosError } from 'axios';
 
-import { ApiResponse } from '@/api/axiosConfig.ts';
+import { ApiErrorResponse } from '@/api/axiosConfig.ts';
 import { Text } from '@mantine/core';
 
 export function FormError({ error }: { error: Error }) {
-  const axiosError = error as AxiosError<ApiResponse>;
+  const axiosError = error as AxiosError<ApiErrorResponse>;
   const errorMessage =
     axiosError.response?.data?.message ?? 'An unknown error occurred';
 

@@ -2,6 +2,8 @@ import jwt from 'jsonwebtoken';
 
 type JwtPayload = {
   userId: number;
+  username: string;
+  profilePic: string | null;
   iat: number;
   exp: number;
 };

@@ -10,3 +10,7 @@ GET {{api}}/posts/1
 
 ### get comments of a post (protected)
 GET {{api}}/posts/1/comments
+
+### Get for you posts
+GET {{api}}/posts/for-you?cursor=1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTczMjI1OTcwMCwiZXhwIjoxNzMyMjYwNjAwfQ.UyV6SnsJo-Ju742UZIwsTP9zNs6MmoZ3NqN2PUwNcPY

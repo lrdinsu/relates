@@ -1,16 +1,27 @@
 import { create } from 'zustand';
 
+type UserData = {
+  userId: number;
+  username: string;
+  profilePic: string | null;
+};
+
 type AuthState = {
   accessToken: string | null;
-  userId: number | null;
+  userData: UserData | null;
   isAuthenticated: boolean;
-  setAccessToken: (token: string | null, userId?: number | null) => void;
+  setAccessToken: (token: string | null, userData?: UserData | null) => void;
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
   accessToken: null,
   isAuthenticated: false,
-  userId: null,
-  setAccessToken: (token, userId = null) =>
-    set({ accessToken: token, isAuthenticated: Boolean(token), userId }),
+  userData: null,
+
+  setAccessToken: (token, userData = null) =>
+    set({
+      accessToken: token,
+      isAuthenticated: Boolean(token),
+      userData,
+    }),
 }));

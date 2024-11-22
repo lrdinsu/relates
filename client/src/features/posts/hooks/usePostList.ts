@@ -22,7 +22,7 @@ export function usePostsList() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const location = useLocation();
 
-  const { data, isPending, isError, hasNextPage, fetchNextPage, isFetching } =
+  const { data, isPending, isError, hasNextPage, fetchNextPage } =
     useInfiniteQuery({
       queryKey: ['posts', isAuthenticated, location.pathname],
       queryFn: async ({ pageParam }): Promise<PostsResponse> => {
@@ -35,7 +35,9 @@ export function usePostsList() {
         }
 
         const response = await axiosInstance.get<PostsResponse>(endpoint, {
-          params: { cursor: pageParam === 0 ? undefined : pageParam },
+          params: {
+            cursor: pageParam === 0 ? undefined : pageParam,
+          },
         });
         return response.data;
       },
@@ -49,6 +51,5 @@ export function usePostsList() {
     isError,
     hasNextPage,
     fetchNextPage,
-    isFetching,
   } as const;
 }

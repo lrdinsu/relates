@@ -14,8 +14,10 @@ export const useLogoutMutation = () => {
       return response.data as AuthResponse;
     },
     onSuccess: () => {
-      setAccessToken(null, null);
-      navigate('/');
+      setAccessToken(null);
+      setTimeout(() => {
+        navigate('/');
+      });
     },
   });
 };

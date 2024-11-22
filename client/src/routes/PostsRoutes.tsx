@@ -24,6 +24,13 @@ const PostsRoutes = () => [
       };
     },
   })),
+  {
+    path: 'posts/:postId',
+    async lazy() {
+      const { PostPage } = await import('../pages/PostPage.tsx');
+      return { Component: PostPage };
+    },
+  },
 ];
 
 export default PostsRoutes;

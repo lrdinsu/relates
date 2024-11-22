@@ -28,5 +28,6 @@
 
   @media (max-width: 48em) {
     max-width: none;
+    border-radius: 0;
   }
 }

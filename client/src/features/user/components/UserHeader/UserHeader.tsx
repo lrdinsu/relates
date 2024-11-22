@@ -1,7 +1,7 @@
 import { Anchor, Avatar, Box, Flex, Stack, Tabs, Text } from '@mantine/core';
 import { IconCamera } from '@tabler/icons-react';
 
-import { UserMoreMenu } from '../userMoreMenu/userMoreMenu.tsx';
+import { UserMoreMenu } from '../UserMoreMenu/userMoreMenu.tsx';
 import classes from './UserHeader.module.css';
 
 export function UserHeader() {
