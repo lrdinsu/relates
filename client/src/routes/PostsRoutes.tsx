@@ -1,4 +1,4 @@
-const PostsRoutes = () => [
+export const PostsRoutes = () => [
   {
     path: 'hot',
     async lazy() {
@@ -32,5 +32,3 @@ const PostsRoutes = () => [
     },
   },
 ];
-
-export default PostsRoutes;
