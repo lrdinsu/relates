@@ -16,7 +16,7 @@ export const useSignupMutation = () => {
     },
     onSuccess: ({ accessToken, userId, username, profilePic }) => {
       setAccessToken(accessToken, { userId, username, profilePic });
-      navigate('/');
+      void navigate('/');
     },
   });
 };

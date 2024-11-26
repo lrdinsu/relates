@@ -17,9 +17,9 @@ export function BackButton() {
 
   const handleBack = () => {
     if (location.key === 'default') {
-      navigate('/');
+      void navigate('/');
     } else {
-      navigate(-1);
+      void navigate(-1);
     }
   };
 

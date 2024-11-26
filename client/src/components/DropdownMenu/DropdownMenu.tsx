@@ -36,7 +36,7 @@ export function DropdownMenu({
             key={item.name}
             color={item.color}
             onClick={() => {
-              navigate(item.path, { replace: true });
+              void navigate(item.path, { replace: true });
               setTitle(item.name);
             }}
           >

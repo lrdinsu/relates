@@ -11,6 +11,10 @@ import {
   getSavedPosts,
 } from '../controllers/postControllers/getPostController.js';
 import {
+  getCommentsByUsername,
+  getPostsByUsername,
+} from '../controllers/postControllers/getUserPostsController.js';
+import {
   deletePostById,
   likeUnlikePost,
   repostUnrepost,
@@ -38,3 +42,7 @@ postRouter.post('/', protectRoute, createPost); // for create post
 postRouter.put('/:postId/like', protectRoute, likeUnlikePost);
 postRouter.put('/:postId/save', protectRoute, saveUnsavePost);
 postRouter.put('/:postId/repost', protectRoute, repostUnrepost);
+
+// get posts/comments by username
+postRouter.get('/user/:username/posts', getPostsByUsername);
+postRouter.get('/user/:username/comments', getCommentsByUsername);

@@ -7,7 +7,7 @@ import classes from './LoginButton.module.css';
 export function LoginButton() {
   const navigate = useNavigate();
   const handleLogin = () => {
-    navigate('/login');
+    void navigate('/login');
   };
 
   return (

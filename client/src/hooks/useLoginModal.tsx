@@ -31,7 +31,7 @@ export function useLoginModal() {
         <Text>Log in or sign up to share your thoughts with the world!</Text>
       ),
       labels: { confirm: 'Log in', cancel: 'Sign up' },
-      onConfirm: () => navigate('/login'),
-      onCancel: () => navigate('/signup'),
+      onConfirm: () => void navigate('/login'),
+      onCancel: () => void navigate('/signup'),
     });
 }

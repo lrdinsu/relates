@@ -2,8 +2,8 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import { Loading } from '@/components/Loading/Loading.tsx';
 
-import AuthRoutes from './AuthRoutes.tsx';
-import PostsRoutes from './PostsRoutes.tsx';
+import { AuthRoutes } from './AuthRoutes.tsx';
+import { PostsRoutes } from './PostsRoutes.tsx';
 import { UserRoutes } from './UserRoutes.tsx';
 
 const router = createBrowserRouter(
@@ -24,6 +24,7 @@ const router = createBrowserRouter(
             const { HomePage } = await import('../pages/HomePage.tsx');
             return { Component: HomePage };
           },
+          hydrateFallbackElement: <Loading />,
         },
         ...PostsRoutes(),
         ...UserRoutes(),
@@ -35,6 +36,7 @@ const router = createBrowserRouter(
             );
             return { Component: NotFoundPage };
           },
+          hydrateFallbackElement: <Loading />,
         },
       ],
     },
