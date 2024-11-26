@@ -15,7 +15,7 @@ export function useChildPosts(parentPostId: number) {
 
   const { data, isPending, isError, hasNextPage, fetchNextPage, isFetching } =
     useInfiniteQuery({
-      queryKey: ['childposts', location.pathname],
+      queryKey: ['childposts', location.pathname, parentPostId],
       queryFn: async ({ pageParam }): Promise<ChildPostsResponse> => {
         const response = await axiosInstance.get<ChildPostsResponse>(
           `posts/${parentPostId}/comments`,

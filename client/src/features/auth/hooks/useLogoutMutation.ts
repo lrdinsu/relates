@@ -16,7 +16,7 @@ export const useLogoutMutation = () => {
     onSuccess: () => {
       setAccessToken(null);
       setTimeout(() => {
-        navigate('/');
+        void navigate('/');
       });
     },
   });

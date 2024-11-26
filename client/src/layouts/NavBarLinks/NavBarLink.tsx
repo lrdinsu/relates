@@ -35,7 +35,7 @@ export function NavBarLink({
       openLoginModal();
     } else {
       if (path) {
-        navigate(path);
+        void navigate(path);
         if (path !== '/') {
           setTitle(path[1].toUpperCase() + path.slice(2));
         }
