@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import { UserPic } from '@/components/UserPic/UserPic.tsx';
 import { convertPostTime } from '@/utils/convertPostTime.ts';
 import { Flex } from '@mantine/core';
@@ -31,7 +33,12 @@ export function ParenPost({
   return (
     <PostMain>
       <Flex gap={12}>
-        <UserPic username={username} avatar={avatar} />
+        <Link
+          to={`/user/${username}`}
+          style={{ textDecoration: 'none', color: 'inherit' }}
+        >
+          <UserPic username={username} avatar={avatar} />
+        </Link>
         <PostHeader
           userName={username}
           postTime={convertPostTime(new Date(postTime))}

@@ -1,47 +1,55 @@
-import { Anchor, Avatar, Box, Flex, Stack, Tabs, Text } from '@mantine/core';
+import { UserPic } from '@/components/UserPic/UserPic.tsx';
+import { Box, Flex, Stack, Tabs, Text } from '@mantine/core';
 import { IconCamera } from '@tabler/icons-react';
 
+import { UserProfile } from '../../hooks/useUserProfile.ts';
 import { UserMoreMenu } from '../UserMoreMenu/userMoreMenu.tsx';
 import classes from './UserHeader.module.css';
 
-export function UserHeader() {
+type UserHeaderProps = {
+  tab: 'posts' | 'comments';
+  onTabChange: (tab: string) => void;
+  user: UserProfile;
+};
+
+export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
   return (
-    <Stack gap={16} align="start">
+    <Stack gap={16} align="start" className={classes.container}>
       <Flex justify="space-between" w="100%">
         <Box>
           <Text size="xl" fw="bold">
-            Kellie Smith
+            {user.name}
           </Text>
           <Flex gap={8} align="center">
-            <Text size="sm">kelliesmith</Text>
+            <Text size="sm">@{user.username}</Text>
             <Text size="xs" p={4} className={classes.net}>
               relates.net
             </Text>
           </Flex>
         </Box>
         <Box>
-          <Avatar
-            alt="Kellie Smith"
-            src="/kellie-avatar.webp"
+          <UserPic
+            username={user.username}
+            avatar={user.profilePic}
             hiddenFrom="sm"
             size="lg"
           />
-          <Avatar
-            alt="Kellie Smith"
-            src="/kellie-avatar.webp"
+          <UserPic
+            username={user.username}
+            avatar={user.profilePic}
             visibleFrom="sm"
             size="xl"
           />
         </Box>
       </Flex>
 
-      <Text>Exploring happiness, habits, and human nature.</Text>
+      <Text> {user.biography ?? 'Introduce yourself to the world...'} </Text>
 
       <Flex w="100%" justify="space-between">
         <Flex gap={8} align="center" c="gray.6">
-          <Text>3.2k followers</Text>
+          <Text>{user.followersCount} followers</Text>
           <Box>&bull;</Box>
-          <Anchor c="inherit">kelliesmith.com</Anchor>
+          <Text>{user.followingCount} following</Text>
         </Flex>
 
         <Flex>
@@ -52,19 +60,19 @@ export function UserHeader() {
         </Flex>
       </Flex>
 
-      <Tabs defaultValue="posts" w="100%">
+      <Tabs value={tab} onChange={(v) => onTabChange(v!)} w="100%">
         <Tabs.List>
           <Tabs.Tab value="posts" className={classes.tab} py={12} fw="600">
             Posts
           </Tabs.Tab>
           <Tabs.Tab
-            value="replies"
+            value="comments"
             className={classes.tab}
             py={12}
             fw="600"
             c="gray.6"
           >
-            Replies
+            Comments
           </Tabs.Tab>
         </Tabs.List>
       </Tabs>

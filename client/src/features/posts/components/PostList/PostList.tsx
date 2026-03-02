@@ -7,9 +7,13 @@ import { Center, Loader, Stack } from '@mantine/core';
 import { usePostsList } from '../../hooks/usePostList.ts';
 import { PostItem } from '../PostItem/PostItem.tsx';
 
-export function PostList() {
+type PostListProps = {
+  endpoint?: string;
+};
+
+export function PostList({ endpoint }: PostListProps) {
   const { data, isPending, isError, hasNextPage, fetchNextPage } =
-    usePostsList();
+    usePostsList(endpoint);
   const { ref, inView } = useInView();
 
   useEffect(() => {

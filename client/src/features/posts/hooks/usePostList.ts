@@ -18,25 +18,26 @@ export type Post = PostType & {
   };
 };
 
-export function usePostsList() {
+export function usePostsList(endpoint = location.pathname) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const location = useLocation();
 
   const { data, isPending, isError, hasNextPage, fetchNextPage } =
     useInfiniteQuery({
-      queryKey: ['posts', isAuthenticated, location.pathname],
+      queryKey: ['posts', isAuthenticated, location.pathname, endpoint],
       queryFn: async ({ pageParam }): Promise<PostsResponse> => {
-        let endpoint = location.pathname;
+        let fetchUrl = '';
 
         if (endpoint === '/') {
-          endpoint = isAuthenticated ? '/posts/for-you' : '/posts/hot';
+          fetchUrl = isAuthenticated ? '/posts/for-you' : '/posts/hot';
         } else {
-          endpoint = `/posts${endpoint}`;
+          fetchUrl = `/posts${endpoint}`;
         }
 
-        const response = await axiosInstance.get<PostsResponse>(endpoint, {
+        const response = await axiosInstance.get<PostsResponse>(fetchUrl, {
           params: {
             cursor: pageParam === 0 ? undefined : pageParam,
+            limit: 10,
           },
         });
         return response.data;
