@@ -3,3 +3,6 @@ GET {{api}}/posts/user/kellysmith/posts
 
 ### get comments by username
 GET {{api}}/posts/user/dog/comments
+
+### get comments by username kelly
+GET {{api}}/posts/user/kellysmith/comments

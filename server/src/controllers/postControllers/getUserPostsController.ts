@@ -1,9 +1,12 @@
 import { Request, Response } from 'express';
 
-import { prisma } from '../../db/index.js';
+import { prisma } from '../../db';
 import { PostQuerySchema } from '../../types/validation/schemas.js';
 
-export async function getPostsByUsername(req: Request, res: Response) {
+export async function getPostsByUsername(
+  req: Request<{ username: string }>,
+  res: Response,
+) {
   try {
     const input = PostQuerySchema.safeParse(req.query);
     if (!input.success) {
@@ -40,7 +43,10 @@ export async function getPostsByUsername(req: Request, res: Response) {
   }
 }
 
-export async function getCommentsByUsername(req: Request, res: Response) {
+export async function getCommentsByUsername(
+  req: Request<{ username: string }>,
+  res: Response,
+) {
   try {
     const input = PostQuerySchema.safeParse(req.query);
     if (!input.success) {
@@ -85,7 +91,7 @@ export async function getCommentsByUsername(req: Request, res: Response) {
     const nextCursor =
       comments.length > 0 ? comments[comments.length - 1].id : null;
 
-    res.status(200).json({ comments, nextCursor });
+    res.status(200).json({ posts: comments, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get user comments:', error);
