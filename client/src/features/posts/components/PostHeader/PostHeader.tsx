@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import { Flex, Text } from '@mantine/core';
 import { IconDots } from '@tabler/icons-react';
 
@@ -10,9 +12,17 @@ export function PostHeader({ postTime, userName }: PostHeaderProps) {
   return (
     <Flex justify="space-between" w="100%">
       <Flex w="100%" align="center" gap={10}>
-        <Text size="sm" fw="bold">
-          {userName}
-        </Text>
+        <Link
+          to={`/user/${userName}`}
+          style={{ textDecoration: 'none', color: 'inherit' }}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <Text size="sm" fw="bold">
+            {userName}
+          </Text>
+        </Link>
         <Text size="sm" c="gray.6">
           {postTime}
         </Text>

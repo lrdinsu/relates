@@ -9,3 +9,8 @@
 .avatars div {
   position: absolute;
 }
+
+.avatarLink {
+  text-decoration: none;
+  color: inherit;
+}

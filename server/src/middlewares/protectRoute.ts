@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
-import { prisma } from '../db/index.js';
+import { prisma } from '../db';
 import { jwtVerify } from '../utils/jwtVerify.js';
 
 export async function protectRoute(

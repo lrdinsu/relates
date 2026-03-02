@@ -11,6 +11,7 @@ export function PostAction({ children, color, onClick }: PostActionProps) {
 
   function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
+    e.stopPropagation();
     onClick();
   }
 

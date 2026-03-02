@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { PostCreateSchema } from 'validation';
 
-import { prisma } from '../../db/index.js';
+import { prisma } from '../../db';
 import { PostCreateParamsSchema } from '../../types/validation/schemas.js';
 
 export async function createPost(req: Request, res: Response): Promise<void> {
@@ -46,8 +46,8 @@ export async function createPost(req: Request, res: Response): Promise<void> {
       data: {
         postedById: currentUserId,
         text,
-        images: images ? images : undefined,
-        parentPostId: parentPostId ? parentPostId : undefined,
+        images: images ?? undefined,
+        parentPostId: parentPostId ?? undefined,
       },
       include: {
         postedBy: {
