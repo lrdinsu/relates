@@ -23,7 +23,7 @@
     "declaration": true,
     /* Path */
     "outDir": "dist",
-    "baseUrl": "src/",
+    "baseUrl": "src",
     "paths": {
       "@/*": ["*"]
     },

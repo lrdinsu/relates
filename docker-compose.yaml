@@ -1,30 +1,68 @@
 services:
-  server:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: server
-    ports:
-        - '3000:3000'
-
-  nginx:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: nginx
-    ports:
-      - '8080:80'
-    depends_on:
-        - server
-
   db:
+    image: postgres:16
     env_file:
-      - .env
-    image: postgres
-    restart: always
+      - ./server/.prod.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    networks: [appnet]
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
+
+  server:
+    image: relates-server:prod
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    env_file:
+      - ./server/.prod.env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [appnet]
+    restart: unless-stopped
+
+  # Run migrations on deploy:
+  # docker compose run --rm migrate
+  migrate:
+    image: relates-server:prod
+    env_file:
+      - ./server/.prod.env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [appnet]
+    restart: "no"
+    working_dir: /app
+    command: ["npx", "prisma", "migrate", "deploy"]
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    networks: [appnet]
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8002:80"
+      # add 443 later when you do TLS
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - web
+      - server
+    networks: [appnet]
+    restart: unless-stopped
+
+networks:
+  appnet:
