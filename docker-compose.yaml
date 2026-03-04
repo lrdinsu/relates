@@ -47,11 +47,7 @@ services:
       context: .
       dockerfile: Dockerfile.client
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
+      - "8002:80"
     depends_on:
       - server
     networks: [ appnet ]
@@ -62,5 +58,3 @@ networks:
 
 volumes:
   pg_data:
-  caddy_data:
-  caddy_config:
