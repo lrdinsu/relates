@@ -13,3 +13,4 @@ data
 .nx/workspace-data
 
 pg_data
+certs/
