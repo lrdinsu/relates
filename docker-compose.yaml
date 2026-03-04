@@ -3,6 +3,8 @@ services:
     image: postgres:16
     env_file:
       - ./server/.prod.env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -14,8 +16,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    ports:
-      - "5432:5432"
 
   server:
     image: relates-server:prod
@@ -42,45 +42,25 @@ services:
     working_dir: /app
     command: ["npx", "prisma", "migrate", "deploy"]
 
-  web:
+  caddy:
     build:
       context: .
       dockerfile: Dockerfile.client
-    networks: [appnet]
-    restart: unless-stopped
-
-  nginx:
-    image: nginx:alpine
     ports:
-      - "8002:80"
-      - "8444:443"
+      - "80:80"
+      - "443:443"
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
-      - web
       - server
-    networks: [appnet]
+    networks: [ appnet ]
     restart: unless-stopped
-
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
-
-  certbot-renew:
-    image: certbot/certbot
-    volumes:
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
-    entrypoint: /bin/sh -c
-    command: >
-      "trap exit TERM; while :; do
-        certbot renew --webroot -w /var/www/certbot;
-        sleep 12h;
-      done"
 
 networks:
   appnet:
+
+volumes:
+  pg_data:
+  caddy_data:
+  caddy_config:
