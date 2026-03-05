@@ -60,7 +60,7 @@ export function PostWithComments() {
 
       {isAuthenticated && parentPost && (
         <>
-          <Divider mx={-16} my="md" />
+          <Divider mx={-16} />
           <CreatePost parentPost={parentPost} inline />
         </>
       )}
