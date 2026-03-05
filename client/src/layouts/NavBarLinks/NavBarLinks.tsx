@@ -1,17 +1,23 @@
-import { useState } from 'react';
-
+import { useLocation } from 'react-router-dom';
 import { actions } from './Actions.ts';
 import { NavBarLink } from './NavBarLink.tsx';
 
 export function NavBarLinks() {
-  const [active, setActive] = useState(2);
+  const location = useLocation();
 
-  return actions.map((link, index) => (
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return location.pathname === '/' || location.pathname === '/for-you' || location.pathname === '/following';
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  return actions.map((link) => (
     <NavBarLink
       {...link}
       key={link.path}
-      active={index === active}
-      onClick={() => setActive(index)}
+      active={isActive(link.path)}
+      onClick={() => {}}
       needAuth={link.needAuth}
     />
   ));

@@ -13,7 +13,6 @@ type NavbarLinkProps = {
   icon: typeof IconHome;
   path: string;
   active?: boolean;
-  onClick: () => void;
   needAuth?: boolean;
 };
 
@@ -21,7 +20,6 @@ export function NavBarLink({
   icon: Icon,
   path,
   active,
-  onClick,
   needAuth,
 }: NavbarLinkProps) {
   const navigate = useNavigate();
@@ -31,8 +29,6 @@ export function NavBarLink({
   const openCreatePostModal = useCreatePostModal();
 
   const handleClick = () => {
-    onClick();
-
     if (needAuth && !isAuthenticated) {
       openLoginModal();
     } else {
@@ -40,7 +36,9 @@ export function NavBarLink({
         openCreatePostModal();
       } else if (path) {
         void navigate(path);
-        if (path !== '/') {
+        if (path === '/' || path === '/for-you' || path === '/following') {
+          setTitle('Home');
+        } else {
           setTitle(path[1].toUpperCase() + path.slice(2));
         }
       }

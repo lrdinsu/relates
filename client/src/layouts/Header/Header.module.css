@@ -1,13 +1,50 @@
 .header {
   position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  height: 60px;
 }
 
-.dropdownIcon {
-  background-color: var(--main-bg-color);
-  color: var(--text-color);
-}
-
-.burger {
+.backButtonContainer {
   position: absolute;
-  right: 24px;
+  left: 0;
+  display: flex;
+  align-items: center;
+}
+
+.tabsContainer {
+  display: flex;
+  gap: 20px;
+  height: 100%;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 16px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--mantine-color-dimmed);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-bottom-color 0.2s;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--mantine-color-text);
+}
+
+.activeTab {
+  color: var(--mantine-color-text);
+  border-bottom-color: var(--mantine-color-gray-6);
+}
+
+.homeTitle {
+  font-weight: 700;
+  font-size: 16px;
 }

@@ -26,6 +26,48 @@ const router = createBrowserRouter(
           },
           hydrateFallbackElement: <Loading />,
         },
+        {
+          path: 'for-you',
+          async lazy() {
+            const { HomePage } = await import('../pages/HomePage.tsx');
+            return { Component: HomePage };
+          },
+          hydrateFallbackElement: <Loading />,
+        },
+        {
+          path: 'following',
+          async lazy() {
+            const { PostList } = await import(
+              '../features/posts/components/PostList/PostList.tsx'
+            );
+            const { ProtectedRoute } = await import('./ProtectedRoute.tsx');
+            return {
+              Component: () => (
+                <ProtectedRoute>
+                  <PostList endpoint="/following" />
+                </ProtectedRoute>
+              ),
+            };
+          },
+          hydrateFallbackElement: <Loading />,
+        },
+        {
+          path: 'saved',
+          async lazy() {
+            const { PostList } = await import(
+              '../features/posts/components/PostList/PostList.tsx'
+            );
+            const { ProtectedRoute } = await import('./ProtectedRoute.tsx');
+            return {
+              Component: () => (
+                <ProtectedRoute>
+                  <PostList endpoint="/saved" />
+                </ProtectedRoute>
+              ),
+            };
+          },
+          hydrateFallbackElement: <Loading />,
+        },
         ...PostsRoutes(),
         ...UserRoutes(),
         {

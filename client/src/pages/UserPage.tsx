@@ -1,14 +1,29 @@
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Loading } from '@/components/Loading/Loading.tsx';
 import { PostList } from '@/features/posts/components/PostList/PostList.tsx';
 import { UserHeader } from '@/features/user/components/UserHeader/UserHeader.tsx';
 import { useUserProfile } from '@/features/user/hooks/useUserProfile.ts';
+import { useTitleStore } from '@/stores/titleStore.ts';
+import { useAuthStore } from '@/stores/authStore.ts';
 
 export function UserPage() {
   const navigate = useNavigate();
   const { username, tab } = useParams<{ username: string; tab?: string }>();
   const { data: user, isLoading, isError } = useUserProfile(username);
+  const setTitle = useTitleStore((state) => state.setTitle);
+  const currentUser = useAuthStore((state) => state.userData);
+
+  useEffect(() => {
+    if (user) {
+      if (user.username === currentUser?.username) {
+        setTitle('Profile');
+      } else {
+        setTitle(user.name);
+      }
+    }
+  }, [user, currentUser, setTitle]);
 
   const activeTab = tab == 'comments' ? 'comments' : 'posts';
 

@@ -8,8 +8,8 @@ export const PostsRoutes = () => [
       return { Component: PostList };
     },
   },
-  ...['for-you', 'following', 'liked', 'saved'].map((path) => ({
-    path,
+  {
+    path: 'liked',
     async lazy() {
       const { PostList } = await import(
         '../features/posts/components/PostList/PostList.tsx'
@@ -18,12 +18,12 @@ export const PostsRoutes = () => [
       return {
         Component: () => (
           <ProtectedRoute>
-            <PostList />
+            <PostList endpoint="/liked" />
           </ProtectedRoute>
         ),
       };
     },
-  })),
+  },
   {
     path: 'posts/:postId',
     async lazy() {

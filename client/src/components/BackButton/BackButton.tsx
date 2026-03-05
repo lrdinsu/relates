@@ -12,7 +12,8 @@ export function BackButton() {
   const [showButton, setShowButton] = useState(false);
 
   useEffect(() => {
-    setShowButton(location.pathname !== '/');
+    const isHome = location.pathname === '/' || location.pathname === '/for-you' || location.pathname === '/following';
+    setShowButton(!isHome);
   }, [location.pathname]);
 
   const handleBack = () => {
