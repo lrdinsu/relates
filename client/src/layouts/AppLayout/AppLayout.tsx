@@ -1,8 +1,6 @@
-import { Outlet, useLocation, useNavigation } from 'react-router-dom';
+import { Outlet, useNavigation } from 'react-router-dom';
 
 import { Loading } from '@/components/Loading/Loading.tsx';
-import { LoginButton } from '@/components/LoginButton/LoginButton.tsx';
-import { useAuthStore } from '@/stores/authStore.ts';
 import { AppShell, Container } from '@mantine/core';
 
 import { Footer } from '../Footer/Footer.tsx';
@@ -11,8 +9,6 @@ import { NavBar } from '../Navbar/NavBar.tsx';
 import classes from './AppLayout.module.css';
 
 export function AppLayout() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const location = useLocation();
   const navigation = useNavigation();
 
   return (
