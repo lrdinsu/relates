@@ -1,6 +1,7 @@
 .login {
   position: fixed;
   right: 24px;
-  top: 16px;
+  top: 30px;
+  transform: translateY(-50%);
   z-index: 200;
 }
