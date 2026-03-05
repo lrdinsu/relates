@@ -10,6 +10,7 @@ export type UserProfile = {
   followingCount: number;
   followersCount: number;
   createdAt: string;
+  isFollowing: boolean;
 };
 
 export type UserProfileResponse = { user: UserProfile };

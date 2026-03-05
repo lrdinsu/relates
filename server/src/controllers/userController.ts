@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { UserUpdateSchema } from 'validation';
 
 import { prisma } from '../db';
+import { jwtVerify } from '../utils/jwtVerify.js';
 
 export async function followUnfollowUser(
   req: Request<{ id: string }>,
@@ -114,8 +115,34 @@ export async function getUserProfile(
 ) {
   try {
     const { username } = req.params;
+    // Get token from headers to check if user is authorized (optional check for isFollowing)
+    const token = req.headers.authorization?.split(' ')[1];
+    let currentUserId: number | null = null;
+
+    if (token) {
+      try {
+        const { userId } = await jwtVerify(
+          token,
+          process.env.ACCESS_TOKEN_SECRET!,
+        );
+        currentUserId = userId;
+      } catch (e) {
+        // Token might be invalid or expired, ignore
+      }
+    }
+
     const user = await prisma.user.findUnique({
       where: { username },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        profilePic: true,
+        biography: true,
+        followingCount: true,
+        followersCount: true,
+        createdAt: true,
+      },
     });
 
     if (!user) {
@@ -123,7 +150,20 @@ export async function getUserProfile(
       return;
     }
 
-    res.status(200).json({ user });
+    let isFollowing = false;
+    if (currentUserId && currentUserId !== user.id) {
+      const follow = await prisma.userFollows.findUnique({
+        where: {
+          followerId_followingId: {
+            followerId: currentUserId,
+            followingId: user.id,
+          },
+        },
+      });
+      isFollowing = !!follow;
+    }
+
+    res.status(200).json({ user: { ...user, isFollowing } });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in getUserProfile:', error);

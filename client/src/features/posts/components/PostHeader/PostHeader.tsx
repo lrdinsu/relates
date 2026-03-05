@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 
 import { Flex, Text, Stack } from '@mantine/core';
 import { IconDots } from '@tabler/icons-react';
+import { UserHoverCard } from '@/features/user/components/UserHoverCard/UserHoverCard.tsx';
 
 type PostHeaderProps = {
   postTime: string;
@@ -20,20 +21,24 @@ export function PostHeader({
     <Flex justify="space-between" w="100%">
       <Stack gap={0} w="100%">
         <Flex w="100%" align="center" gap={4}>
-          <Link
-            to={`/user/${userName}`}
-            style={{ textDecoration: 'none', color: 'inherit' }}
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <Text size="sm" fw="bold" truncate>
-              {name}
-            </Text>
-          </Link>
-          <Text size="xs" c="gray.6" truncate>
-            @{userName}
-          </Text>
+          <UserHoverCard username={userName}>
+            <Flex align="center" gap={4}>
+              <Link
+                to={`/user/${userName}`}
+                style={{ textDecoration: 'none', color: 'inherit' }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                <Text size="sm" fw="bold" truncate>
+                  {name}
+                </Text>
+              </Link>
+              <Text size="xs" c="gray.6" truncate>
+                @{userName}
+              </Text>
+            </Flex>
+          </UserHoverCard>
           <Text size="xs" c="gray.6">
             ·
           </Text>
@@ -44,15 +49,17 @@ export function PostHeader({
         {replyTo && (
           <Text size="xs" c="gray.6">
             Replying to{' '}
-            <Link
-              to={`/user/${replyTo}`}
-              style={{ textDecoration: 'none', color: '#4dabf7' }}
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              @{replyTo}
-            </Link>
+            <UserHoverCard username={replyTo}>
+              <Link
+                to={`/user/${replyTo}`}
+                style={{ textDecoration: 'none', color: '#4dabf7' }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                @{replyTo}
+              </Link>
+            </UserHoverCard>
           </Text>
         )}
       </Stack>
