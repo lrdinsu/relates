@@ -50,25 +50,30 @@ export function PostWithComments() {
           <Divider mx={-16} mt="md" />
         </Box>
       )}
+
       {/* Render Current Post */}
       {parentPost && (
-        <Box>
+        <Box pt="md" pb="md">
           <PostItem post={parentPost} hideDivider />
         </Box>
       )}
+
       {isAuthenticated && parentPost && (
-        <Box py="md">
-          <Divider mx={-16} />
+        <>
+          <Divider mx={-16} my="md" />
           <CreatePost parentPost={parentPost} inline />
-        </Box>
+        </>
       )}
-      <Divider mx={-16} />
+
+      <Divider mx={-16} mt={0} mb="md" />
+
       {/* Render Child Posts */}
       <Stack gap="md">
         {childPostsData?.pages.map((page) =>
           page.comments.map((post) => <PostItem post={post} key={post.id} />),
         )}
       </Stack>
+
       {/* Infinite Scroll Loader */}
       {hasNextPage && (
         <div ref={ref}>
@@ -79,6 +84,7 @@ export function PostWithComments() {
           )}
         </div>
       )}
+
       {/* Error Handling for Child Posts */}
       {isChildError && <div>Error loading child posts</div>}
     </Stack>
