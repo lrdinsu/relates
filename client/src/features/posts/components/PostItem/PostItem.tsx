@@ -34,6 +34,7 @@ export function PostItem({ post, withLine, hideDivider }: postProps) {
           />
           <PostMain>
             <PostHeader
+              post={post}
               userName={post.postedBy.username}
               name={post.postedBy.name}
               postTime={convertPostTime(new Date(post.createdAt))}

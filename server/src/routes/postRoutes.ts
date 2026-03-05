@@ -19,6 +19,7 @@ import {
   likeUnlikePost,
   repostUnrepost,
   saveUnsavePost,
+  updatePost,
 } from '../controllers/postControllers/updatePostController.js';
 import { optionalProtectRoute, protectRoute } from '../middlewares/protectRoute.js';
 
@@ -35,6 +36,7 @@ postRouter.get('/:postId/comments', optionalProtectRoute, getPostComments);
 postRouter.get('/:postId', optionalProtectRoute, getPostById);
 
 postRouter.delete('/:postId', protectRoute, deletePostById);
+postRouter.put('/:postId', protectRoute, updatePost);
 
 postRouter.post('/:parentPostId', protectRoute, createPost); // for create comment under post
 postRouter.post('/', protectRoute, createPost); // for create post

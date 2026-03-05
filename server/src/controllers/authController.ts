@@ -128,13 +128,28 @@ export async function refreshAccessToken(req: Request, res: Response) {
       return;
     }
 
-    const { userId, username, profilePic } = await jwtVerify(
+    const { userId } = await jwtVerify(
       token,
       process.env.REFRESH_TOKEN_SECRET!,
     );
 
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, username: true, profilePic: true },
+    });
+
+    if (!user) {
+      res.status(401).json({ message: 'User not found, please log in' });
+      return;
+    }
+
     const accessToken = generateAccessToken(userId);
-    res.status(200).json({ accessToken, userId, username, profilePic });
+    res.status(200).json({ 
+      accessToken, 
+      userId: user.id, 
+      username: user.username, 
+      profilePic: user.profilePic 
+    });
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       res.status(401).json({ message: 'Token expired, please log in' });

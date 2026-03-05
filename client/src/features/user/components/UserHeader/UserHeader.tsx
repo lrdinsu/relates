@@ -7,6 +7,7 @@ import { UserMoreMenu } from '../UserMoreMenu/userMoreMenu.tsx';
 import { useAuthStore } from '@/stores/authStore.ts';
 import { useFollowMutation } from '../../hooks/useFollowMutation.ts';
 import { useLoginModal } from '@/hooks/useLoginModal.tsx';
+import { useEditProfileModal } from '@/hooks/useEditProfileModal.tsx';
 import classes from './UserHeader.module.css';
 
 type UserHeaderProps = {
@@ -20,6 +21,7 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const followMutation = useFollowMutation();
   const openLoginModal = useLoginModal();
+  const openEditProfileModal = useEditProfileModal();
   const [isBtnHovered, setIsBtnHovered] = useState(false);
 
   const isMe = currentUser?.username === user.username;
@@ -86,7 +88,7 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
         radius="md"
         variant={isMe || user.isFollowing ? 'outline' : 'filled'}
         color={!isMe && user.isFollowing && isBtnHovered ? 'red' : (isMe || user.isFollowing ? 'gray' : 'my-green')}
-        onClick={isMe ? () => console.log('edit profile') : handleFollow}
+        onClick={isMe ? () => openEditProfileModal(user) : handleFollow}
         onMouseEnter={() => setIsBtnHovered(true)}
         onMouseLeave={() => setIsBtnHovered(false)}
         loading={followMutation.isPending}

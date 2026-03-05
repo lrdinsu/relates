@@ -2,6 +2,50 @@ import { Request, Response } from 'express';
 
 import { prisma } from '../../db';
 import { PostParamsSchema } from '../../types/validation/schemas.js';
+import { PostUpdateSchema } from 'validation';
+
+export async function updatePost(req: Request, res: Response): Promise<void> {
+  try {
+    const params = PostParamsSchema.safeParse(req.params);
+    if (!params.success) {
+      res.status(400).json({ message: 'Invalid post params' });
+      return;
+    }
+    const postId = params.data.postId;
+
+    const body = PostUpdateSchema.safeParse(req.body);
+    if (!body.success) {
+      res.status(400).json({ message: body.error.errors[0].message });
+      return;
+    }
+
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) {
+      res.status(404).json({ message: 'Post not found' });
+      return;
+    }
+
+    // check if user is authorized to update post
+    const currentUser = req.user!;
+    if (!(post.postedById === currentUser.id)) {
+      res.status(403).json({ message: 'Unauthorized to update post' });
+      return;
+    }
+
+    await prisma.post.update({
+      where: { id: postId },
+      data: body.data,
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: 'Unknown error occurred!' });
+    console.error('Error in update post:', error);
+  }
+}
 
 export async function deletePostById(
   req: Request,

@@ -19,7 +19,11 @@ export async function getPostsByUsername(
     const currentUserId = req.user?.id;
 
     const posts = await prisma.post.findMany({
-      where: { postedBy: { username }, parentPostId: null },
+      where: { 
+        postedBy: { username }, 
+        parentPostId: null,
+        isDeleted: false
+      },
       orderBy: { createdAt: 'desc' },
       include: {
         postedBy: {
@@ -82,7 +86,11 @@ export async function getCommentsByUsername(
     const currentUserId = req.user?.id;
 
     const comments = await prisma.post.findMany({
-      where: { postedBy: { username }, parentPostId: { not: null } },
+      where: { 
+        postedBy: { username }, 
+        parentPostId: { not: null },
+        isDeleted: false
+      },
       orderBy: { createdAt: 'desc' },
       include: {
         postedBy: {

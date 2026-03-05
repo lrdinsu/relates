@@ -97,12 +97,16 @@ export async function updateUser(req: Request, res: Response) {
 
     const currentUserId = req.user!.id;
 
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: currentUserId },
       data: input.data,
     });
 
-    res.status(204).send();
+    res.status(200).json({
+      username: updatedUser.username,
+      profilePic: updatedUser.profilePic,
+      userId: updatedUser.id,
+    });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in updateUser:', error);

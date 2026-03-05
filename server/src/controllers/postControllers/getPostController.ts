@@ -18,6 +18,7 @@ export async function getHotPosts(req: Request, res: Response) {
     const currentUserId = req.user?.id;
 
     const posts = await prisma.post.findMany({
+      where: { isDeleted: false },
       orderBy: [
         { likesCount: 'desc' },
         { commentsCount: 'desc' },
@@ -175,6 +176,7 @@ export async function getFollowingPosts(req: Request, res: Response) {
     const posts = await prisma.post.findMany({
       where: {
         postedById: { in: followedIds },
+        isDeleted: false,
       },
       orderBy: [
         { likesCount: 'desc' },
@@ -243,7 +245,10 @@ export async function getLikedPosts(req: Request, res: Response) {
     const likedPostIds = likedPosts.map((like) => like.postId);
 
     const posts = await prisma.post.findMany({
-      where: { id: { in: likedPostIds } },
+      where: { 
+        id: { in: likedPostIds },
+        isDeleted: false,
+      },
       orderBy: { createdAt: 'desc' },
       take: limit,
       cursor: cursor ? { id: cursor } : undefined,
@@ -302,7 +307,10 @@ export async function getSavedPosts(req: Request, res: Response) {
     const savedPostIds = savedPosts.map((save) => save.postId);
 
     const posts = await prisma.post.findMany({
-      where: { id: { in: savedPostIds } },
+      where: { 
+        id: { in: savedPostIds },
+        isDeleted: false,
+      },
       orderBy: { createdAt: 'desc' },
       take: limit,
       cursor: cursor ? { id: cursor } : undefined,
@@ -392,7 +400,7 @@ export async function getPostById(req: Request, res: Response): Promise<void> {
       },
     });
 
-    if (!post) {
+    if (!post || post.isDeleted) {
       res.status(404).json({ message: 'Post not found' });
       return;
     }
@@ -427,7 +435,7 @@ export async function getPostById(req: Request, res: Response): Promise<void> {
         },
       });
 
-      if (!parent) break;
+      if (!parent || parent.isDeleted) break;
       ancestors.unshift({
         ...parent,
         isLiked: (parent.likes?.length ?? 0) > 0,
@@ -461,7 +469,7 @@ export async function getPostComments(req: Request, res: Response) {
     const currentUserId = req.user?.id;
 
     const comments = await prisma.post.findMany({
-      where: { parentPostId: postId },
+      where: { parentPostId: postId, isDeleted: false },
       orderBy: { createdAt: 'desc' },
       take: limit,
       cursor: cursor ? { id: cursor } : undefined,

@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 
 import { UserPic } from '@/components/UserPic/UserPic.tsx';
-import { useAuthStore } from '@/stores/authStore.ts';
 import {
   Button,
   Flex,
@@ -22,6 +21,8 @@ import { IconPhoto, IconPlus } from '@tabler/icons-react';
 import { isAxiosError } from 'axios';
 
 import { useCreatePost } from '../../hooks/useCreatePost.ts';
+import { useUpdatePost } from '../../hooks/useUpdatePost.ts';
+import { useMe } from '@/features/user/hooks/useMe.ts';
 import { Post } from '../../hooks/usePostList.ts';
 import { PostContent } from '../PostContent/PostContent.tsx';
 import { convertPostTime } from '@/utils/convertPostTime.ts';
@@ -33,44 +34,57 @@ const MAX_IMAGES = 4;
 
 type CreatePostProps = {
   parentPost?: Post;
+  editingPost?: Post;
   inline?: boolean;
   onClose?: () => void;
 };
 
-export function CreatePost({ parentPost, inline, onClose }: CreatePostProps) {
-  const userData = useAuthStore((state) => state.userData);
-  const [text, setText] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+export function CreatePost({ parentPost, editingPost, inline, onClose }: CreatePostProps) {
+  const { data: userData } = useMe();
+  const [text, setText] = useState(editingPost?.text ?? '');
+  const [images, setImages] = useState<string[]>(editingPost?.images ?? []);
   const [imageUrl, setImageUrl] = useState('');
   const [imagePopoverOpen, setImagePopoverOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const createPostMutation = useCreatePost();
+  const updatePostMutation = useUpdatePost();
 
-  const handleCreatePost = async () => {
+  const isEditing = !!editingPost;
+  const isPending = createPostMutation.isPending || updatePostMutation.isPending;
+
+  const handleSubmit = async () => {
     if (!text.trim() && images.length === 0) return;
     setError(null);
 
     try {
-      const res = await createPostMutation.mutateAsync({
-        text: text.trim(),
-        images,
-        parentPostId: parentPost?.id,
-      });
+      if (isEditing) {
+        await updatePostMutation.mutateAsync({
+          postId: editingPost.id,
+          data: { text: text.trim(), images },
+        });
+      } else {
+        const res = await createPostMutation.mutateAsync({
+          text: text.trim(),
+          images,
+          parentPostId: parentPost?.id,
+        });
+        
+        if (res.post?.id && !parentPost) {
+          void router.navigate(`/posts/${res.post.id}`);
+        }
+      }
+      
       setText('');
       setImages([]);
       if (onClose) onClose();
-
-      if (res.post?.id) {
-        void router.navigate(`/posts/${res.post.id}`);
-      }
     } catch (err: unknown) {
       if (isAxiosError<{ message: string }>(err)) {
-        setError(err.response?.data?.message ?? 'Failed to create post');
+        setError(err.response?.data?.message ?? `Failed to ${isEditing ? 'update' : 'create'} post`);
       } else {
         setError('An unexpected error occurred');
       }
-      console.error('Failed to create post:', err);
+      console.error(`Failed to ${isEditing ? 'update' : 'create'} post:`, err);
     }
   };
 
@@ -142,11 +156,11 @@ export function CreatePost({ parentPost, inline, onClose }: CreatePostProps) {
 
       {isReply && !inline && <Divider mt="sm" mb="md" mx={-20} />}
 
-      <Flex gap={12} pt={isReply && !inline ? 0 : 0}>
+      <Flex gap={12} pt={(isReply && !inline) || isEditing ? 0 : 0}>
         <Box className={classes.leftColumn}>
           <UserPic
-            username={userData?.username ?? ''}
-            avatar={userData?.profilePic ?? ''}
+            username={isEditing ? editingPost.postedBy.username : (userData?.username ?? '')}
+            avatar={isEditing ? editingPost.postedBy.profilePic : (userData?.profilePic ?? '')}
           />
         </Box>
         <Stack gap={12} style={{ flex: 1 }}>
@@ -161,8 +175,8 @@ export function CreatePost({ parentPost, inline, onClose }: CreatePostProps) {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                if ((text.trim() || images.length > 0) && !createPostMutation.isPending) {
-                  void handleCreatePost();
+                if ((text.trim() || images.length > 0) && !isPending) {
+                  void handleSubmit();
                 }
               }
             }}
@@ -257,12 +271,12 @@ export function CreatePost({ parentPost, inline, onClose }: CreatePostProps) {
 
             <Button
               className={classes.submitButton}
-              onClick={handleCreatePost}
-              loading={createPostMutation.isPending}
-              disabled={(!text.trim() && images.length === 0) || createPostMutation.isPending}
+              onClick={handleSubmit}
+              loading={isPending}
+              disabled={(!text.trim() && images.length === 0) || isPending}
               radius="xl"
             >
-              {isReply ? 'Reply' : 'Post'}
+              {isEditing ? 'Save' : (isReply ? 'Reply' : 'Post')}
             </Button>
           </Group>
         </Stack>

@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
 
 import { Flex, Text, Stack } from '@mantine/core';
-import { IconDots } from '@tabler/icons-react';
 import { UserHoverCard } from '@/features/user/components/UserHoverCard/UserHoverCard.tsx';
+import { PostMoreMenu } from '../PostMoreMenu/PostMoreMenu.tsx';
+import { Post } from '../../hooks/usePostList.ts';
 
 type PostHeaderProps = {
+  post: Post;
   postTime: string;
   userName: string;
   name: string;
@@ -12,6 +14,7 @@ type PostHeaderProps = {
 };
 
 export function PostHeader({
+  post,
   postTime,
   userName,
   name,
@@ -19,7 +22,7 @@ export function PostHeader({
 }: PostHeaderProps) {
   return (
     <Flex justify="space-between" w="100%">
-      <Stack gap={0} w="100%">
+      <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
         <Flex w="100%" align="center" gap={4}>
           <UserHoverCard username={userName}>
             <Flex align="center" gap={4}>
@@ -64,8 +67,8 @@ export function PostHeader({
         )}
       </Stack>
 
-      <Flex gap={16} align="center">
-        <IconDots cursor="pointer" size={16} />
+      <Flex gap={16} align="flex-start" mt={-4} mr={-8}>
+        <PostMoreMenu post={post} />
       </Flex>
     </Flex>
   );
