@@ -1,159 +1,120 @@
 # Relates
 
-Relates is a full-stack social media application built with `React`, `TypeScript`, `Vite`, `Express`, and `PostgreSQL`. It leverages `Docker` for containerization and `Nginx` as a reverse proxy. The application provides a modern user interface, real-time features, and robust authentication.
+Relates is a high-performance, full-stack social media platform inspired by modern threads-style interaction. Built with `React`, `TypeScript`, `Vite`, `Express`, and `PostgreSQL`, it features a sophisticated UI, real-time optimistic updates, and a robust search engine.
 
 ## Table of Contents
 
-- [Features](#features)
-- [Client](#client)
+- [Core Features](#core-features)
+- [Client Architecture](#client-architecture)
   - [Technologies](#technologies)
-  - [Features](#features-1)
-- [Server](#server)
+  - [Key Features](#key-features)
+- [Server Architecture](#server-architecture)
   - [Technologies](#technologies-1)
-  - [Features](#features-2)
+  - [Key Features](#key-features-1)
 - [Packages](#packages)
-  - [Validation](#validation)
 - [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Running the Application](#running-the-application)
-  - [Development](#development)
 - [License](#license)
 
-## Features
+## Core Features
 
-- **User Authentication**: Secure login and registration using JWT.
-- **Posts and Comments**: Create, view, like, comment, and repost posts.
-- **Real-time Updates**: Real-time updates using React Query.
-- **Responsive Design**: Mobile-first approach with responsive components.
-- **Dark Mode Support**: Theme toggle between light and dark modes.
-- **Profile Management**: User profiles with avatars, bios, and follower counts.
-- **Notifications**: In-app notifications for user interactions.
-- **Validation**: Shared validation schemas using Zod.
+- **Dynamic Content Discovery**: "For You" and "Following" feeds with intelligent navigation.
+- **Universal Search**: Real-time debounced search for both users and post content.
+- **Sophisticated Media Experience**: Full-screen image viewer with multi-image navigation and keyboard shortcuts.
+- **Optimistic UI Interaction**: Zero-latency feedback for Likes and interactions via React Query.
+- **Full Post Lifecycle**: Create, Edit, and Soft-Delete capabilities for posts and nested replies.
+- **Advanced Profile Management**: Live profile editing (Name, Bio, Avatar URL) with instant cross-app synchronization.
+- **Secure Authentication**: JWT-based auth with automatic token refresh linked to live database state.
+- **Responsive Design**: Polished mobile and desktop layouts featuring a smart navigation system and unified "Menu" button.
 
-## Client
+## Client Architecture
 
-The client is a React application using Vite for bundling and development. It is located in the `client/` directory.
-
-### Technologies
-
-- **React 18**
-- **TypeScript**
-- **Vite**
-- **Mantine UI Library**
-- **React Router**
-- **React Query**
-- **Zustand** for state management
-- **Axios** for API requests
-
-### Features
-
-- **Modern UI Components**: Built with Mantine UI for a sleek design.
-- **State Management**: Uses Zustand for global state management.
-- **API Handling**: Axios instance configured with interceptors.
-- **Routing**: React Router setup with code-splitting and lazy loading.
-- **Forms and Validation**: Form handling with React Hook Form and Zod schemas.
-- **Custom Hooks**: Reusable hooks for authentication and data fetching.
-- **Responsive Layouts**: Components like `Header`, `Navbar`, and `Footer` adapting to screen sizes.
-- **Post Components**: Modular components such as `PostItem`, `PostMain`, and `PostActions`.
-
-## Server
-
-The server is an Express application written in TypeScript. It is located in the `server/` directory.
+The client is a modern SPA designed for speed and responsiveness.
 
 ### Technologies
 
-- **Express**
-- **TypeScript**
-- **Prisma ORM**
-- **PostgreSQL**
-- **JWT Authentication**
-- **Zod** for validation
-- **Cors** and **Helmet** for security
+- **React 18** & **TypeScript**
+- **Vite** for optimized bundling
+- **Mantine UI** for professional-grade component architecture
+- **React Query** for state synchronization and optimistic updates
+- **Zustand** for lightweight global state management
+- **React Router v7** with advanced lazy loading and path-aware navigation
 
-### Features
+### Key Features
 
-- **Authentication**: Secure routes with JWT tokens.
-- **User Management**: CRUD operations for user profiles.
-- **Post Management**: Endpoints for creating, reading, updating, and deleting posts.
-- **Comment System**: Nested comments with reply functionality.
-- **Reposting**: Ability to repost existing posts.
-- **Database ORM**: Prisma for database interactions with PostgreSQL.
-- **Input Validation**: Zod schemas for request validation.
-- **Error Handling**: Centralized error handling middleware.
-- **Testing**: HTTP tests using *.http* files.
+- **Smart Navigation**: Header tabs that dynamically sync with home routes and hide during search/profile views.
+- **Unified Post Component**: Single versatile component handling creation, replies, and edits.
+- **Portal-based Modals**: Clean, accessible modals for profile editing and post management.
+- **Intelligent Back Button**: Context-aware visibility logic based on navigation history.
+- **Theme Engine**: Seamless light/dark mode transitions with persistent user preferences.
+
+## Server Architecture
+
+A scalable Express backend focused on data integrity and performance.
+
+### Technologies
+
+- **Express** & **TypeScript**
+- **Prisma ORM** for type-safe database operations
+- **PostgreSQL** for relational data storage
+- **Zod** for end-to-end type safety and validation
+- **Argon2** for industry-standard password hashing
+
+### Key Features
+
+- **Soft-Delete System**: Database-safe post removal ensuring data integrity and relationship stability.
+- **Blended Feed Logic**: Complex Prisma queries for fetching network-relevant content.
+- **Type-Safe Search**: Case-insensitive partial matching for users and posts.
+- **Live Token Refresh**: Refresh mechanism that pulls latest profile data from DB to prevent stale client state.
+- **Modular Controllers**: Clean separation of concerns for Auth, Post, User, and Search logic.
 
 ## Packages
 
 ### Validation
 
-Located in `packages/validation/`, this package contains shared Zod schemas and types used both in the client and server for consistent validation.
+Shared Zod schemas located in `packages/validation/`. This ensures the client and server are always in sync regarding data structures, reducing runtime errors.
 
-- **User Schemas**: Validation for user registration, login, and profile updates.
-- **Post Schemas**: Validation for creating and updating posts.
-- **Comment Schemas**: Validation for comments and replies.
-- **Repost Schemas**: Validation for reposting functionality.
+- **Sync Schemas**: One source of truth for Users, Posts, Searches, and Interactions.
 
 ## Getting Started
 
 ### Prerequisites
 
-- **Node.js**
-- **pnpm**: Preferred package manager.
-- **Docker**
-- **Docker Compose**
+- **Node.js** (v18+)
+- **pnpm** (preferred)
+- **Docker** & **Docker Compose**
 
 ### Installation
 
-1. **Clone the repository**:
-
-    ```
+1. **Clone & Install**:
+    ```bash
     git clone `repository-url`
     cd relates
-    ```
-
-2. **Install dependencies**:
-
-    ```
     pnpm install
     ```
 
-3. **Environment Variables**:
+2. **Environment**:
+    - Configure `.env` in the root using the provided samples.
 
-    - Create a `.env` file in the root directory and add the necessary environment variables.
-    - Sample `.env` files might be provided in the `client/` and `server/` directories.
+3. **Database**:
+    - Ensure PostgreSQL is running (or use Docker).
+    - Run `npx prisma generate` and `npx prisma migrate dev`.
 
 ### Running the Application
 
-1. **Build and start the Docker containers**:
+**Using Docker**:
+```bash
+docker-compose up --build
+```
 
-    ```
-    docker-compose up --build
-    ```
+**Development Mode**:
+```bash
+# Terminal 1 (Client)
+cd client && pnpm dev
 
-2. **Access the application**:
-
-    - Client: `http://localhost:8080`
-    - Server: `http://localhost:3000`
-
-### Development
-
-To run the client and server in development mode without Docker:
-
-1. **Start the client**:
-
-    ```
-    cd client
-    pnpm dev
-    ```
-
-2. **Start the server**:
-
-    ```
-    cd server
-    pnpm dev
-    ```
+# Terminal 2 (Server)
+cd server && pnpm dev
+```
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for more information.
+MIT License. See `LICENSE` for details.
