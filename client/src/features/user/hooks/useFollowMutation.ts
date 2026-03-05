@@ -16,6 +16,7 @@ export function useFollowMutation() {
       void queryClient.invalidateQueries({ queryKey: ['posts'] });
       void queryClient.invalidateQueries({ queryKey: ['parentPost'] });
       void queryClient.invalidateQueries({ queryKey: ['childposts'] });
+      void queryClient.invalidateQueries({ queryKey: ['search'] });
     },
   });
 }

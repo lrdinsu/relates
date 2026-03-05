@@ -1,0 +1,33 @@
+.searchHeader {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--mantine-color-body);
+}
+
+.searchInput input {
+  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+  border: none;
+}
+
+.tabsList {
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.tab {
+  font-weight: 600;
+  height: 50px;
+  color: var(--mantine-color-dimmed);
+  transition: color 0.2s;
+}
+
+.tab:hover {
+  color: var(--mantine-color-text);
+  background: transparent;
+  border-bottom-color: transparent;
+}
+
+.tab[data-active] {
+  color: var(--mantine-color-text);
+  border-bottom-color: var(--mantine-color-text);
+}

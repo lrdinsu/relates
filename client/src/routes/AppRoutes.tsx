@@ -68,6 +68,14 @@ const router = createBrowserRouter(
           },
           hydrateFallbackElement: <Loading />,
         },
+        {
+          path: 'search',
+          async lazy() {
+            const { SearchPage } = await import('../pages/SearchPage.tsx');
+            return { Component: SearchPage };
+          },
+          hydrateFallbackElement: <Loading />,
+        },
         ...PostsRoutes(),
         ...UserRoutes(),
         {
