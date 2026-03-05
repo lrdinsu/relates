@@ -25,8 +25,6 @@ export function AppLayout() {
         transitionDuration={500}
         transitionTimingFunction="ease"
       >
-        {!isAuthenticated && location.pathname !== '/login' && <LoginButton />}
-
         <AppShell.Header className={classes.header} withBorder={false}>
           <Header />
         </AppShell.Header>

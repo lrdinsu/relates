@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 
 import { BackButton } from '@/components/BackButton/BackButton.tsx';
+import { LoginButton } from '@/components/LoginButton/LoginButton.tsx';
 import { useAuthStore } from '@/stores/authStore.ts';
 import { useTitleStore } from '@/stores/titleStore.ts';
 import { Flex, Text } from '@mantine/core';
@@ -23,6 +24,12 @@ export function HeaderMobile() {
       <div className={classes.backButtonContainer}>
         <BackButton />
       </div>
+
+      {!isAuthenticated && location.pathname !== '/login' && (
+        <div className={classes.loginButtonContainer}>
+          <LoginButton />
+        </div>
+      )}
 
       {isAuthenticated && isHome ? (
         <div className={classes.tabsContainer}>
