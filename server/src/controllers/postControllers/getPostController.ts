@@ -56,6 +56,7 @@ export async function getHotPosts(req: Request, res: Response) {
 
 export async function getForYouPosts(req: Request, res: Response) {
   try {
+    const currentUserId = req.user!.id;
     const input = PostQuerySchema.safeParse(req.query);
     if (!input.success) {
       res.status(400).json({ message: 'Invalid query params' });
@@ -64,11 +65,34 @@ export async function getForYouPosts(req: Request, res: Response) {
 
     const { cursor, limit } = input.data;
 
+    // 1. In-Network: Get followed users
+    const followedUsers = await prisma.userFollows.findMany({
+      where: { followerId: currentUserId },
+      select: { followingId: true },
+    });
+    const followedIds = followedUsers.map((f) => f.followingId);
+
+    // 2. Extended Network: Posts liked by the people you follow
+    const likedByFollowed = await prisma.like.findMany({
+      where: { userId: { in: followedIds } },
+      select: { postId: true },
+    });
+    const likedPostIdsByFollowed = likedByFollowed.map((l) => l.postId);
+
+    // 3. Blended Fetch
     const posts = await prisma.post.findMany({
+      where: {
+        OR: [
+          { postedById: { in: followedIds } }, // In-Network
+          { id: { in: likedPostIdsByFollowed } }, // Extended Network
+          { likesCount: { gte: 5 } }, // Out-of-Network (Popular fallback)
+        ],
+        isDeleted: false,
+      },
       orderBy: [
         { createdAt: 'desc' },
-        { commentsCount: 'desc' },
         { likesCount: 'desc' },
+        { commentsCount: 'desc' },
       ],
       take: limit,
       cursor: cursor ? { id: cursor } : undefined,
