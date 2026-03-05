@@ -1,18 +1,18 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { UserUpdateSchema } from 'validation';
 import { z } from 'zod';
-import { 
-  Box, 
-  Button, 
-  Stack, 
-  TextInput, 
-  Textarea, 
-  Avatar, 
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Avatar,
+  Box,
+  Button,
   Flex,
-  Text
+  Stack,
+  TextInput,
+  Textarea,
 } from '@mantine/core';
+
 import { useUpdateProfile } from '../../hooks/useUpdateProfile.ts';
 import { UserProfile } from '../../hooks/useUserProfile.ts';
 
@@ -25,7 +25,7 @@ type EditProfileModalProps = {
 
 export function EditProfileModal({ user, onClose }: EditProfileModalProps) {
   const updateProfileMutation = useUpdateProfile();
-  
+
   const {
     register,
     handleSubmit,
@@ -56,10 +56,10 @@ export function EditProfileModal({ user, onClose }: EditProfileModalProps) {
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
           <Flex justify="center">
-            <Avatar 
-              src={profilePicUrl} 
-              size={100} 
-              radius={100} 
+            <Avatar
+              src={profilePicUrl}
+              size={100}
+              radius={100}
               name={user.name}
             />
           </Flex>
@@ -87,9 +87,9 @@ export function EditProfileModal({ user, onClose }: EditProfileModalProps) {
             error={errors.biography?.message}
           />
 
-          <Button 
-            fullWidth 
-            type="submit" 
+          <Button
+            fullWidth
+            type="submit"
             loading={updateProfileMutation.isPending}
             mt="md"
             radius="xl"
