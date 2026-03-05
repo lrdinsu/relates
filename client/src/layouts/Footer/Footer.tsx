@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Flex, Menu, UnstyledButton, rem, useComputedColorScheme, useMantineColorScheme } from '@mantine/core';
-import { IconMenu2, IconSun, IconMoon, IconLogout, IconBookmark } from '@tabler/icons-react';
+import { IconSun, IconMoon, IconLogout, IconBookmark, IconUser } from '@tabler/icons-react';
 
 import { NavBarLinks } from '../NavBarLinks/NavBarLinks.tsx';
 import { useAuthStore } from '@/stores/authStore.ts';
@@ -24,22 +24,30 @@ export function Footer() {
 
   return (
     <Flex justify="space-between" align="center" p={5}>
-      <NavBarLinks />
+      <NavBarLinks limit={4} />
       <Menu shadow="md" width={200} position="top-end" offset={10}>
         <Menu.Target>
           <UnstyledButton className={classes.button}>
-            <IconMenu2 style={{ width: rem(30), height: rem(30) }} stroke={1.5} />
+            <IconUser style={{ width: rem(30), height: rem(30) }} stroke={1.5} />
           </UnstyledButton>
         </Menu.Target>
 
         <Menu.Dropdown>
           {isAuthenticated && (
-            <Menu.Item 
-              leftSection={<IconBookmark style={{ width: rem(16), height: rem(16) }} />}
-              onClick={() => navigate('/saved')}
-            >
-              Saved
-            </Menu.Item>
+            <>
+              <Menu.Item 
+                leftSection={<IconUser style={{ width: rem(16), height: rem(16) }} />}
+                onClick={() => navigate('/profile')}
+              >
+                Profile
+              </Menu.Item>
+              <Menu.Item 
+                leftSection={<IconBookmark style={{ width: rem(16), height: rem(16) }} />}
+                onClick={() => navigate('/saved')}
+              >
+                Saved
+              </Menu.Item>
+            </>
           )}
           <Menu.Item 
             leftSection={computedColorScheme === 'dark' ? 
