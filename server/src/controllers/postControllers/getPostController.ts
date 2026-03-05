@@ -27,7 +27,17 @@ export async function getHotPosts(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
       },
@@ -68,7 +78,17 @@ export async function getForYouPosts(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
       },
@@ -121,7 +141,17 @@ export async function getFollowingPosts(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
       },
@@ -165,7 +195,17 @@ export async function getLikedPosts(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
       },
@@ -209,7 +249,17 @@ export async function getSavedPosts(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
       },
@@ -245,7 +295,17 @@ export async function getPostById(req: Request, res: Response): Promise<void> {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
       },
@@ -313,7 +373,17 @@ export async function getPostComments(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
       },

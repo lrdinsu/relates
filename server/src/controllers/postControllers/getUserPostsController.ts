@@ -25,7 +25,17 @@ export async function getPostsByUsername(
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
       },
@@ -65,6 +75,7 @@ export async function getCommentsByUsername(
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
           },
         },

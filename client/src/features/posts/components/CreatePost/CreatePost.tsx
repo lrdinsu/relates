@@ -112,12 +112,18 @@ export function CreatePost({ parentPost, inline, onClose }: CreatePostProps) {
                avatar={parentPost.postedBy.profilePic}
              />
           </Box>
-          <Stack gap={4} style={{ flex: 1 }}>
-            <Group gap={8}>
+          <Stack gap={0} style={{ flex: 1 }}>
+            <Group gap={4} align="center">
               <Text size="sm" fw="bold">
-                {parentPost.postedBy.username}
+                {parentPost.postedBy.name}
               </Text>
-              <Text size="sm" c="gray.6">
+              <Text size="xs" c="gray.6">
+                @{parentPost.postedBy.username}
+              </Text>
+              <Text size="xs" c="gray.6">
+                ·
+              </Text>
+              <Text size="xs" c="gray.6">
                 {convertPostTime(new Date(parentPost.createdAt))}
               </Text>
             </Group>
