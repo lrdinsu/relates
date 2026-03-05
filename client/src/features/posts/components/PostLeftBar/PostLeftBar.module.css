@@ -10,7 +10,20 @@
   position: absolute;
 }
 
+.postLeftBar {
+  min-width: 40px;
+  flex-shrink: 0;
+}
+
 .avatarLink {
   text-decoration: none;
   color: inherit;
+}
+
+.verticalLine {
+  width: 2px;
+  background-color: var(--mantine-color-gray-3);
+  flex: 1;
+  margin-top: 4px;
+  margin-bottom: 4px;
 }

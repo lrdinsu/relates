@@ -8,6 +8,7 @@ import { Post } from './usePostList.ts';
 
 type PostResponse = {
   post: Post;
+  ancestors?: Post[];
 };
 
 export function usePostwithChildPosts() {

@@ -106,13 +106,12 @@ export function CreatePost({ parentPost, inline, onClose }: CreatePostProps) {
     <Stack gap={0} className={inline ? classes.inlineContainer : ''}>
       {isReply && !inline && (
         <Flex gap={12} className={classes.parentPostPreview}>
-          <Stack align="center" gap={0}>
+          <Box className={classes.leftColumn}>
              <UserPic
                username={parentPost.postedBy.username}
                avatar={parentPost.postedBy.profilePic}
              />
-             <div className={classes.verticalLine} />
-          </Stack>
+          </Box>
           <Stack gap={4} style={{ flex: 1 }}>
             <Group gap={8}>
               <Text size="sm" fw="bold">
@@ -130,13 +129,15 @@ export function CreatePost({ parentPost, inline, onClose }: CreatePostProps) {
         </Flex>
       )}
 
-      {isReply && !inline && <Divider my="sm" mx={-20} />}
+      {isReply && !inline && <Divider mt="sm" mb="md" mx={-20} />}
 
       <Flex gap={12} pt={isReply && !inline ? 0 : 0}>
-        <UserPic
-          username={userData?.username ?? ''}
-          avatar={userData?.profilePic ?? ''}
-        />
+        <Box className={classes.leftColumn}>
+          <UserPic
+            username={userData?.username ?? ''}
+            avatar={userData?.profilePic ?? ''}
+          />
+        </Box>
         <Stack gap={12} style={{ flex: 1 }}>
           <Textarea
             autosize

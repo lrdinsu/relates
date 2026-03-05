@@ -256,7 +256,30 @@ export async function getPostById(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    res.status(200).json({ post });
+    // Fetch ancestors
+    const ancestors = [];
+    let currentParentPostId = post.parentPostId;
+
+    while (currentParentPostId) {
+      const parent = await prisma.post.findUnique({
+        where: { id: currentParentPostId },
+        include: {
+          postedBy: {
+            select: {
+              id: true,
+              username: true,
+              profilePic: true,
+            },
+          },
+        },
+      });
+
+      if (!parent) break;
+      ancestors.unshift(parent);
+      currentParentPostId = parent.parentPostId;
+    }
+
+    res.status(200).json({ post, ancestors });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get post by id:', error);

@@ -13,6 +13,14 @@
   outline: none;
 }
 
+.leftColumn {
+  width: 40px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .verticalLine {
   width: 2px;
   background-color: var(--mantine-color-gray-3);
@@ -46,5 +54,5 @@
 }
 
 .inlineContainer {
-  padding: 12px 0;
+  padding: 16px 0;
 }

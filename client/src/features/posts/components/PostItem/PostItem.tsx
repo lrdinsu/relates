@@ -3,19 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { convertPostTime } from '@/utils/convertPostTime.ts';
 import { Divider, Flex } from '@mantine/core';
 
+import { Post } from '../../hooks/usePostList.ts';
 import { PostActions } from '../PostActions/PostActions.tsx';
 import { PostContent } from '../PostContent/PostContent.tsx';
 import { PostHeader } from '../PostHeader/PostHeader.tsx';
 import { PostLeftBar } from '../PostLeftBar/PostLeftBar.tsx';
 import { PostMain } from '../PostMain/PostMain.tsx';
 import classes from './PostItem.module.css';
-import { Post } from '../../hooks/usePostList.ts';
 
 type postProps = {
   post: Post;
+  withLine?: boolean;
+  hideDivider?: boolean;
 };
 
-export function PostItem({ post }: postProps) {
+export function PostItem({ post, withLine, hideDivider }: postProps) {
   const navigate = useNavigate();
 
   return (
@@ -28,6 +30,7 @@ export function PostItem({ post }: postProps) {
           <PostLeftBar
             username={post.postedBy.username}
             avatar={post.postedBy.profilePic}
+            withLine={withLine}
           />
           <PostMain>
             <PostHeader
@@ -40,7 +43,7 @@ export function PostItem({ post }: postProps) {
         </Flex>
       </div>
 
-      <Divider mx={-16} />
+      {!hideDivider && <Divider mx={-16} />}
     </>
   );
 }
