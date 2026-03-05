@@ -78,6 +78,15 @@ export async function deletePostById(
       where: { id: postId },
       data: { isDeleted: true },
     });
+
+    // If it's a reply, decrement parent's comment count
+    if (post.parentPostId) {
+      await prisma.post.update({
+        where: { id: post.parentPostId },
+        data: { commentsCount: { decrement: 1 } },
+      });
+    }
+
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
