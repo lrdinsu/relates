@@ -25,6 +25,7 @@ import { useCreatePost } from '../../hooks/useCreatePost.ts';
 import { Post } from '../../hooks/usePostList.ts';
 import { PostContent } from '../PostContent/PostContent.tsx';
 import { convertPostTime } from '@/utils/convertPostTime.ts';
+import router from '@/routes/AppRoutes.tsx';
 
 import classes from './CreatePost.module.css';
 
@@ -51,7 +52,7 @@ export function CreatePost({ parentPost, inline, onClose }: CreatePostProps) {
     setError(null);
 
     try {
-      await createPostMutation.mutateAsync({
+      const res = await createPostMutation.mutateAsync({
         text: text.trim(),
         images,
         parentPostId: parentPost?.id,
@@ -59,6 +60,10 @@ export function CreatePost({ parentPost, inline, onClose }: CreatePostProps) {
       setText('');
       setImages([]);
       if (onClose) onClose();
+
+      if (res.post?.id) {
+        void router.navigate(`/posts/${res.post.id}`);
+      }
     } catch (err: unknown) {
       if (isAxiosError<{ message: string }>(err)) {
         setError(err.response?.data?.message ?? 'Failed to create post');
