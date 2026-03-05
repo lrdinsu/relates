@@ -82,11 +82,15 @@ export function SearchPage() {
     }
 
     const allResults =
-      data?.pages.flatMap((page) => {
-        if ('users' in page) return page.users;
-        if ('posts' in page) return page.posts;
-        return [];
-      }) ?? [];
+      data?.pages.reduce<(UserSearchResult | Post)[]>((acc, page) => {
+        if ('users' in page) {
+          return [...acc, ...page.users];
+        }
+        if ('posts' in page) {
+          return [...acc, ...page.posts];
+        }
+        return acc;
+      }, []) ?? [];
 
     if (allResults.length === 0) {
       return (

@@ -5,7 +5,7 @@ import { UserHoverCard } from '@/features/user/components/UserHoverCard/UserHove
 import { PostMoreMenu } from '../PostMoreMenu/PostMoreMenu.tsx';
 import { Post } from '../../hooks/usePostList.ts';
 
-type PostHeaderProps = {
+export type PostHeaderProps = {
   post: Post;
   postTime: string;
   userName: string;

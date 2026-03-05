@@ -11,13 +11,13 @@ import { PostLeftBar } from '../PostLeftBar/PostLeftBar.tsx';
 import { PostMain } from '../PostMain/PostMain.tsx';
 import classes from './PostItem.module.css';
 
-type postProps = {
+type PostProps = {
   post: Post;
   withLine?: boolean;
   hideDivider?: boolean;
 };
 
-export function PostItem({ post, withLine, hideDivider }: postProps) {
+export function PostItem({ post, withLine, hideDivider }: PostProps) {
   const navigate = useNavigate();
 
   return (
