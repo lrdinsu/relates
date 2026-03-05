@@ -47,3 +47,32 @@ export async function protectRoute(
     }
   }
 }
+
+export async function optionalProtectRoute(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+      return next();
+    }
+
+    const { userId } = await jwtVerify(token, process.env.ACCESS_TOKEN_SECRET!);
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (user) {
+      req.user = user;
+    }
+
+    next();
+  } catch {
+    // If token is invalid or expired, we just continue without user
+    next();
+  }
+}

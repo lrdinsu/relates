@@ -20,19 +20,19 @@ import {
   repostUnrepost,
   saveUnsavePost,
 } from '../controllers/postControllers/updatePostController.js';
-import { protectRoute } from '../middlewares/protectRoute.js';
+import { optionalProtectRoute, protectRoute } from '../middlewares/protectRoute.js';
 
 export const postRouter: Router = express.Router();
 
 // posts
-postRouter.get('/hot', getHotPosts);
+postRouter.get('/hot', optionalProtectRoute, getHotPosts);
 postRouter.get('/for-you', protectRoute, getForYouPosts);
 postRouter.get('/following', protectRoute, getFollowingPosts);
 postRouter.get('/liked', protectRoute, getLikedPosts);
 postRouter.get('/saved', protectRoute, getSavedPosts);
 
-postRouter.get('/:postId/comments', getPostComments);
-postRouter.get('/:postId', getPostById);
+postRouter.get('/:postId/comments', optionalProtectRoute, getPostComments);
+postRouter.get('/:postId', optionalProtectRoute, getPostById);
 
 postRouter.delete('/:postId', protectRoute, deletePostById);
 
@@ -44,5 +44,5 @@ postRouter.put('/:postId/save', protectRoute, saveUnsavePost);
 postRouter.put('/:postId/repost', protectRoute, repostUnrepost);
 
 // get posts/comments by username
-postRouter.get('/user/:username/posts', getPostsByUsername);
-postRouter.get('/user/:username/comments', getCommentsByUsername);
+postRouter.get('/user/:username/posts', optionalProtectRoute, getPostsByUsername);
+postRouter.get('/user/:username/comments', optionalProtectRoute, getCommentsByUsername);

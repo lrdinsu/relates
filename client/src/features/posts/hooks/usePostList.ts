@@ -22,6 +22,7 @@ export type Post = PostType & {
       username: string;
     };
   };
+  isLiked: boolean;
 };
 
 export function usePostsList(endpoint = location.pathname) {

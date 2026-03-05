@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import { Center, Group, Text } from '@mantine/core';
 import {
   IconHeart,
@@ -14,19 +12,19 @@ import { Post } from '../../hooks/usePostList.ts';
 import { useCreatePostModal } from '@/hooks/useCreatePostModal.tsx';
 import { useAuthStore } from '@/stores/authStore.ts';
 import { useLoginModal } from '@/hooks/useLoginModal.tsx';
+import { useLikePost } from '../../hooks/useLikePost.ts';
 
 type PostActionsProps = {
   post: Post;
 };
 
 export function PostActions({ post }: PostActionsProps) {
-  const [liked, setLiked] = useState(false);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const openLoginModal = useLoginModal();
   const openCreatePostModal = useCreatePostModal();
+  const { mutate: likePost } = useLikePost();
 
-  const { likesCount, commentsCount, repostsCount } = post;
-  const currentLikesCount = liked ? likesCount + 1 : likesCount;
+  const { likesCount, commentsCount, repostsCount, isLiked, id } = post;
 
   return (
     <Group ml={-6} gap={12}>
@@ -35,13 +33,13 @@ export function PostActions({ post }: PostActionsProps) {
           color="red"
           onClick={() => {
             if (!isAuthenticated) return openLoginModal();
-            setLiked(!liked);
+            likePost(id);
           }}
         >
-          <IconHeart className={liked ? classes.liked : ''} />
+          <IconHeart className={isLiked ? classes.liked : ''} />
         </PostAction>
         <Text className={classes.count}>
-          {currentLikesCount === 0 ? '' : currentLikesCount}
+          {likesCount === 0 ? '' : likesCount}
         </Text>
       </Center>
       <Center>

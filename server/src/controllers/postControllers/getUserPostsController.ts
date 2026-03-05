@@ -16,6 +16,7 @@ export async function getPostsByUsername(
 
     const { cursor, limit } = input.data;
     const { username } = req.params;
+    const currentUserId = req.user?.id;
 
     const posts = await prisma.post.findMany({
       where: { postedBy: { username }, parentPostId: null },
@@ -38,15 +39,27 @@ export async function getPostsByUsername(
             },
           },
         },
+        likes: currentUserId
+          ? {
+              where: { userId: currentUserId },
+              select: { userId: true },
+            }
+          : false,
       },
       take: limit,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { id: cursor } : undefined,
     });
 
+    const postsWithIsLiked = posts.map((post) => ({
+      ...post,
+      isLiked: (post.likes?.length ?? 0) > 0,
+      likes: undefined,
+    }));
+
     const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
 
-    res.status(200).json({ posts, nextCursor });
+    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get user posts:', error);
@@ -66,6 +79,7 @@ export async function getCommentsByUsername(
 
     const { cursor, limit } = input.data;
     const { username } = req.params;
+    const currentUserId = req.user?.id;
 
     const comments = await prisma.post.findMany({
       where: { postedBy: { username }, parentPostId: { not: null } },
@@ -93,16 +107,28 @@ export async function getCommentsByUsername(
             },
           },
         },
+        likes: currentUserId
+          ? {
+              where: { userId: currentUserId },
+              select: { userId: true },
+            }
+          : false,
       },
       take: limit,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { id: cursor } : undefined,
     });
 
+    const commentsWithIsLiked = comments.map((comment) => ({
+      ...comment,
+      isLiked: (comment.likes?.length ?? 0) > 0,
+      likes: undefined,
+    }));
+
     const nextCursor =
       comments.length > 0 ? comments[comments.length - 1].id : null;
 
-    res.status(200).json({ posts: comments, nextCursor });
+    res.status(200).json({ posts: commentsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get user comments:', error);

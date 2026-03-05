@@ -15,6 +15,7 @@ export async function getHotPosts(req: Request, res: Response) {
     }
 
     const { cursor, limit } = input.data;
+    const currentUserId = req.user?.id;
 
     const posts = await prisma.post.findMany({
       orderBy: [
@@ -40,14 +41,27 @@ export async function getHotPosts(req: Request, res: Response) {
             },
           },
         },
+        likes: currentUserId
+          ? {
+              where: { userId: currentUserId },
+              select: { userId: true },
+            }
+          : false,
       },
       take: limit,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { id: cursor } : undefined,
     });
+
+    const postsWithIsLiked = posts.map((post) => ({
+      ...post,
+      isLiked: (post.likes?.length ?? 0) > 0,
+      likes: undefined,
+    }));
+
     const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
 
-    res.status(200).json({ posts, nextCursor });
+    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get hot posts:', error);
@@ -115,12 +129,22 @@ export async function getForYouPosts(req: Request, res: Response) {
             },
           },
         },
+        likes: {
+          where: { userId: currentUserId },
+          select: { userId: true },
+        },
       },
     });
 
+    const postsWithIsLiked = posts.map((post) => ({
+      ...post,
+      isLiked: post.likes.length > 0,
+      likes: undefined,
+    }));
+
     const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
 
-    res.status(200).json({ posts, nextCursor });
+    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get for you posts:', error);
@@ -178,12 +202,22 @@ export async function getFollowingPosts(req: Request, res: Response) {
             },
           },
         },
+        likes: {
+          where: { userId: currentUserId },
+          select: { userId: true },
+        },
       },
     });
 
+    const postsWithIsLiked = posts.map((post) => ({
+      ...post,
+      isLiked: post.likes.length > 0,
+      likes: undefined,
+    }));
+
     const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
 
-    res.status(200).json({ posts, nextCursor });
+    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get following posts:', error);
@@ -235,9 +269,14 @@ export async function getLikedPosts(req: Request, res: Response) {
       },
     });
 
+    const postsWithIsLiked = posts.map((post) => ({
+      ...post,
+      isLiked: true,
+    }));
+
     const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
 
-    res.status(200).json({ posts, nextCursor });
+    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get liked posts:', error);
@@ -286,12 +325,22 @@ export async function getSavedPosts(req: Request, res: Response) {
             },
           },
         },
+        likes: {
+          where: { userId: currentUserId },
+          select: { userId: true },
+        },
       },
     });
 
+    const postsWithIsLiked = posts.map((post) => ({
+      ...post,
+      isLiked: post.likes.length > 0,
+      likes: undefined,
+    }));
+
     const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
 
-    res.status(200).json({ posts, nextCursor });
+    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get saved posts:', error);
@@ -312,6 +361,8 @@ export async function getPostById(req: Request, res: Response): Promise<void> {
       return;
     }
     const postId = params.data.postId;
+    const currentUserId = req.user?.id;
+
     const post = await prisma.post.findUnique({
       where: { id: postId },
       include: {
@@ -332,6 +383,12 @@ export async function getPostById(req: Request, res: Response): Promise<void> {
             },
           },
         },
+        likes: currentUserId
+          ? {
+              where: { userId: currentUserId },
+              select: { userId: true },
+            }
+          : false,
       },
     });
 
@@ -339,6 +396,12 @@ export async function getPostById(req: Request, res: Response): Promise<void> {
       res.status(404).json({ message: 'Post not found' });
       return;
     }
+
+    const postWithIsLiked = {
+      ...post,
+      isLiked: (post.likes?.length ?? 0) > 0,
+      likes: undefined,
+    };
 
     // Fetch ancestors
     const ancestors = [];
@@ -355,15 +418,25 @@ export async function getPostById(req: Request, res: Response): Promise<void> {
               profilePic: true,
             },
           },
+          likes: currentUserId
+            ? {
+                where: { userId: currentUserId },
+                select: { userId: true },
+              }
+            : false,
         },
       });
 
       if (!parent) break;
-      ancestors.unshift(parent);
+      ancestors.unshift({
+        ...parent,
+        isLiked: (parent.likes?.length ?? 0) > 0,
+        likes: undefined,
+      });
       currentParentPostId = parent.parentPostId;
     }
 
-    res.status(200).json({ post, ancestors });
+    res.status(200).json({ post: postWithIsLiked, ancestors });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get post by id:', error);
@@ -385,6 +458,7 @@ export async function getPostComments(req: Request, res: Response) {
       return;
     }
     const postId = params.data.postId;
+    const currentUserId = req.user?.id;
 
     const comments = await prisma.post.findMany({
       where: { parentPostId: postId },
@@ -410,12 +484,24 @@ export async function getPostComments(req: Request, res: Response) {
             },
           },
         },
+        likes: currentUserId
+          ? {
+              where: { userId: currentUserId },
+              select: { userId: true },
+            }
+          : false,
       },
     });
 
+    const commentsWithIsLiked = comments.map((comment) => ({
+      ...comment,
+      isLiked: (comment.likes?.length ?? 0) > 0,
+      likes: undefined,
+    }));
+
     const nextCursor =
       comments.length > 0 ? comments[comments.length - 1].id : null;
-    res.status(200).json({ comments, nextCursor });
+    res.status(200).json({ comments: commentsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get comments:', error);
