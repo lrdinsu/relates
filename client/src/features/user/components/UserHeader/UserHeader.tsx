@@ -1,6 +1,5 @@
 import { UserPic } from '@/components/UserPic/UserPic.tsx';
 import { Box, Flex, Stack, Tabs, Text, Button } from '@mantine/core';
-import { IconCamera } from '@tabler/icons-react';
 import { useState } from 'react';
 
 import { UserProfile } from '../../hooks/useUserProfile.ts';
@@ -50,9 +49,6 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
           </Text>
           <Flex gap={8} align="center">
             <Text size="sm">@{user.username}</Text>
-            <Text size="xs" p={4} className={classes.net}>
-              relates.net
-            </Text>
           </Flex>
         </Box>
         <Box>
@@ -81,9 +77,6 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
         </Flex>
 
         <Flex align="center" gap={12}>
-          <Box className={classes.iconContainer}>
-            <IconCamera size={24} cursor="pointer" />
-          </Box>
           <UserMoreMenu />
         </Flex>
       </Flex>
