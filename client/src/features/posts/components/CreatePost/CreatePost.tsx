@@ -158,6 +158,14 @@ export function CreatePost({ parentPost, inline, onClose }: CreatePostProps) {
             variant="unstyled"
             value={text}
             onChange={(e) => setText(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if ((text.trim() || images.length > 0) && !createPostMutation.isPending) {
+                  void handleCreatePost();
+                }
+              }
+            }}
           />
 
           {images.length > 0 && (
