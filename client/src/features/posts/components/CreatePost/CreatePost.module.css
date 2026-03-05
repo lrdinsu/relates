@@ -1,0 +1,50 @@
+.postInput {
+  flex: 1;
+}
+
+.postInput textarea {
+  border: none;
+  font-size: 1.25rem;
+  padding-left: 0;
+  background-color: transparent;
+}
+
+.postInput textarea:focus {
+  outline: none;
+}
+
+.verticalLine {
+  width: 2px;
+  background-color: var(--mantine-color-gray-3);
+  flex: 1;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.parentPostPreview {
+  margin-bottom: 4px;
+}
+
+.replyTo {
+  color: var(--mantine-color-blue-6);
+  font-weight: 500;
+}
+
+.imagePreviewContainer {
+  position: relative;
+}
+
+.removeImageIcon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+}
+
+.submitButton {
+  font-weight: 700;
+}
+
+.inlineContainer {
+  padding: 12px 0;
+}

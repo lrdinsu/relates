@@ -7,7 +7,7 @@ import { Center, Divider, Loader, Stack } from '@mantine/core';
 
 import { PostItem } from '../../posts/components/PostItem/PostItem.tsx';
 import { usePostwithChildPosts } from '../../posts/hooks/usePostwithChildPosts.ts';
-import { AddComment } from '../AddComment/AddComment.tsx';
+import { CreatePost } from '../../posts/components/CreatePost/CreatePost.tsx';
 import { ParenPost } from '../ParentPost/ParentPost.tsx';
 
 export function PostWithComments() {
@@ -45,19 +45,15 @@ export function PostWithComments() {
     <Stack>
       {/* Render Parent Post */}
       {parentPost && (
-        <ParenPost
-          username={parentPost.postedBy.username}
-          avatar={parentPost.postedBy.profilePic}
-          likesCount={parentPost.likesCount}
-          commentsCount={parentPost.commentsCount}
-          repostsCount={parentPost.repostsCount}
-          postText={parentPost.text}
-          postImages={parentPost.images?.[0]}
-          postTime={parentPost.createdAt}
-        />
+        <ParenPost post={parentPost} />
       )}
 
-      {isAuthenticated && <AddComment />}
+      {isAuthenticated && parentPost && (
+        <>
+          <Divider mx={-16} />
+          <CreatePost parentPost={parentPost} inline />
+        </>
+      )}
 
       <Divider mx={-16} />
 
@@ -65,17 +61,8 @@ export function PostWithComments() {
       {childPostsData?.pages.map((page) =>
         page.comments.map((post) => (
           <PostItem
-            postId={post.id}
+            post={post}
             key={post.id}
-            likesCount={post.likesCount}
-            commentsCount={post.commentsCount}
-            repostsCount={post.repostsCount}
-            postText={post.text ?? ''}
-            postImages={post?.images?.[0]}
-            postTime={post.createdAt}
-            postAuthor={post.postedBy.username}
-            postAuthorId={post.postedBy.id}
-            postAuthorAvatar={post.postedBy.profilePic}
           />
         )),
       )}

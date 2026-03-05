@@ -9,52 +9,33 @@ import { PostHeader } from '../PostHeader/PostHeader.tsx';
 import { PostLeftBar } from '../PostLeftBar/PostLeftBar.tsx';
 import { PostMain } from '../PostMain/PostMain.tsx';
 import classes from './PostItem.module.css';
+import { Post } from '../../hooks/usePostList.ts';
 
 type postProps = {
-  postId: number;
-  postImages?: string;
-  postText?: string;
-  postTime: Date;
-  postAuthor: string;
-  postAuthorId: number;
-  postAuthorAvatar: string | null;
-  likesCount: number;
-  commentsCount: number;
-  repostsCount: number;
+  post: Post;
 };
 
-export function PostItem({
-  postImages,
-  postText,
-  postTime,
-  postId,
-  postAuthor,
-  postAuthorAvatar,
-  likesCount,
-  commentsCount,
-  repostsCount,
-}: postProps) {
+export function PostItem({ post }: postProps) {
   const navigate = useNavigate();
 
   return (
     <>
       <div
-        onClick={() => navigate(`/posts/${postId}`)}
+        onClick={() => navigate(`/posts/${post.id}`)}
         className={classes.postItem}
       >
         <Flex gap={12}>
-          <PostLeftBar username={postAuthor} avatar={postAuthorAvatar} />
+          <PostLeftBar
+            username={post.postedBy.username}
+            avatar={post.postedBy.profilePic}
+          />
           <PostMain>
             <PostHeader
-              userName={postAuthor}
-              postTime={convertPostTime(new Date(postTime))}
+              userName={post.postedBy.username}
+              postTime={convertPostTime(new Date(post.createdAt))}
             />
-            <PostContent postText={postText} postImages={postImages} />
-            <PostActions
-              likesCount={likesCount}
-              commentsCount={commentsCount}
-              repostsCount={repostsCount}
-            />
+            <PostContent postText={post.text} postImages={post.images} />
+            <PostActions post={post} />
           </PostMain>
         </Flex>
       </div>

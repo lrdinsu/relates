@@ -35,17 +35,8 @@ export function PostList({ endpoint }: PostListProps) {
       {data?.pages.map((page) =>
         page.posts.map((post) => (
           <PostItem
-            postId={post.id}
+            post={post}
             key={post.id}
-            likesCount={post.likesCount}
-            commentsCount={post.commentsCount}
-            repostsCount={post.repostsCount}
-            postText={post.text ?? ''}
-            postImages={post?.images?.[0]}
-            postTime={post.createdAt}
-            postAuthor={post.postedBy.username}
-            postAuthorId={post.postedBy.id}
-            postAuthorAvatar={post.postedBy.profilePic}
           />
         )),
       )}
