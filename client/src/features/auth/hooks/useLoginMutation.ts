@@ -16,7 +16,7 @@ export const useLoginMutation = () => {
     },
     onSuccess: ({ accessToken, userId, username, profilePic }) => {
       setAccessToken(accessToken, { userId, username, profilePic });
-      void navigate(-1);
+      void navigate('/');
     },
   });
 };
