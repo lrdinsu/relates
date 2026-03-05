@@ -19,7 +19,7 @@ export function useSearch(query: string, mode: SearchMode) {
   return useInfiniteQuery({
     queryKey: ['search', mode, query],
     queryFn: async ({ pageParam }): Promise<UserSearchResponse | PostSearchResponse> => {
-      const response = await axiosInstance.get(`/search/${mode}`, {
+      const response = await axiosInstance.get<UserSearchResponse | PostSearchResponse>(`/search/${mode}`, {
         params: {
           q: query,
           cursor: pageParam === 0 ? undefined : pageParam,

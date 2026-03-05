@@ -1,13 +1,25 @@
-import { useState, useEffect } from 'react';
-import { useDebouncedValue, useIntersection } from '@mantine/hooks';
-import { Stack, TextInput, Tabs, Center, Loader, Text, Divider, Box } from '@mantine/core';
-import { IconSearch } from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
 
-import { useSearch, SearchMode } from '@/features/search/hooks/useSearch.ts';
-import { SearchUserItem, UserSearchResult } from '@/features/search/components/SearchUserItem.tsx';
 import { PostItem } from '@/features/posts/components/PostItem/PostItem.tsx';
 import { Post } from '@/features/posts/hooks/usePostList.ts';
+import {
+  SearchUserItem,
+  UserSearchResult,
+} from '@/features/search/components/SearchUserItem.tsx';
+import { SearchMode, useSearch } from '@/features/search/hooks/useSearch.ts';
 import { useTitleStore } from '@/stores/titleStore.ts';
+import {
+  Box,
+  Center,
+  Divider,
+  Loader,
+  Stack,
+  Tabs,
+  Text,
+  TextInput,
+} from '@mantine/core';
+import { useDebouncedValue, useIntersection } from '@mantine/hooks';
+import { IconSearch } from '@tabler/icons-react';
 
 import classes from './SearchPage.module.css';
 
@@ -69,16 +81,19 @@ export function SearchPage() {
       );
     }
 
-    const allResults = data?.pages.flatMap((page) => {
+    const allResults =
+      data?.pages.flatMap((page) => {
         if ('users' in page) return page.users;
         if ('posts' in page) return page.posts;
         return [];
-    }) ?? [];
+      }) ?? [];
 
     if (allResults.length === 0) {
       return (
         <Center mt="xl">
-          <Text c="dimmed">No results found for "{debouncedQuery}"</Text>
+          <Text c="dimmed">
+            No results found for &#34;{debouncedQuery}&#34;
+          </Text>
         </Center>
       );
     }
@@ -95,9 +110,9 @@ export function SearchPage() {
             );
           } else {
             return (
-              <PostItem 
-                key={(item as Post).id} 
-                post={item as Post} 
+              <PostItem
+                key={(item as Post).id}
+                post={item as Post}
                 hideDivider={index === allResults.length - 1}
               />
             );
@@ -126,12 +141,12 @@ export function SearchPage() {
         />
       </Box>
 
-      <Tabs 
-        value={activeTab} 
+      <Tabs
+        value={activeTab}
         onChange={(value) => setActiveTab(value as SearchMode)}
         classNames={{
-            list: classes.tabsList,
-            tab: classes.tab,
+          list: classes.tabsList,
+          tab: classes.tab,
         }}
       >
         <Tabs.List grow>
