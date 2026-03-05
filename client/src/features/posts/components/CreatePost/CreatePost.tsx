@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 import { UserPic } from '@/components/UserPic/UserPic.tsx';
 import { useAuthStore } from '@/stores/authStore.ts';
@@ -13,10 +13,13 @@ import {
   Group,
   SimpleGrid,
   TextInput,
-  Collapse,
+  Popover,
   Divider,
+  Box,
+  CloseButton,
 } from '@mantine/core';
-import { IconPhoto, IconPlus, IconX } from '@tabler/icons-react';
+import { IconPhoto, IconPlus } from '@tabler/icons-react';
+import { isAxiosError } from 'axios';
 
 import { useCreatePost } from '../../hooks/useCreatePost.ts';
 import { Post } from '../../hooks/usePostList.ts';
@@ -24,6 +27,8 @@ import { PostContent } from '../PostContent/PostContent.tsx';
 import { convertPostTime } from '@/utils/convertPostTime.ts';
 
 import classes from './CreatePost.module.css';
+
+const MAX_IMAGES = 4;
 
 type CreatePostProps = {
   parentPost?: Post;
@@ -36,37 +41,63 @@ export function CreatePost({ parentPost, inline, onClose }: CreatePostProps) {
   const [text, setText] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState('');
-  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [imagePopoverOpen, setImagePopoverOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const createPostMutation = useCreatePost();
 
   const handleCreatePost = async () => {
-    if (!text && images.length === 0) return;
+    if (!text.trim() && images.length === 0) return;
+    setError(null);
 
     try {
       await createPostMutation.mutateAsync({
-        text,
+        text: text.trim(),
         images,
         parentPostId: parentPost?.id,
       });
       setText('');
       setImages([]);
-      setShowUrlInput(false);
       if (onClose) onClose();
-    } catch (error) {
-      console.error('Failed to create post:', error);
+    } catch (err: unknown) {
+      if (isAxiosError<{ message: string }>(err)) {
+        setError(err.response?.data?.message ?? 'Failed to create post');
+      } else {
+        setError('An unexpected error occurred');
+      }
+      console.error('Failed to create post:', err);
     }
   };
 
-  const addImageUrl = () => {
-    if (imageUrl.trim()) {
-      setImages((prev) => [...prev, imageUrl.trim()]);
-      setImageUrl('');
-      setShowUrlInput(false);
-    }
-  };
+  const addImageUrl = useCallback(() => {
+    const trimmed = imageUrl.trim();
+    if (!trimmed) return;
 
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+    try {
+      new URL(trimmed);
+    } catch {
+      setError('Please enter a valid URL');
+      return;
+    }
+
+    if (images.length >= MAX_IMAGES) {
+      setError(`You can attach up to ${MAX_IMAGES} images`);
+      return;
+    }
+
+    if (images.includes(trimmed)) {
+      setError('Image already added');
+      return;
+    }
+
+    setImages((prev) => [...prev, trimmed]);
+    setImageUrl('');
+    setImagePopoverOpen(false);
+    setError(null);
+  }, [imageUrl, images]);
+
+  const removeImage = (url: string) => {
+    setImages((prev) => prev.filter((img) => img !== url));
   };
 
   const isReply = !!parentPost;
@@ -92,7 +123,7 @@ export function CreatePost({ parentPost, inline, onClose }: CreatePostProps) {
               </Text>
             </Group>
             <PostContent postText={parentPost.text} />
-            <Text size="sm" color="dimmed" mt={8}>
+            <Text size="sm" c="dimmed" mt={8}>
               Replying to <span className={classes.replyTo}>@{parentPost.postedBy.username}</span>
             </Text>
           </Stack>
@@ -112,74 +143,103 @@ export function CreatePost({ parentPost, inline, onClose }: CreatePostProps) {
             minRows={inline ? 1 : 3}
             placeholder={isReply ? "Post your reply" : "What is happening?!"}
             className={classes.postInput}
+            variant="unstyled"
             value={text}
             onChange={(e) => setText(e.currentTarget.value)}
           />
 
           {images.length > 0 && (
-            <SimpleGrid cols={images.length > 1 ? 2 : 1} spacing="xs">
-              {images.map((src, index) => (
-                <div key={index} className={classes.imagePreviewContainer}>
-                  <Image src={src} radius="md" />
-                  <ActionIcon
+            <SimpleGrid cols={images.length === 1 ? 1 : 2} spacing="xs">
+              {images.map((url) => (
+                <Box key={url} pos="relative">
+                  <Image
+                    src={url}
+                    alt="attachment"
+                    radius="md"
+                    h={images.length === 1 ? 260 : 160}
+                    fit="cover"
+                    fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
+                  />
+                  <CloseButton
+                    size="sm"
                     variant="filled"
-                    color="rgba(0,0,0,0.6)"
+                    pos="absolute"
+                    top={6}
+                    right={6}
+                    onClick={() => removeImage(url)}
+                    aria-label="Remove image"
                     className={classes.removeImageIcon}
-                    onClick={() => removeImage(index)}
-                    radius="xl"
-                  >
-                    <IconX size={16} />
-                  </ActionIcon>
-                </div>
+                  />
+                </Box>
               ))}
             </SimpleGrid>
           )}
 
-          <Collapse in={showUrlInput}>
-            <Group gap={8} mt="xs">
-              <TextInput
-                placeholder="Paste image URL..."
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.currentTarget.value)}
-                style={{ flex: 1 }}
-                size="xs"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addImageUrl();
-                  }
-                }}
-                autoFocus
-              />
-              <ActionIcon
-                variant="light"
-                color="blue"
-                onClick={addImageUrl}
-                radius="xl"
-                size="lg"
-                disabled={!imageUrl.trim()}
-              >
-                <IconPlus size={20} />
-              </ActionIcon>
-            </Group>
-          </Collapse>
+          {error && (
+            <Text c="red" size="sm">
+              {error}
+            </Text>
+          )}
 
           <Group justify="space-between" mt="sm">
-            <ActionIcon
-              variant="subtle"
-              color="blue"
-              onClick={() => setShowUrlInput((prev) => !prev)}
-              radius="xl"
-              size="lg"
+            <Popover
+              opened={imagePopoverOpen}
+              onChange={setImagePopoverOpen}
+              width={300}
+              position="bottom-start"
+              shadow="md"
+              withArrow
             >
-              <IconPhoto size={20} />
-            </ActionIcon>
+              <Popover.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="blue"
+                  size="lg"
+                  onClick={() => setImagePopoverOpen((o) => !o)}
+                  radius="xl"
+                  disabled={images.length >= MAX_IMAGES}
+                >
+                  <IconPhoto size={20} />
+                </ActionIcon>
+              </Popover.Target>
+
+              <Popover.Dropdown>
+                <Text size="xs" fw={500} mb={6}>
+                  Paste image URL
+                </Text>
+                <Group gap={8}>
+                  <TextInput
+                    placeholder="https://example.com/image.jpg"
+                    size="xs"
+                    style={{ flex: 1 }}
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.currentTarget.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addImageUrl();
+                      }
+                    }}
+                    autoFocus
+                  />
+                  <ActionIcon
+                    size="sm"
+                    radius="xl"
+                    onClick={addImageUrl}
+                    variant="filled"
+                    disabled={!imageUrl.trim()}
+                  >
+                    <IconPlus size={16} />
+                  </ActionIcon>
+                </Group>
+              </Popover.Dropdown>
+            </Popover>
 
             <Button
               className={classes.submitButton}
               onClick={handleCreatePost}
               loading={createPostMutation.isPending}
-              disabled={!text && images.length === 0}
+              disabled={(!text.trim() && images.length === 0) || createPostMutation.isPending}
               radius="xl"
             >
               {isReply ? 'Reply' : 'Post'}
