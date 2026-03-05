@@ -17,7 +17,6 @@ export function NavBarLinks() {
       {...link}
       key={link.path}
       active={isActive(link.path)}
-      onClick={() => {}}
       needAuth={link.needAuth}
     />
   ));

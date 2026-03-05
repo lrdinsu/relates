@@ -126,7 +126,7 @@ export async function getUserProfile(
           process.env.ACCESS_TOKEN_SECRET!,
         );
         currentUserId = userId;
-      } catch (e) {
+      } catch {
         // Token might be invalid or expired, ignore
       }
     }
