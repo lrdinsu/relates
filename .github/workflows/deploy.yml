@@ -6,6 +6,32 @@ on:
       - main
 
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Server Image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/relates-server:latest -f Dockerfile.server .
+          docker push ghcr.io/${{ github.repository_owner }}/relates-server:latest
+
+      - name: Build and push Caddy/Client Image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/relates-client:latest -f Dockerfile.client .
+          docker push ghcr.io/${{ github.repository_owner }}/relates-client:latest
+
   deploy:
     runs-on: ubuntu-latest
     steps:
@@ -16,11 +42,12 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            # Navigate to where your project lives on the Droplet
             cd /home/lynn/apps/relates
+            
+            echo "${{ secrets.GH_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # Pull the latest code from GitHub
             git pull origin main
 
-            # Rebuild and restart the Docker containers
-            docker compose -f docker-compose.yaml up -d --build
+            docker compose -f docker-compose.yml pull
+            
+            docker compose -f docker-compose.yml up -d

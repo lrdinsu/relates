@@ -18,10 +18,7 @@ services:
       retries: 5
 
   server:
-    image: relates-server:prod
-    build:
-      context: .
-      dockerfile: Dockerfile.server
+    image: ghcr.io/lrdinsu/relates-server:latest
     env_file:
       - ./server/.prod.env
     depends_on:
@@ -31,7 +28,7 @@ services:
     restart: unless-stopped
 
   migrate:
-    image: relates-server:prod
+    image: ghcr.io/lrdinsu/relates-server:latest
     env_file:
       - ./server/.prod.env
     depends_on:
@@ -43,9 +40,7 @@ services:
     command: ["npx", "prisma", "migrate", "deploy"]
 
   caddy:
-    build:
-      context: .
-      dockerfile: Dockerfile.client
+    image: ghcr.io/lrdinsu/relates-client:latest
     ports:
       - "127.0.0.1:8002:80"
     depends_on:
