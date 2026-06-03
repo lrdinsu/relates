@@ -7,7 +7,8 @@
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "build": "tsdown",
     "start": "node --env-file=.prod.env dist/server.mjs",
-    "test": "echo \\\"Error: no src/test specified\\\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "type": "module",
   "keywords": [],
@@ -27,17 +28,21 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@testcontainers/postgresql": "^12.0.1",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.19.19",
     "@types/pg": "^8.20.0",
+    "@types/supertest": "^7.2.0",
     "@typescript-eslint/eslint-plugin": "^8.60.1",
     "@typescript-eslint/parser": "^8.60.1",
     "eslint": "^9.39.4",
     "globals": "^15.15.0",
+    "supertest": "^7.2.2",
     "tsdown": "0.21.0-beta.2",
     "tsx": "^4.22.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.6"
   }
 }
