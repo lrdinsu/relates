@@ -44,7 +44,7 @@
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
     "prettier": "3.3.3",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.1",
     "vite": "^5.4.21",
     "vite-tsconfig-paths": "^5.1.4"
