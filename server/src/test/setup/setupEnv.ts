@@ -7,3 +7,7 @@ import { join } from 'node:path';
 const URL_FILE = join(tmpdir(), 'relates-test-db-url');
 
 process.env.DATABASE_URL = readFileSync(URL_FILE, 'utf8').trim();
+
+// Test-only signing secrets, so the auth flow can issue and verify tokens.
+process.env.ACCESS_TOKEN_SECRET ||= 'test-access-token-secret';
+process.env.REFRESH_TOKEN_SECRET ||= 'test-refresh-token-secret';
