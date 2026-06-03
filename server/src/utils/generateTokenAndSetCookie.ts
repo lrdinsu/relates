@@ -20,6 +20,7 @@ export function generateTokenAndSetCookie(
 
   res.cookie('refreshToken', token, {
     httpOnly: true, // client-side JS cannot access the cookie
+    secure: process.env.NODE_ENV === 'production', // HTTPS-only outside local dev
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     sameSite: 'strict', // CSRF
   });
