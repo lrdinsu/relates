@@ -46,7 +46,8 @@ export async function seedDatabase(
        "isDeleted", images, "createdAt", "updatedAt")
     SELECT
       (g % ${users}) + 1,
-      'Bench post ' || g || ' the quick brown fox jumps over the lazy dog',
+      'Bench post ' || g || ' the quick brown fox jumps over the lazy dog'
+        || CASE WHEN g % 1000 = 0 THEN ' raremarker' ELSE '' END,
       0, 0, 0, false, '{}',
       now() - ((g % 2592000) || ' seconds')::interval,
       now()
