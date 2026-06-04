@@ -21,7 +21,7 @@ export const UserSchema = z.object({
     .max(20, 'Name must be at most 20 characters'),
   role: RoleSchema.default('USER'),
   active: z.boolean().default(true),
-  profilePic: z.string().url().nullable().default(null),
+  profilePic: z.string().url().or(z.literal('')).nullable().default(null),
   biography: z.string().nullable().default(null),
   followingCount: z.number().int().default(0),
   followersCount: z.number().int().default(0),
