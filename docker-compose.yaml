@@ -17,12 +17,29 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks: [appnet]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   server:
     image: ghcr.io/lrdinsu/relates-server:latest
     env_file:
       - ./server/.prod.env
+    environment:
+      REDIS_URL: redis://redis:6379
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks: [appnet]
     restart: unless-stopped
@@ -53,3 +70,4 @@ networks:
 
 volumes:
   pg_data:
+  redis_data:
