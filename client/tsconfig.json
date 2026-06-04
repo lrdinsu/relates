@@ -21,20 +21,19 @@
     "noFallthroughCasesInSwitch": true,
 
     /* Path */
-    "baseUrl": "src/",
     "paths": {
-      "@/components/*": ["components/*"],
-      "@/features/*": ["features/*"],
-      "@/contexts/*": ["contexts/*"],
-      "@/pages/*": ["pages/*"],
-      "@/hooks/*": ["hooks/*"],
-      "@/types/*": ["types/*"],
-      "@/utils/*": ["utils/*"],
-      "@/theme/*": ["theme/*"],
-      "@/stores/*": ["stores/*"],
-      "@/api/*": ["api/*"],
-      "@/layouts/*": ["layouts/*"],
-      "@/routes/*": ["routes/*"]
+      "@/components/*": ["./src/components/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/contexts/*": ["./src/contexts/*"],
+      "@/pages/*": ["./src/pages/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/theme/*": ["./src/theme/*"],
+      "@/stores/*": ["./src/stores/*"],
+      "@/api/*": ["./src/api/*"],
+      "@/layouts/*": ["./src/layouts/*"],
+      "@/routes/*": ["./src/routes/*"]
     }
   },
   "include": ["src"],
