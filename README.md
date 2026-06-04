@@ -12,6 +12,7 @@ Relates is a high-performance, full-stack social media platform inspired by mode
   - [Technologies](#technologies-1)
   - [Key Features](#key-features-1)
 - [Packages](#packages)
+- [Performance](#performance)
 - [Getting Started](#getting-started)
 - [License](#license)
 
@@ -32,7 +33,7 @@ The client is a modern SPA designed for speed and responsiveness.
 
 ### Technologies
 
-- **React 18** & **TypeScript**
+- **React 19** & **TypeScript**
 - **Vite** for optimized bundling
 - **Mantine UI** for professional-grade component architecture
 - **React Query** for state synchronization and optimistic updates
@@ -75,11 +76,30 @@ Shared Zod schemas located in `packages/validation/`. This ensures the client an
 
 - **Sync Schemas**: One source of truth for Users, Posts, Searches, and Interactions.
 
+## Performance
+
+Benchmarked with a synthetic dataset (up to 100k users / 1M posts, seeded via PostgreSQL's `generate_series`) against local PostgreSQL 16. Median / p95 end-to-end latency:
+
+| Endpoint        | 10k posts | 100k posts | 1M posts     |
+|-----------------|-----------|------------|--------------|
+| For You feed    | 8 / 10 ms | 14 / 17 ms | 60 / 76 ms   |
+| Following feed  | 5 / 6 ms  | 11 / 13 ms | 50 / 59 ms   |
+| Hot feed        | 4 / 5 ms  | 11 / 12 ms | 61 / 68 ms   |
+| Search          | 11 / 15 ms| 37 / 45 ms | 292 / 353 ms |
+
+`EXPLAIN ANALYZE` showed search doing a sequential scan, a leading-wildcard `ILIKE` can't use a B-tree index, so Postgres reads every row. Relates adds a `pg_trgm` GIN index on post text, so the same query uses a bitmap index scan instead, cutting search at 1M posts from ~290 ms to ~3 ms (about 100x). The feeds sort on unindexed columns; indexes help at moderate scale, and a precomputed (fan-out-on-write) feed is the direction beyond that.
+
+The Search column above is the pre-index baseline that motivated the fix; with the shipped trigram index, search stays in the low single-digit milliseconds. (The benchmark applies all migrations, so re-running it reflects the indexed search.) Numbers are from local hardware and are directional. Reproduce with:
+
+```bash
+BENCH_DATABASE_URL=postgresql://user:pass@localhost:5432/relates_bench pnpm --filter server bench
+```
+
 ## Getting Started
 
 ### Prerequisites
 
-- **Node.js** (v18+)
+- **Node.js** (v22+)
 - **pnpm** (preferred)
 - **Docker** & **Docker Compose**
 
@@ -97,13 +117,17 @@ Shared Zod schemas located in `packages/validation/`. This ensures the client an
 
 3. **Database**:
     - Ensure PostgreSQL is running (or use Docker).
-    - Run `npx prisma generate` and `npx prisma migrate dev`.
+    - Generate the client and apply migrations (from the repo root):
+      ```bash
+      pnpm --filter server exec prisma generate
+      pnpm --filter server exec prisma migrate dev
+      ```
 
 ### Running the Application
 
-**Using Docker**:
+**Using Docker** (runs the published images from the registry):
 ```bash
-docker-compose up --build
+docker compose up -d
 ```
 
 **Development Mode**:

@@ -15,7 +15,7 @@ export async function updatePost(req: Request, res: Response): Promise<void> {
 
     const body = PostUpdateSchema.safeParse(req.body);
     if (!body.success) {
-      res.status(400).json({ message: body.error.errors[0].message });
+      res.status(400).json({ message: body.error.issues[0].message });
       return;
     }
 
