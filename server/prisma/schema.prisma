@@ -1,11 +1,12 @@
 generator client {
   provider        = "prisma-client"
   output = "../generated/prisma"
-  previewFeatures = ["typedSql"]
+  previewFeatures = ["typedSql", "postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [pg_trgm]
 }
 
 model User {
@@ -58,6 +59,10 @@ model Post {
   postedBy      User     @relation(fields: [postedById], references: [id])
   reposts       Repost[]
   saves         Save[]
+
+  // Trigram index so case-insensitive substring search (ILIKE '%term%') can use
+  // an index instead of scanning every row.
+  @@index([text(ops: raw("gin_trgm_ops"))], type: Gin)
 }
 
 model Like {
