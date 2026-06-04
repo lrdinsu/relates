@@ -8,7 +8,8 @@
     "build": "tsdown",
     "start": "node --env-file=.prod.env dist/server.mjs",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "bench": "tsx src/bench/run.ts"
   },
   "type": "module",
   "keywords": [],
