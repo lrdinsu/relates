@@ -33,7 +33,7 @@ The client is a modern SPA designed for speed and responsiveness.
 
 ### Technologies
 
-- **React 18** & **TypeScript**
+- **React 19** & **TypeScript**
 - **Vite** for optimized bundling
 - **Mantine UI** for professional-grade component architecture
 - **React Query** for state synchronization and optimistic updates
@@ -87,9 +87,9 @@ Benchmarked with a synthetic dataset (up to 100k users / 1M posts, seeded via Po
 | Hot feed        | 4 / 5 ms  | 11 / 12 ms | 61 / 68 ms   |
 | Search          | 11 / 15 ms| 37 / 45 ms | 292 / 353 ms |
 
-`EXPLAIN ANALYZE` showed search doing a sequential scan, a leading-wildcard `ILIKE` can't use a B-tree index, so Postgres reads every row. A `pg_trgm` GIN index cuts search at 1M posts from ~290 ms to ~3 ms (about 100x), with the query plan switching from a sequential scan to a bitmap index scan. The feeds sort on unindexed columns; indexes help at moderate scale, and a precomputed (fan-out-on-write) feed is the direction beyond that.
+`EXPLAIN ANALYZE` showed search doing a sequential scan, a leading-wildcard `ILIKE` can't use a B-tree index, so Postgres reads every row. Relates adds a `pg_trgm` GIN index on post text, so the same query uses a bitmap index scan instead, cutting search at 1M posts from ~290 ms to ~3 ms (about 100x). The feeds sort on unindexed columns; indexes help at moderate scale, and a precomputed (fan-out-on-write) feed is the direction beyond that.
 
-Numbers are from local hardware and are directional. Reproduce with:
+The Search column above is the pre-index baseline that motivated the fix; with the shipped trigram index, search stays in the low single-digit milliseconds. (The benchmark applies all migrations, so re-running it reflects the indexed search.) Numbers are from local hardware and are directional. Reproduce with:
 
 ```bash
 BENCH_DATABASE_URL=postgresql://user:pass@localhost:5432/relates_bench pnpm --filter server bench
@@ -99,7 +99,7 @@ BENCH_DATABASE_URL=postgresql://user:pass@localhost:5432/relates_bench pnpm --fi
 
 ### Prerequisites
 
-- **Node.js** (v18+)
+- **Node.js** (v22+)
 - **pnpm** (preferred)
 - **Docker** & **Docker Compose**
 
@@ -117,13 +117,17 @@ BENCH_DATABASE_URL=postgresql://user:pass@localhost:5432/relates_bench pnpm --fi
 
 3. **Database**:
     - Ensure PostgreSQL is running (or use Docker).
-    - Run `npx prisma generate` and `npx prisma migrate dev`.
+    - Generate the client and apply migrations (from the repo root):
+      ```bash
+      pnpm --filter server exec prisma generate
+      pnpm --filter server exec prisma migrate dev
+      ```
 
 ### Running the Application
 
-**Using Docker**:
+**Using Docker** (runs the published images from the registry):
 ```bash
-docker-compose up --build
+docker compose up -d
 ```
 
 **Development Mode**:
