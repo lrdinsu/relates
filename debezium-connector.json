@@ -1,0 +1,20 @@
+{
+  "name": "relates-postgres",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "relates",
+    "database.password": "relates_local_pw",
+    "database.dbname": "relates",
+    "topic.prefix": "relates",
+    "plugin.name": "pgoutput",
+    "table.include.list": "public.Post",
+    "slot.name": "relates_slot",
+    "publication.autocreate.mode": "filtered",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false"
+  }
+}
