@@ -1,5 +1,5 @@
-import { prisma } from '../../db';
-import { redis } from '../../db/redis';
+import { prisma } from '../../src/db';
+import { redis } from '../../src/db/redis';
 
 // Empties every table and resets identity sequences, and clears Redis, so each
 // test starts from a known-clean state.
