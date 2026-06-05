@@ -3,6 +3,7 @@ import { PostCreateSchema } from 'validation';
 
 import { Prisma } from '../../../generated/prisma/client';
 import { prisma } from '../../db';
+import { POST_CREATED, PostCreatedPayload } from '../../events/events.js';
 import { PostCreateParamsSchema } from '../../types/validation/schemas.js';
 
 export async function createPost(req: Request, res: Response): Promise<void> {
@@ -66,8 +67,22 @@ export async function createPost(req: Request, res: Response): Promise<void> {
       ]);
       post = created;
     } else {
-      // Root-level post: no counter to maintain.
-      post = await prisma.post.create(postArgs);
+      // Root-level post: create it and record a POST_CREATED event in the same
+      // transaction, so the feed fan-out can run asynchronously off the outbox.
+      // Replies are not fanned out to timelines, so only root posts emit this.
+      post = await prisma.$transaction(async (tx) => {
+        const created = await tx.post.create(postArgs);
+        await tx.outbox.create({
+          data: {
+            eventType: POST_CREATED,
+            payload: {
+              postId: created.id,
+              authorId: currentUserId,
+            } satisfies PostCreatedPayload,
+          },
+        });
+        return created;
+      });
     }
 
     res.status(201).json({ post });

@@ -4,8 +4,12 @@
 
 export const LIKE_CREATED = 'LIKE_CREATED';
 export const FOLLOW_CREATED = 'FOLLOW_CREATED';
+export const POST_CREATED = 'POST_CREATED';
 
-export type EventType = typeof LIKE_CREATED | typeof FOLLOW_CREATED;
+export type EventType =
+  | typeof LIKE_CREATED
+  | typeof FOLLOW_CREATED
+  | typeof POST_CREATED;
 
 // Someone liked recipient's post.
 export interface LikeCreatedPayload {
@@ -20,4 +24,13 @@ export interface FollowCreatedPayload {
   recipientId: number;
 }
 
-export type EventPayload = LikeCreatedPayload | FollowCreatedPayload;
+// A root post was created; drives feed fan-out.
+export interface PostCreatedPayload {
+  postId: number;
+  authorId: number;
+}
+
+export type EventPayload =
+  | LikeCreatedPayload
+  | FollowCreatedPayload
+  | PostCreatedPayload;
