@@ -5,7 +5,7 @@ import { redis } from '../../src/db/redis';
 // test starts from a known-clean state.
 export async function resetDatabase() {
   await prisma.$executeRawUnsafe(
-    'TRUNCATE TABLE "Like", "Repost", "Save", "UserFollows", "Post", "User" RESTART IDENTITY CASCADE',
+    'TRUNCATE TABLE "Notification", "Outbox", "Like", "Repost", "Save", "UserFollows", "Post", "User" RESTART IDENTITY CASCADE',
   );
   await redis.flushall();
 }
