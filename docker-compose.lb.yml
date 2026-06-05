@@ -1,0 +1,113 @@
+# docker-compose.lb.yml — LOCAL-ONLY load-balancing demo.
+#
+# Two stateless `server` replicas behind Caddy, sharing one Postgres and one
+# Redis. Because sessions already live in Redis, any replica can serve any
+# request, so Caddy can round-robin across them. Production stays single-replica
+# (docker-compose.yaml is untouched); this stack is for dev/demo/resume only.
+#
+# Run:   docker compose -f docker-compose.lb.yml up --build
+# Open:  http://localhost:8080
+# Demo:  docker kill relates-lb-server-1   # traffic shifts to server-2, no downtime
+#
+# `name:` isolates this stack's containers, network, and volumes from the prod
+# compose project so the two never collide.
+name: relates-lb
+
+# Shared definition for the two replicas. Both build the same image and read the
+# same env; only the container name and identity differ.
+x-server: &server
+  build:
+    context: .
+    dockerfile: Dockerfile.server
+  image: relates-server:lb
+  env_file:
+    - ./server/.prod.env
+  environment:
+    REDIS_URL: redis://redis:6379
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    migrate:
+      condition: service_completed_successfully
+  networks: [appnet]
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:16
+    env_file:
+      - ./server/.prod.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - lb_pg_data:/var/lib/postgresql/data
+    networks: [appnet]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - lb_redis_data:/data
+    networks: [appnet]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # One-shot: apply migrations before the replicas start serving.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    image: relates-server:lb
+    env_file:
+      - ./server/.prod.env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [appnet]
+    restart: "no"
+    working_dir: /app
+    command: ["npx", "prisma", "migrate", "deploy"]
+
+  server-1:
+    <<: *server
+    container_name: relates-lb-server-1
+
+  server-2:
+    <<: *server
+    container_name: relates-lb-server-2
+
+  caddy:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    ports:
+      - "8080:80"
+    # Override the image's baked-in Caddyfile with the load-balancing one.
+    volumes:
+      - ./Caddyfile.lb:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - server-1
+      - server-2
+    networks: [appnet]
+    restart: unless-stopped
+
+networks:
+  appnet:
+
+volumes:
+  lb_pg_data:
+  lb_redis_data:

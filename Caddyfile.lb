@@ -1,0 +1,37 @@
+# Caddyfile.lb — local-only load-balancing demo.
+# Same SPA serving as the prod Caddyfile, but /api/v1/* is balanced across two
+# stateless server replicas instead of a single upstream. Mounted over
+# /etc/caddy/Caddyfile by docker-compose.lb.yml so we reuse the client image's
+# built SPA without rebuilding it.
+:80 {
+	# Load-balance API requests across the two replicas.
+	handle /api/v1/* {
+		reverse_proxy server-1:3000 server-2:3000 {
+			# Even, simple distribution across identical stateless workers.
+			lb_policy round_robin
+
+			# Active health checks: Caddy polls each replica's liveness
+			# endpoint and stops routing to one that fails, then re-adds it
+			# when it recovers. This is what makes "kill a replica" seamless.
+			health_uri /api/v1/health
+			health_interval 5s
+			health_timeout 2s
+			health_status 200
+
+			# Passive ejection: if a live request to a replica errors or
+			# times out, take it out of rotation briefly as well.
+			fail_duration 10s
+		}
+	}
+
+	# Serve SPA — try_files equivalent for React Router
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Cache static assets
+	@static path *.css *.js *.mjs *.map *.ico *.png *.jpg *.jpeg *.gif *.svg *.webp *.ttf *.woff *.woff2
+	header @static Cache-Control "public, max-age=604800, immutable"
+}
