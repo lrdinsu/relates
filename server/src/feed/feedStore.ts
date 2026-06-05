@@ -35,6 +35,30 @@ export async function addPostToFeeds(
   await pipeline.exec();
 }
 
+// Fan a new post out to the feeds of the author's followers (and the author's
+// own feed). Skips celebrity authors: above the follower threshold the write
+// amplification is too high, so their posts are instead merged in at read time.
+export async function fanOutPost(
+  postId: number,
+  authorId: number,
+): Promise<void> {
+  const author = await prisma.user.findUnique({
+    where: { id: authorId },
+    select: { followersCount: true },
+  });
+  if (!author) return;
+  if (author.followersCount >= CELEBRITY_FOLLOWER_THRESHOLD) return;
+
+  const followers = await prisma.userFollows.findMany({
+    where: { followingId: authorId },
+    select: { followerId: true },
+  });
+
+  const userIds = followers.map((follow) => follow.followerId);
+  userIds.push(authorId); // the author sees their own post in their feed
+  await addPostToFeeds(userIds, postId);
+}
+
 // One page of a feed, newest-first, ids strictly older than `cursor` (a post id).
 export async function getFeedPage(
   userId: number,

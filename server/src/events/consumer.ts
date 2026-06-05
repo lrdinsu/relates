@@ -2,12 +2,15 @@ import { Consumer } from 'kafkajs';
 
 import { Prisma } from '../../generated/prisma/client';
 import { prisma } from '../db';
+import { fanOutPost } from '../feed/feedStore.js';
 import { isPrismaErrorCode } from '../utils/prismaError.js';
 import {
   FOLLOW_CREATED,
   FollowCreatedPayload,
   LIKE_CREATED,
   LikeCreatedPayload,
+  POST_CREATED,
+  PostCreatedPayload,
 } from './events.js';
 import { TOPIC, kafka } from './kafka.js';
 
@@ -32,6 +35,13 @@ interface OutboxMessage {
 // already handled. That is why the consumer can be redelivered safely.
 export async function handleEvent(raw: string): Promise<void> {
   const message = JSON.parse(raw) as OutboxMessage;
+
+  // A new post fans out to follower feeds rather than creating a notification.
+  if (message.eventType === POST_CREATED) {
+    const payload = message.payload as PostCreatedPayload;
+    await fanOutPost(payload.postId, payload.authorId);
+    return;
+  }
 
   let data: Prisma.NotificationUncheckedCreateInput;
   if (message.eventType === LIKE_CREATED) {
