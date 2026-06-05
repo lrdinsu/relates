@@ -1,4 +1,5 @@
 import {
+  IconBell,
   IconHeart,
   IconHome,
   IconPlus,
@@ -11,5 +12,6 @@ export const actions = [
   { icon: IconSearch, path: '/search', needAuth: false },
   { icon: IconPlus, path: '/create', needAuth: true },
   { icon: IconHeart, path: '/liked', needAuth: true },
+  { icon: IconBell, path: '/notifications', needAuth: true },
   { icon: IconUser, path: '/profile', needAuth: true },
 ];
