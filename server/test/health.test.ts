@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
-import { app } from '../app';
+import { app } from '../src/app';
 
 // The health endpoint is the load balancer's liveness probe. Its contract:
 // answer 200 to anyone, without authentication and without depending on the

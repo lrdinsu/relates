@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { app } from '../app';
+import { app } from '../src/app';
 import { getRefreshCookie, signup } from './helpers';
 import { resetDatabase } from './setup/resetDb';
 

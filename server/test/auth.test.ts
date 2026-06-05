@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { app } from '../app';
+import { app } from '../src/app';
 import { getRefreshCookie, signup, validUser } from './helpers';
 import { resetDatabase } from './setup/resetDb';
 
