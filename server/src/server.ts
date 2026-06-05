@@ -1,5 +1,5 @@
 import { app } from './app.js';
-import { prisma } from './db/index.js';
+import { prisma } from './db';
 import { redis } from './db/redis.js';
 
 // Handle outside express unhandled promise rejections (e.g. database connection error)
