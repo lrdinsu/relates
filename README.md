@@ -24,7 +24,7 @@ Relates is a high-performance, full-stack social media platform inspired by mode
 - **Optimistic UI Interaction**: Zero-latency feedback for Likes and interactions via React Query.
 - **Full Post Lifecycle**: Create, Edit, and Soft-Delete capabilities for posts and nested replies.
 - **Advanced Profile Management**: Live profile editing (Name, Bio, Avatar URL) with instant cross-app synchronization.
-- **Secure Authentication**: JWT-based auth with automatic token refresh linked to live database state.
+- **Secure Authentication**: JWT auth with refresh-token rotation and reuse detection, backed by a Redis session store, with log-out-everywhere support.
 - **Responsive Design**: Polished mobile and desktop layouts featuring a smart navigation system and unified "Menu" button.
 
 ## Client Architecture
@@ -57,6 +57,7 @@ A scalable Express backend focused on data integrity and performance.
 - **Express** & **TypeScript**
 - **Prisma ORM** for type-safe database operations
 - **PostgreSQL** for relational data storage
+- **Redis** for session storage and refresh-token rotation
 - **Zod** for end-to-end type safety and validation
 - **Argon2** for industry-standard password hashing
 
@@ -65,7 +66,7 @@ A scalable Express backend focused on data integrity and performance.
 - **Soft-Delete System**: Database-safe post removal ensuring data integrity and relationship stability.
 - **Blended Feed Logic**: Complex Prisma queries for fetching network-relevant content.
 - **Type-Safe Search**: Case-insensitive partial matching for users and posts.
-- **Live Token Refresh**: Refresh mechanism that pulls latest profile data from DB to prevent stale client state.
+- **Rotating Sessions**: Refresh tokens rotate on every use with reuse detection (a replayed token revokes the session); per-request auth validates the signed token without a database lookup.
 - **Modular Controllers**: Clean separation of concerns for Auth, Post, User, and Search logic.
 
 ## Packages
