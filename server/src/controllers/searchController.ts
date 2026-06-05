@@ -13,15 +13,31 @@ export async function searchPosts(req: Request, res: Response) {
     const { q, cursor, limit } = input.data;
     const currentUserId = req.user?.id;
 
+    // Full-text search ranked by relevance. The cursor is treated as an offset
+    // here (results are rank-ordered, not id-ordered, so an id cursor wouldn't
+    // page correctly). Step 1: rank + page the matching ids via the GIN-indexed
+    // tsvector; step 2: hydrate the bodies with Prisma, preserving rank order.
+    const offset = cursor ?? 0;
+    const ranked = await prisma.$queryRaw<{ id: number }[]>`
+      SELECT id
+      FROM "Post"
+      WHERE "isDeleted" = false
+        AND "searchVector" @@ websearch_to_tsquery('english', ${q})
+      ORDER BY
+        ts_rank("searchVector", websearch_to_tsquery('english', ${q})) DESC,
+        id DESC
+      OFFSET ${offset}
+      LIMIT ${limit}
+    `;
+    const ids = ranked.map((row) => row.id);
+
+    if (ids.length === 0) {
+      res.status(200).json({ posts: [], nextCursor: null });
+      return;
+    }
+
     const posts = await prisma.post.findMany({
-      where: {
-        text: {
-          contains: q,
-          mode: 'insensitive',
-        },
-        isDeleted: false,
-      },
-      orderBy: { createdAt: 'desc' },
+      where: { id: { in: ids } },
       include: {
         postedBy: {
           select: {
@@ -47,18 +63,21 @@ export async function searchPosts(req: Request, res: Response) {
             }
           : false,
       },
-      take: limit,
-      skip: cursor ? 1 : 0,
-      cursor: cursor ? { id: cursor } : undefined,
     });
 
-    const postsWithIsLiked = posts.map((post) => ({
-      ...post,
-      isLiked: (post.likes?.length ?? 0) > 0,
-      likes: undefined,
-    }));
+    // findMany doesn't preserve the `in` order, so restore the rank order.
+    const byId = new Map(posts.map((post) => [post.id, post]));
+    const postsWithIsLiked = ids
+      .map((id) => byId.get(id))
+      .filter((post): post is NonNullable<typeof post> => post !== undefined)
+      .map((post) => ({
+        ...post,
+        isLiked: (post.likes?.length ?? 0) > 0,
+        likes: undefined,
+      }));
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+    // A full page means there are likely more results; advance the offset.
+    const nextCursor = ids.length === limit ? offset + ids.length : null;
 
     res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
