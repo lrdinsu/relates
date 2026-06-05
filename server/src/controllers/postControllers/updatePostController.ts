@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 
 import { prisma } from '../../db';
 import { PostParamsSchema } from '../../types/validation/schemas.js';
+import { isPrismaErrorCode } from '../../utils/prismaError.js';
 import { PostUpdateSchema } from 'validation';
 
 export async function updatePost(req: Request, res: Response): Promise<void> {
@@ -122,31 +123,35 @@ export async function likeUnlikePost(req: Request, res: Response) {
     });
 
     if (isLiked) {
-      // Unlike post
-      await prisma.like.delete({
-        where: {
-          userId_postId: {
-            postId,
-            userId,
-          },
-        },
-      });
-      await prisma.post.update({
-        where: { id: postId },
-        data: { likesCount: { decrement: 1 } },
-      });
+      // Unlike: drop the row and the counter together so they can't drift.
+      try {
+        await prisma.$transaction([
+          prisma.like.delete({
+            where: { userId_postId: { postId, userId } },
+          }),
+          prisma.post.update({
+            where: { id: postId },
+            data: { likesCount: { decrement: 1 } },
+          }),
+        ]);
+      } catch (err) {
+        // A concurrent unlike already removed the row: nothing left to do.
+        if (!isPrismaErrorCode(err, 'P2025')) throw err;
+      }
     } else {
-      // Like post
-      await prisma.like.create({
-        data: {
-          userId,
-          postId,
-        },
-      });
-      await prisma.post.update({
-        where: { id: postId },
-        data: { likesCount: { increment: 1 } },
-      });
+      // Like: create the row and bump the counter together.
+      try {
+        await prisma.$transaction([
+          prisma.like.create({ data: { userId, postId } }),
+          prisma.post.update({
+            where: { id: postId },
+            data: { likesCount: { increment: 1 } },
+          }),
+        ]);
+      } catch (err) {
+        // A concurrent like already created the row (unique constraint): no-op.
+        if (!isPrismaErrorCode(err, 'P2002')) throw err;
+      }
     }
     res.status(204).send();
   } catch (error) {
@@ -235,31 +240,35 @@ export async function repostUnrepost(req: Request, res: Response) {
     });
 
     if (isReposted) {
-      // Unrepost post
-      await prisma.repost.delete({
-        where: {
-          userId_postId: {
-            postId,
-            userId,
-          },
-        },
-      });
-      await prisma.post.update({
-        where: { id: postId },
-        data: { repostsCount: { decrement: 1 } },
-      });
+      // Unrepost: drop the row and the counter together so they can't drift.
+      try {
+        await prisma.$transaction([
+          prisma.repost.delete({
+            where: { userId_postId: { postId, userId } },
+          }),
+          prisma.post.update({
+            where: { id: postId },
+            data: { repostsCount: { decrement: 1 } },
+          }),
+        ]);
+      } catch (err) {
+        // A concurrent unrepost already removed the row: nothing left to do.
+        if (!isPrismaErrorCode(err, 'P2025')) throw err;
+      }
     } else {
-      // Repost post
-      await prisma.repost.create({
-        data: {
-          userId,
-          postId,
-        },
-      });
-      await prisma.post.update({
-        where: { id: postId },
-        data: { repostsCount: { increment: 1 } },
-      });
+      // Repost: create the row and bump the counter together.
+      try {
+        await prisma.$transaction([
+          prisma.repost.create({ data: { userId, postId } }),
+          prisma.post.update({
+            where: { id: postId },
+            data: { repostsCount: { increment: 1 } },
+          }),
+        ]);
+      } catch (err) {
+        // A concurrent repost already created the row (unique constraint): no-op.
+        if (!isPrismaErrorCode(err, 'P2002')) throw err;
+      }
     }
     res.status(204).send();
   } catch (error) {
