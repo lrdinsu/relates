@@ -1,9 +1,10 @@
-import { UserType } from 'validation';
-
 declare global {
   namespace Express {
     interface Request {
-      user?: UserType;
+      // The authenticated user id, taken from the verified access token.
+      user?: { id: number };
     }
   }
 }
+
+export {};
