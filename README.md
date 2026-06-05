@@ -13,6 +13,7 @@ Relates is a high-performance, full-stack social media platform inspired by mode
   - [Key Features](#key-features-1)
 - [Packages](#packages)
 - [Performance](#performance)
+- [Horizontal Scaling](#horizontal-scaling)
 - [Getting Started](#getting-started)
 - [License](#license)
 
@@ -67,6 +68,7 @@ A scalable Express backend focused on data integrity and performance.
 - **Blended Feed Logic**: Complex Prisma queries for fetching network-relevant content.
 - **Type-Safe Search**: Case-insensitive partial matching for users and posts.
 - **Rotating Sessions**: Refresh tokens rotate on every use with reuse detection (a replayed token revokes the session); per-request auth validates the signed token without a database lookup.
+- **Stateless & Horizontally Scalable**: No per-request state in process memory (sessions live in Redis), so the API runs behind a load balancer as identical replicas; a `/api/v1/health` liveness probe and graceful `SIGTERM` draining let replicas be added or removed without dropping requests.
 - **Modular Controllers**: Clean separation of concerns for Auth, Post, User, and Search logic.
 
 ## Packages
@@ -95,6 +97,21 @@ The Search column above is the pre-index baseline that motivated the fix; with t
 ```bash
 BENCH_DATABASE_URL=postgresql://user:pass@localhost:5432/relates_bench pnpm --filter server bench
 ```
+
+## Horizontal Scaling
+
+Because sessions live in Redis rather than in process memory, the API is stateless: any replica can serve any request, so it scales horizontally by simply running more copies behind a load balancer. No sticky sessions are needed.
+
+A local-only demo stack (`docker-compose.lb.yml` + `Caddyfile.lb`) runs two `server` replicas behind Caddy:
+
+```bash
+docker compose -f docker-compose.lb.yml up --build   # http://localhost:8080
+docker kill relates-lb-server-1                       # traffic shifts to the survivor, no downtime
+```
+
+Caddy balances `/api/v1/*` across the replicas round-robin, polls each one's `/api/v1/health` liveness probe, and pulls a failing replica out of rotation (re-adding it on recovery). On shutdown each replica handles `SIGTERM` by draining in-flight requests before exiting, so removing one drops no requests.
+
+This is a single-machine demonstration of the pattern; production runs a single replica on a small VPS. At real scale the same shape holds with more replicas behind a managed L7 balancer (for example an ALB) instead of Caddy. The probe and graceful-shutdown handling are the parts that stay identical regardless of the balancer.
 
 ## Getting Started
 
