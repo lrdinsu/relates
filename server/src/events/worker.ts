@@ -1,3 +1,9 @@
+import { isEsEnabled } from '../search/esClient.js';
+import { ensurePostIndex } from '../search/postIndex.js';
+import {
+  startSearchIndexer,
+  stopSearchIndexer,
+} from '../search/indexer.js';
 import {
   startNotificationConsumer,
   stopNotificationConsumer,
@@ -37,11 +43,20 @@ export async function startEventWorker(): Promise<void> {
   await startNotificationConsumer();
   void publishLoop();
   console.log('Event worker started (outbox publisher + notifications consumer)');
+
+  // Only run the CDC search indexer where Elasticsearch is configured (local).
+  if (isEsEnabled()) {
+    await ensurePostIndex();
+    await startSearchIndexer();
+  }
 }
 
 export async function stopEventWorker(): Promise<void> {
   stopped = true;
   if (publishTimer) clearTimeout(publishTimer);
   await stopNotificationConsumer();
+  if (isEsEnabled()) {
+    await stopSearchIndexer();
+  }
   await disconnectProducer();
 }
