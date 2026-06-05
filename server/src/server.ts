@@ -1,6 +1,7 @@
 import { app } from './app.js';
 import { prisma } from './db';
 import { redis } from './db/redis.js';
+import { startEventWorker, stopEventWorker } from './events/worker.js';
 
 // Handle outside express unhandled promise rejections (e.g. database connection error)
 process.on('unhandledRejection', (err) => {
@@ -26,6 +27,15 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server started at ${PORT}`);
 });
 
+// Start the event worker only where a broker is configured. Production runs no
+// Kafka (the broker is local-only), so KAFKA_BROKERS is unset there and the
+// worker stays off; the local demo stack sets it and the pipeline runs.
+if (process.env.KAFKA_BROKERS) {
+  startEventWorker().catch((err) => {
+    console.error('Failed to start event worker:', err);
+  });
+}
+
 // Graceful shutdown. When the load balancer ejects a replica and the container
 // is stopped, Docker sends SIGTERM. We stop accepting new connections, let
 // in-flight requests finish, then close Redis and Postgres so nothing is cut
@@ -46,6 +56,7 @@ async function shutdown(signal: string): Promise<void> {
 
   server.close(async () => {
     try {
+      await stopEventWorker();
       await redis.quit();
       await prisma.$disconnect();
     } catch (err) {

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { UserUpdateSchema } from 'validation';
 
 import { prisma } from '../db';
+import { FOLLOW_CREATED, FollowCreatedPayload } from '../events/events.js';
 import { isPrismaErrorCode } from '../utils/prismaError.js';
 import { jwtVerify } from '../utils/jwtVerify.js';
 
@@ -69,7 +70,9 @@ export async function followUnfollowUser(
       res.status(204).send();
       return;
     } else {
-      // Follow: create the edge and adjust both users' counters together.
+      // Follow: create the edge and adjust both users' counters together, and
+      // record a FOLLOW_CREATED event in the SAME transaction (the outbox) so a
+      // notification can be produced asynchronously.
       try {
         await prisma.$transaction([
           prisma.userFollows.create({
@@ -85,6 +88,15 @@ export async function followUnfollowUser(
           prisma.user.update({
             where: { id: currentUserId },
             data: { followingCount: { increment: 1 } },
+          }),
+          prisma.outbox.create({
+            data: {
+              eventType: FOLLOW_CREATED,
+              payload: {
+                actorId: currentUserId,
+                recipientId: targetUserId,
+              } satisfies FollowCreatedPayload,
+            },
           }),
         ]);
       } catch (err) {

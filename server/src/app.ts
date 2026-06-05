@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import express, { Express } from 'express';
 
 import { authRouter } from './routes/authRoutes.js';
+import { notificationRouter } from './routes/notificationRoutes.js';
 import { postRouter } from './routes/postRoutes.js';
 import { userRouter } from './routes/userRoutes.js';
 import { searchRouter } from './routes/searchRoutes.js';
@@ -29,3 +30,4 @@ app.use('/api/v1/users', userRouter);
 app.use('/api/v1/posts', postRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/search', searchRouter);
+app.use('/api/v1/notifications', notificationRouter);

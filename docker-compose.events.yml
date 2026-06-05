@@ -1,0 +1,40 @@
+# docker-compose.events.yml — LOCAL-ONLY event broker for the notifications
+# pipeline. Production runs no broker (it's local-only by decision), so this is
+# never part of the prod stack.
+#
+# Run:   docker compose -f docker-compose.events.yml up -d
+# Then point the dev server at it:  KAFKA_BROKERS=localhost:9092 (in server/.env)
+# and start it with `pnpm --filter server dev`. Likes and follows then flow
+# through the outbox to a notification.
+#
+# Redpanda speaks the Kafka protocol (no JVM), so the app's kafkajs client and
+# all the Kafka concepts are unchanged; only the broker binary differs.
+name: relates-events
+
+services:
+  redpanda:
+    image: redpandadata/redpanda:v24.2.7
+    command:
+      - redpanda
+      - start
+      - --mode
+      - dev-container
+      - --smp
+      - "1"
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://localhost:9092
+    ports:
+      - "9092:9092" # Kafka API
+      - "9644:9644" # admin/metrics
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster info >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  redpanda_data:

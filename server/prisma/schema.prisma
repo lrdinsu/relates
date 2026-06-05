@@ -29,6 +29,8 @@ model User {
   saves          Save[]
   following      UserFollows[] @relation("Following")
   followers      UserFollows[] @relation("Followers")
+  notifications      Notification[] @relation("NotificationRecipient")
+  actorNotifications Notification[] @relation("NotificationActor")
 }
 
 model UserFollows {
@@ -59,6 +61,7 @@ model Post {
   postedBy      User     @relation(fields: [postedById], references: [id])
   reposts       Repost[]
   saves         Save[]
+  notifications Notification[]
 
   // Trigram index so case-insensitive substring search (ILIKE '%term%') can use
   // an index instead of scanning every row.
@@ -96,6 +99,42 @@ model Save {
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, postId])
+}
+
+// Transactional outbox. An event row is written in the SAME transaction as the
+// state change it describes (e.g. a like), so we never dual-write to Postgres
+// and the message broker. A relay later publishes unpublished rows to Kafka and
+// stamps publishedAt. The id is the event id that travels with the message and
+// is the consumer's idempotency key.
+model Outbox {
+  id          String    @id @default(uuid())
+  eventType   String
+  payload     Json
+  createdAt   DateTime  @default(now())
+  publishedAt DateTime?
+
+  // Find unpublished events in creation order for the relay to ship.
+  @@index([publishedAt, createdAt])
+}
+
+// A derived view: the consequence of an event (someone liked your post or
+// followed you). eventId is the originating Outbox id and is unique, so a
+// redelivered event can't create a duplicate notification (idempotency).
+model Notification {
+  id          Int      @id @default(autoincrement())
+  eventId     String   @unique
+  type        String
+  recipientId Int
+  actorId     Int
+  postId      Int?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  recipient   User     @relation("NotificationRecipient", fields: [recipientId], references: [id])
+  actor       User     @relation("NotificationActor", fields: [actorId], references: [id])
+  post        Post?    @relation(fields: [postId], references: [id])
+
+  // Serve a user's notifications newest-first.
+  @@index([recipientId, createdAt])
 }
 
 enum Role {
