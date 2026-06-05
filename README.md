@@ -67,6 +67,7 @@ A scalable Express backend focused on data integrity and performance.
 - **Soft-Delete System**: Database-safe post removal ensuring data integrity and relationship stability.
 - **Blended Feed Logic**: Complex Prisma queries for fetching network-relevant content.
 - **Type-Safe Search**: Case-insensitive partial matching for users and posts.
+- **Consistent Counters**: Denormalized counts (likes, reposts, followers, comments) are updated together with their underlying rows inside a transaction, so a partial failure can never leave a count out of step; concurrent duplicate actions are idempotent via unique constraints.
 - **Rotating Sessions**: Refresh tokens rotate on every use with reuse detection (a replayed token revokes the session); per-request auth validates the signed token without a database lookup.
 - **Stateless & Horizontally Scalable**: No per-request state in process memory (sessions live in Redis), so the API runs behind a load balancer as identical replicas; a `/api/v1/health` liveness probe and graceful `SIGTERM` draining let replicas be added or removed without dropping requests.
 - **Modular Controllers**: Clean separation of concerns for Auth, Post, User, and Search logic.
