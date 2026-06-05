@@ -74,19 +74,24 @@ export async function deletePostById(
       return;
     }
 
-    // Mark the post as deleted
-    await prisma.post.update({
-      where: { id: postId },
-      data: { isDeleted: true },
-    });
-
-    // If it's a reply, decrement parent's comment count
-    if (post.parentPostId) {
-      await prisma.post.update({
-        where: { id: post.parentPostId },
-        data: { commentsCount: { decrement: 1 } },
+    // Soft-delete the post and, if it's a reply, decrement the parent's comment
+    // count in the same transaction so they can't drift apart. The updateMany
+    // with `isDeleted: false` makes this idempotent: a repeat delete affects
+    // zero rows (count === 0), so we skip the decrement and the parent's count
+    // can't fall below the real number of replies.
+    await prisma.$transaction(async (tx) => {
+      const { count } = await tx.post.updateMany({
+        where: { id: postId, isDeleted: false },
+        data: { isDeleted: true },
       });
-    }
+
+      if (count > 0 && post.parentPostId) {
+        await tx.post.update({
+          where: { id: post.parentPostId },
+          data: { commentsCount: { decrement: 1 } },
+        });
+      }
+    });
 
     res.status(204).send();
   } catch (error) {
