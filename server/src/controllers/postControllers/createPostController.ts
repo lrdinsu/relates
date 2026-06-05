@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PostCreateSchema } from 'validation';
 
+import { Prisma } from '../../../generated/prisma/client';
 import { prisma } from '../../db';
 import { PostCreateParamsSchema } from '../../types/validation/schemas.js';
 
@@ -24,25 +25,7 @@ export async function createPost(req: Request, res: Response): Promise<void> {
 
     const parentPostId = params.data.parentPostId;
 
-    // If it's a comment, verify that the parent post exists and increment `commentsCount`
-    if (parentPostId) {
-      const parentPost = await prisma.post.findUnique({
-        where: { id: parentPostId },
-      });
-
-      if (!parentPost) {
-        res.status(404).json({ message: 'Parent post not found' });
-        return;
-      }
-
-      await prisma.post.update({
-        where: { id: parentPostId },
-        data: { commentsCount: { increment: 1 } },
-      });
-    }
-
-    // create post
-    const post = await prisma.post.create({
+    const postArgs = {
       data: {
         postedById: currentUserId,
         text,
@@ -58,7 +41,34 @@ export async function createPost(req: Request, res: Response): Promise<void> {
           },
         },
       },
-    });
+    } satisfies Prisma.PostCreateArgs;
+
+    let post;
+    if (parentPostId) {
+      // It's a comment: verify the parent exists, then create the comment and
+      // bump the parent's commentsCount together so the count can't drift from
+      // the actual number of replies if a write fails partway.
+      const parentPost = await prisma.post.findUnique({
+        where: { id: parentPostId },
+      });
+
+      if (!parentPost) {
+        res.status(404).json({ message: 'Parent post not found' });
+        return;
+      }
+
+      const [created] = await prisma.$transaction([
+        prisma.post.create(postArgs),
+        prisma.post.update({
+          where: { id: parentPostId },
+          data: { commentsCount: { increment: 1 } },
+        }),
+      ]);
+      post = created;
+    } else {
+      // Root-level post: no counter to maintain.
+      post = await prisma.post.create(postArgs);
+    }
 
     res.status(201).json({ post });
   } catch (error) {
