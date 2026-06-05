@@ -1,6 +1,6 @@
 # Relates
 
-Relates is a high-performance, full-stack social media platform inspired by modern threads-style interaction. Built with `React`, `TypeScript`, `Vite`, `Express`, and `PostgreSQL`, it features a sophisticated UI, real-time optimistic updates, and a robust search engine.
+Relates is a high-performance, full-stack social media platform inspired by modern threads-style interaction. Built with `React`, `TypeScript`, `Vite`, `Express`, `PostgreSQL`, and `Redis`, it features a sophisticated UI, real-time optimistic updates, and a robust search engine.
 
 ## Table of Contents
 
