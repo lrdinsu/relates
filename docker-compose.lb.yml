@@ -3,7 +3,7 @@
 # Two stateless `server` replicas behind Caddy, sharing one Postgres and one
 # Redis. Because sessions already live in Redis, any replica can serve any
 # request, so Caddy can round-robin across them. Production stays single-replica
-# (docker-compose.yaml is untouched); this stack is for dev/demo/resume only.
+# (docker-compose.yaml is untouched); this stack is for dev/demo only.
 #
 # Run:   docker compose -f docker-compose.lb.yml up --build
 # Open:  http://localhost:8080
