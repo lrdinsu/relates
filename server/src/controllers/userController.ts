@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { UserUpdateSchema } from 'validation';
 
 import { prisma } from '../db';
+import { isPrismaErrorCode } from '../utils/prismaError.js';
 import { jwtVerify } from '../utils/jwtVerify.js';
 
 export async function followUnfollowUser(
@@ -39,44 +40,57 @@ export async function followUnfollowUser(
     });
 
     if (isFollowing) {
-      // Unfollow user
-      await prisma.userFollows.delete({
-        where: {
-          followerId_followingId: {
-            followerId: currentUserId,
-            followingId: targetUserId,
-          },
-        },
-      });
-      // update followers and following count
-      await prisma.user.update({
-        where: { id: targetUserId },
-        data: { followersCount: { decrement: 1 } },
-      });
-      await prisma.user.update({
-        where: { id: currentUserId },
-        data: { followingCount: { decrement: 1 } },
-      });
+      // Unfollow: remove the edge and adjust both users' counters together,
+      // so the relationship row and the two counts can never drift apart.
+      try {
+        await prisma.$transaction([
+          prisma.userFollows.delete({
+            where: {
+              followerId_followingId: {
+                followerId: currentUserId,
+                followingId: targetUserId,
+              },
+            },
+          }),
+          prisma.user.update({
+            where: { id: targetUserId },
+            data: { followersCount: { decrement: 1 } },
+          }),
+          prisma.user.update({
+            where: { id: currentUserId },
+            data: { followingCount: { decrement: 1 } },
+          }),
+        ]);
+      } catch (err) {
+        // A concurrent unfollow already removed the edge: nothing left to do.
+        if (!isPrismaErrorCode(err, 'P2025')) throw err;
+      }
 
       res.status(204).send();
       return;
     } else {
-      // Follow user
-      await prisma.userFollows.create({
-        data: {
-          followerId: currentUserId,
-          followingId: targetUserId,
-        },
-      });
-      // update followers and following count
-      await prisma.user.update({
-        where: { id: targetUserId },
-        data: { followersCount: { increment: 1 } },
-      });
-      await prisma.user.update({
-        where: { id: currentUserId },
-        data: { followingCount: { increment: 1 } },
-      });
+      // Follow: create the edge and adjust both users' counters together.
+      try {
+        await prisma.$transaction([
+          prisma.userFollows.create({
+            data: {
+              followerId: currentUserId,
+              followingId: targetUserId,
+            },
+          }),
+          prisma.user.update({
+            where: { id: targetUserId },
+            data: { followersCount: { increment: 1 } },
+          }),
+          prisma.user.update({
+            where: { id: currentUserId },
+            data: { followingCount: { increment: 1 } },
+          }),
+        ]);
+      } catch (err) {
+        // A concurrent follow already created the edge (unique constraint): no-op.
+        if (!isPrismaErrorCode(err, 'P2002')) throw err;
+      }
 
       res.status(204).send();
       return;
