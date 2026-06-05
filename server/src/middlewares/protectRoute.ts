@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
-import { prisma } from '../db';
 import { jwtVerify } from '../utils/jwtVerify.js';
 
 export async function protectRoute(
@@ -10,7 +9,6 @@ export async function protectRoute(
   next: NextFunction,
 ) {
   try {
-    // Get token from headers
     const token = req.headers.authorization?.split(' ')[1];
 
     if (!token) {
@@ -18,20 +16,10 @@ export async function protectRoute(
       return;
     }
 
-    // verify token
+    // Trust the short-lived signed access token; no per-request DB lookup.
+    // Account revocation happens at the refresh boundary via the session store.
     const { userId } = await jwtVerify(token, process.env.ACCESS_TOKEN_SECRET!);
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      res.status(404).json({ message: 'User not found' });
-      return;
-    }
-
-    // Attach user to req object
-    req.user = user;
+    req.user = { id: userId };
 
     next();
   } catch (error) {
@@ -61,18 +49,11 @@ export async function optionalProtectRoute(
     }
 
     const { userId } = await jwtVerify(token, process.env.ACCESS_TOKEN_SECRET!);
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (user) {
-      req.user = user;
-    }
+    req.user = { id: userId };
 
     next();
   } catch {
-    // If token is invalid or expired, we just continue without user
+    // Invalid or expired token: continue as an anonymous request.
     next();
   }
 }

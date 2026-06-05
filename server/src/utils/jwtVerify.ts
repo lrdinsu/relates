@@ -4,6 +4,8 @@ type JwtPayload = {
   userId: number;
   username: string;
   profilePic: string | null;
+  sid?: string; // session id (refresh tokens only)
+  jti?: string; // token id within the session (refresh tokens only)
   iat: number;
   exp: number;
 };

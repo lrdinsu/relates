@@ -7,10 +7,22 @@ import argon2 from '@node-rs/argon2';
 import { prisma } from '../db';
 import { checkPassword } from '../utils/checkPassword.js';
 import {
+  clearRefreshCookie,
   generateAccessToken,
   generateTokenAndSetCookie,
+  setRefreshCookie,
+  signRefreshToken,
 } from '../utils/generateTokenAndSetCookie.js';
 import { jwtVerify } from '../utils/jwtVerify.js';
+import {
+  deleteAllSessions,
+  deleteSession,
+  getPreviousJti,
+  getSessionJti,
+  newId,
+  storePreviousJti,
+  storeSession,
+} from '../utils/session.js';
 
 export async function signupUser(req: Request, res: Response) {
   try {
@@ -48,7 +60,7 @@ export async function signupUser(req: Request, res: Response) {
       },
     });
 
-    generateTokenAndSetCookie(
+    await generateTokenAndSetCookie(
       newUser.id,
       res,
       newUser.username,
@@ -91,7 +103,7 @@ export async function loginUser(req: Request, res: Response) {
     }
 
     // generate token and set cookie
-    generateTokenAndSetCookie(user.id, res, user.username, user.profilePic);
+    await generateTokenAndSetCookie(user.id, res, user.username, user.profilePic);
     res.status(200).json({
       accessToken: generateAccessToken(user.id),
       userId: user.id,
@@ -104,9 +116,28 @@ export async function loginUser(req: Request, res: Response) {
   }
 }
 
-export function logoutUser(_req: Request, res: Response) {
+export async function logoutUser(req: Request, res: Response) {
   try {
-    res.clearCookie('refreshToken');
+    const token =
+      typeof req.cookies.refreshToken === 'string'
+        ? req.cookies.refreshToken
+        : undefined;
+
+    if (token) {
+      try {
+        const { userId, sid } = await jwtVerify(
+          token,
+          process.env.REFRESH_TOKEN_SECRET!,
+        );
+        if (sid) {
+          await deleteSession(userId, sid);
+        }
+      } catch {
+        // An invalid/expired token just means there's nothing to revoke.
+      }
+    }
+
+    clearRefreshCookie(res);
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
@@ -114,10 +145,23 @@ export function logoutUser(_req: Request, res: Response) {
   }
 }
 
-// Token refresh function
+// Logs the user out of every device by deleting all their sessions.
+export async function logoutAllSessions(req: Request, res: Response) {
+  try {
+    const userId = req.user!.id;
+    await deleteAllSessions(userId);
+    clearRefreshCookie(res);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: 'Unknown error occurred!' });
+    console.error('Error in logoutAllSessions:', error);
+  }
+}
+
+// Rotates the refresh token and issues a new access token. Detects reuse of a
+// retired token (token theft) and revokes the session.
 export async function refreshAccessToken(req: Request, res: Response) {
   try {
-    // Get refresh token from cookies
     const token =
       typeof req.cookies.refreshToken === 'string'
         ? req.cookies.refreshToken
@@ -128,10 +172,45 @@ export async function refreshAccessToken(req: Request, res: Response) {
       return;
     }
 
-    const { userId } = await jwtVerify(
+    const { userId, sid, jti } = await jwtVerify(
       token,
       process.env.REFRESH_TOKEN_SECRET!,
     );
+
+    // Tokens issued before sessions existed can't be validated against the store.
+    if (!sid || !jti) {
+      res.status(401).json({ message: 'Please log in again' });
+      return;
+    }
+
+    let storedJti: string | null;
+    try {
+      storedJti = await getSessionJti(userId, sid);
+    } catch {
+      // Fail closed: if the session store is unreachable, reject the refresh.
+      res.status(401).json({ message: 'Please log in again' });
+      return;
+    }
+
+    if (!storedJti) {
+      // Session expired, logged out, or already revoked.
+      res.status(401).json({ message: 'Session expired, please log in' });
+      return;
+    }
+
+    const isCurrent = storedJti === jti;
+
+    if (!isCurrent) {
+      // Not the current token. Accept the just-retired token within the grace
+      // window (concurrent refreshes from multiple tabs); anything older is a
+      // replay of a retired token, so treat it as theft and revoke.
+      const prevJti = await getPreviousJti(userId, sid);
+      if (prevJti !== jti) {
+        await deleteSession(userId, sid);
+        res.status(401).json({ message: 'Session revoked, please log in' });
+        return;
+      }
+    }
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -143,12 +222,26 @@ export async function refreshAccessToken(req: Request, res: Response) {
       return;
     }
 
-    const accessToken = generateAccessToken(userId);
-    res.status(200).json({ 
-      accessToken, 
-      userId: user.id, 
-      username: user.username, 
-      profilePic: user.profilePic 
+    // On the current token, rotate (new id, remember the retired one for the
+    // grace window). On a grace hit, re-issue the current token without
+    // rotating, so the racing request lands on the same token.
+    let cookieJti = storedJti;
+    if (isCurrent) {
+      cookieJti = newId();
+      await storeSession(userId, sid, cookieJti);
+      await storePreviousJti(userId, sid, jti);
+    }
+
+    setRefreshCookie(
+      res,
+      signRefreshToken(userId, user.username, user.profilePic, sid, cookieJti),
+    );
+
+    res.status(200).json({
+      accessToken: generateAccessToken(userId),
+      userId: user.id,
+      username: user.username,
+      profilePic: user.profilePic,
     });
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
