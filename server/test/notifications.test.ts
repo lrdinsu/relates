@@ -49,7 +49,9 @@ describe('notifications pipeline', () => {
       .put(`/api/v1/posts/${postId}/like`)
       .set('Authorization', bearer(author.accessToken))
       .expect(204);
-    expect(await prisma.outbox.count()).toBe(0);
+    expect(
+      await prisma.outbox.count({ where: { eventType: 'LIKE_CREATED' } }),
+    ).toBe(0);
 
     // Another user likes it: exactly one LIKE_CREATED event with the right payload.
     await request(app)
@@ -57,7 +59,9 @@ describe('notifications pipeline', () => {
       .set('Authorization', bearer(liker.accessToken))
       .expect(204);
 
-    const events = await prisma.outbox.findMany();
+    const events = await prisma.outbox.findMany({
+      where: { eventType: 'LIKE_CREATED' },
+    });
     expect(events).toHaveLength(1);
     expect(events[0].eventType).toBe('LIKE_CREATED');
     expect(events[0].payload).toMatchObject({
@@ -96,11 +100,16 @@ describe('notifications pipeline', () => {
       .set('Authorization', bearer(liker.accessToken))
       .expect(204);
 
+    const pendingBefore = await prisma.outbox.count({
+      where: { publishedAt: null },
+    });
     const published = await publishPendingEvents();
-    expect(published).toBe(1);
+    expect(published).toBe(pendingBefore);
 
-    const events = await prisma.outbox.findMany();
-    expect(events[0].publishedAt).not.toBeNull();
+    const stillPending = await prisma.outbox.count({
+      where: { publishedAt: null },
+    });
+    expect(stillPending).toBe(0);
 
     // Nothing left to publish on a second pass.
     expect(await publishPendingEvents()).toBe(0);
@@ -116,7 +125,9 @@ describe('notifications pipeline', () => {
       .set('Authorization', bearer(liker.accessToken))
       .expect(204);
 
-    const [event] = await prisma.outbox.findMany();
+    const [event] = await prisma.outbox.findMany({
+      where: { eventType: 'LIKE_CREATED' },
+    });
     const message = JSON.stringify({
       id: event.id,
       eventType: event.eventType,

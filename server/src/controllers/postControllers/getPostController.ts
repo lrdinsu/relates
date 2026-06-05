@@ -2,6 +2,12 @@ import { Request, Response } from 'express';
 
 import { prisma } from '../../db';
 import {
+  CELEBRITY_FOLLOWER_THRESHOLD,
+  feedExists,
+  getFeedPage,
+  rebuildFeed,
+} from '../../feed/feedStore.js';
+import {
   PostParamsSchema,
   PostQuerySchema,
 } from '../../types/validation/schemas.js';
@@ -152,6 +158,112 @@ export async function getForYouPosts(req: Request, res: Response) {
   }
 }
 
+// Turn a set of post ids into full posts (newest-first), dropping any deleted
+// since they landed in the feed cache. Shared by the Redis-served path.
+async function hydratePostsByIds(ids: number[], currentUserId: number) {
+  if (ids.length === 0) return [];
+
+  const posts = await prisma.post.findMany({
+    where: { id: { in: ids }, isDeleted: false },
+    orderBy: { id: 'desc' },
+    include: {
+      postedBy: {
+        select: { id: true, username: true, name: true, profilePic: true },
+      },
+      parentPost: {
+        select: { postedBy: { select: { username: true } } },
+      },
+      likes: {
+        where: { userId: currentUserId },
+        select: { userId: true },
+      },
+    },
+  });
+
+  return posts.map((post) => ({
+    ...post,
+    isLiked: post.likes.length > 0,
+    likes: undefined,
+  }));
+}
+
+// Recent root posts from the celebrities the user follows. These are not fanned
+// out into the Redis feed, so we merge them in at read time (the hybrid).
+async function followedCelebrityPostIds(
+  currentUserId: number,
+  cursor: number | undefined,
+  limit: number,
+): Promise<number[]> {
+  const follows = await prisma.userFollows.findMany({
+    where: {
+      followerId: currentUserId,
+      following: { followersCount: { gte: CELEBRITY_FOLLOWER_THRESHOLD } },
+    },
+    select: { followingId: true },
+  });
+  const celebrityIds = follows.map((follow) => follow.followingId);
+  if (celebrityIds.length === 0) return [];
+
+  const posts = await prisma.post.findMany({
+    where: {
+      postedById: { in: celebrityIds },
+      parentPostId: null,
+      isDeleted: false,
+      ...(cursor ? { id: { lt: cursor } } : {}),
+    },
+    orderBy: { id: 'desc' },
+    take: limit,
+    select: { id: true },
+  });
+  return posts.map((post) => post.id);
+}
+
+// Fallback used when the Redis feed can't serve (e.g. Redis down, or prod where
+// the fan-out worker doesn't run): compute the following feed from Postgres.
+async function readTimeFollowingFeed(
+  currentUserId: number,
+  cursor: number | undefined,
+  limit: number,
+) {
+  const followed = await prisma.userFollows.findMany({
+    where: { followerId: currentUserId },
+    select: { followingId: true },
+  });
+  const ids = followed.map((follow) => follow.followingId);
+  ids.push(currentUserId);
+
+  const posts = await prisma.post.findMany({
+    where: {
+      postedById: { in: ids },
+      parentPostId: null,
+      isDeleted: false,
+      ...(cursor ? { id: { lt: cursor } } : {}),
+    },
+    orderBy: { id: 'desc' },
+    take: limit,
+    include: {
+      postedBy: {
+        select: { id: true, username: true, name: true, profilePic: true },
+      },
+      parentPost: {
+        select: { postedBy: { select: { username: true } } },
+      },
+      likes: {
+        where: { userId: currentUserId },
+        select: { userId: true },
+      },
+    },
+  });
+
+  const shaped = posts.map((post) => ({
+    ...post,
+    isLiked: post.likes.length > 0,
+    likes: undefined,
+  }));
+  const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+  return { posts: shaped, nextCursor };
+}
+
 export async function getFollowingPosts(req: Request, res: Response) {
   try {
     const currentUserId = req.user!.id;
@@ -163,63 +275,45 @@ export async function getFollowingPosts(req: Request, res: Response) {
 
     const { cursor, limit } = input.data;
 
-    // Get followed users (and include the current user)
-    const followedUsers = await prisma.userFollows.findMany({
-      where: { followerId: currentUserId },
-      select: { followingId: true },
-    });
+    // Prefer the precomputed Redis feed; warm it from Postgres if cold. If Redis
+    // is unavailable, fall back to computing the feed at read time.
+    let feedIds: number[] | null = null;
+    try {
+      if (!(await feedExists(currentUserId))) {
+        await rebuildFeed(currentUserId);
+      }
+      if (await feedExists(currentUserId)) {
+        feedIds = await getFeedPage(currentUserId, cursor, limit);
+      }
+    } catch (err) {
+      console.error('Feed cache unavailable, serving read-time feed:', err);
+      feedIds = null;
+    }
 
-    const followedIds = followedUsers.map((follow) => follow.followingId);
-    followedIds.push(currentUserId);
+    if (feedIds === null) {
+      res.status(200).json(
+        await readTimeFollowingFeed(currentUserId, cursor, limit),
+      );
+      return;
+    }
 
-    // Fetch posts with pagination
-    const posts = await prisma.post.findMany({
-      where: {
-        postedById: { in: followedIds },
-        isDeleted: false,
-      },
-      orderBy: [
-        { likesCount: 'desc' },
-        { commentsCount: 'desc' },
-        { createdAt: 'desc' },
-      ],
-      take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            username: true,
-            name: true,
-            profilePic: true,
-          },
-        },
-        parentPost: {
-          select: {
-            postedBy: {
-              select: {
-                username: true,
-              },
-            },
-          },
-        },
-        likes: {
-          where: { userId: currentUserId },
-          select: { userId: true },
-        },
-      },
-    });
+    // Hybrid: merge in recent posts from followed celebrities (not fanned out).
+    const celebrityIds = await followedCelebrityPostIds(
+      currentUserId,
+      cursor,
+      limit,
+    );
+    const mergedIds = Array.from(new Set([...feedIds, ...celebrityIds]))
+      .sort((a, b) => b - a)
+      .slice(0, limit);
 
-    const postsWithIsLiked = posts.map((post) => ({
-      ...post,
-      isLiked: post.likes.length > 0,
-      likes: undefined,
-    }));
+    const posts = await hydratePostsByIds(mergedIds, currentUserId);
+    // Page from the merged ids (not the hydrated set) so a deleted post doesn't
+    // stop pagination early.
+    const nextCursor =
+      mergedIds.length > 0 ? mergedIds[mergedIds.length - 1] : null;
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
-
-    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
+    res.status(200).json({ posts, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get following posts:', error);
