@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 
+import { Prisma } from '../../../generated/prisma/client';
 import { prisma } from '../../db';
+import { LIKE_CREATED, LikeCreatedPayload } from '../../events/events.js';
 import { PostParamsSchema } from '../../types/validation/schemas.js';
 import { isPrismaErrorCode } from '../../utils/prismaError.js';
 import { PostUpdateSchema } from 'validation';
@@ -144,15 +146,33 @@ export async function likeUnlikePost(req: Request, res: Response) {
         if (!isPrismaErrorCode(err, 'P2025')) throw err;
       }
     } else {
-      // Like: create the row and bump the counter together.
-      try {
-        await prisma.$transaction([
-          prisma.like.create({ data: { userId, postId } }),
-          prisma.post.update({
-            where: { id: postId },
-            data: { likesCount: { increment: 1 } },
+      // Like: create the row and bump the counter together. Record a
+      // LIKE_CREATED event in the SAME transaction (the outbox) so a
+      // notification can be produced asynchronously without dual-writing to the
+      // broker. Skip self-likes: no point notifying yourself.
+      const ops: Prisma.PrismaPromise<unknown>[] = [
+        prisma.like.create({ data: { userId, postId } }),
+        prisma.post.update({
+          where: { id: postId },
+          data: { likesCount: { increment: 1 } },
+        }),
+      ];
+      if (post.postedById !== userId) {
+        ops.push(
+          prisma.outbox.create({
+            data: {
+              eventType: LIKE_CREATED,
+              payload: {
+                actorId: userId,
+                recipientId: post.postedById,
+                postId,
+              } satisfies LikeCreatedPayload,
+            },
           }),
-        ]);
+        );
+      }
+      try {
+        await prisma.$transaction(ops);
       } catch (err) {
         // A concurrent like already created the row (unique constraint): no-op.
         if (!isPrismaErrorCode(err, 'P2002')) throw err;
