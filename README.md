@@ -111,7 +111,6 @@ docker kill relates-lb-server-1                       # traffic shifts to the su
 
 Caddy balances `/api/v1/*` across the replicas round-robin, polls each one's `/api/v1/health` liveness probe, and pulls a failing replica out of rotation (re-adding it on recovery). On shutdown each replica handles `SIGTERM` by draining in-flight requests before exiting, so removing one drops no requests.
 
-This is a single-machine demonstration of the pattern; production runs a single replica on a small VPS. At real scale the same shape holds with more replicas behind a managed L7 balancer (for example an ALB) instead of Caddy. The probe and graceful-shutdown handling are the parts that stay identical regardless of the balancer.
 
 ## Getting Started
 
