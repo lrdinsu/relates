@@ -1,0 +1,128 @@
+# docker-compose.search.yml — LOCAL-ONLY search index demo.
+#
+# The full CDC -> Elasticsearch pipeline: Postgres (logical WAL) -> Debezium
+# (Kafka Connect) -> Redpanda -> the app's indexer consumer -> Elasticsearch.
+# Production uses Postgres full-text search instead; none of this runs there.
+#
+# Run this stack ON ITS OWN (it owns port 5432, so stop the other compose
+# stacks first):
+#   docker compose -f docker-compose.search.yml up -d
+#   # apply migrations to this stack's db:
+#   DATABASE_URL=postgresql://relates:relates_local_pw@localhost:5432/relates npx prisma migrate deploy
+#   # point the dev server at this stack (server/.env):
+#   #   DATABASE_URL=postgresql://relates:relates_local_pw@localhost:5432/relates
+#   #   KAFKA_BROKERS=localhost:19092
+#   #   ELASTICSEARCH_URL=http://localhost:9200
+#   pnpm --filter server dev
+#
+# Create or edit a post, then search: it appears in the Elasticsearch-backed
+# results within a moment (eventual consistency).
+name: relates-search
+
+services:
+  postgres:
+    image: postgres:16
+    # wal_level=logical is what lets Debezium read row changes off the WAL.
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_wal_senders=4
+      - -c
+      - max_replication_slots=4
+    environment:
+      POSTGRES_USER: relates
+      POSTGRES_PASSWORD: relates_local_pw
+      POSTGRES_DB: relates
+    ports:
+      - "5432:5432"
+    volumes:
+      - search_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U relates -d relates"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redpanda:
+    image: redpandadata/redpanda:v24.2.7
+    # Two listeners: `internal` for the in-compose services (Connect), `external`
+    # on 19092 for the dev server running on the host.
+    command:
+      - redpanda
+      - start
+      - --mode
+      - dev-container
+      - --smp
+      - "1"
+      - --kafka-addr
+      - internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr
+      - internal://redpanda:9092,external://localhost:19092
+    ports:
+      - "19092:19092"
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster info >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  connect:
+    image: quay.io/debezium/connect:3.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: redpanda:9092
+      GROUP_ID: relates-connect
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_statuses
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # One-shot: register the Debezium connector once Connect is up.
+  connector-setup:
+    image: curlimages/curl:8.9.1
+    depends_on:
+      connect:
+        condition: service_healthy
+    volumes:
+      - ./debezium-connector.json:/connector.json:ro
+    entrypoint: ["sh", "-c"]
+    command:
+      - >
+        curl -sf -X POST http://connect:8083/connectors
+        -H 'Content-Type: application/json'
+        -d @/connector.json
+        && echo 'connector registered'
+        || echo 'connector may already exist'
+    restart: "no"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.3
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  search_pg_data:
