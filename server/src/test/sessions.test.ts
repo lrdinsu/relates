@@ -24,19 +24,35 @@ describe('refresh-token sessions', () => {
     expect(cookie2).not.toBe(cookie1);
   });
 
-  it('detects reuse of a retired token and revokes the session', async () => {
+  it('accepts the just-retired token within the grace window', async () => {
     const cookie1 = getRefreshCookie(await signup());
 
-    const r1 = await refresh(cookie1!);
+    const r1 = await refresh(cookie1!); // rotates; cookie1 becomes the prev token
     expect(r1.status).toBe(200);
-    const cookie2 = getRefreshCookie(r1);
 
-    // Replaying the old (rotated-out) token is treated as theft.
+    // A racing request still holding the just-retired token succeeds (it's the
+    // concurrent-refresh case, not theft).
+    const racing = await refresh(cookie1!);
+    expect(racing.status).toBe(200);
+  });
+
+  it('revokes the session when a long-retired token is replayed', async () => {
+    const cookie1 = getRefreshCookie(await signup()); // token X
+
+    const r1 = await refresh(cookie1!); // X -> X' (prev = X)
+    expect(r1.status).toBe(200);
+    const cookie2 = getRefreshCookie(r1)!;
+
+    const r2 = await refresh(cookie2); // X' -> X'' (prev = X')
+    expect(r2.status).toBe(200);
+
+    // X is now older than the grace token (X'), so replaying it is theft.
     const reuse = await refresh(cookie1!);
     expect(reuse.status).toBe(401);
 
-    // ...and the whole session is revoked, so the legit rotated token fails too.
-    const after = await refresh(cookie2!);
+    // ...and the whole session is revoked: the latest token fails too.
+    const cookie3 = getRefreshCookie(r2)!;
+    const after = await refresh(cookie3);
     expect(after.status).toBe(401);
   });
 

@@ -17,8 +17,10 @@ import { jwtVerify } from '../utils/jwtVerify.js';
 import {
   deleteAllSessions,
   deleteSession,
+  getPreviousJti,
   getSessionJti,
   newId,
+  storePreviousJti,
   storeSession,
 } from '../utils/session.js';
 
@@ -196,11 +198,18 @@ export async function refreshAccessToken(req: Request, res: Response) {
       return;
     }
 
-    if (storedJti !== jti) {
-      // A retired token was replayed: likely theft. Revoke the whole session.
-      await deleteSession(userId, sid);
-      res.status(401).json({ message: 'Session revoked, please log in' });
-      return;
+    const isCurrent = storedJti === jti;
+
+    if (!isCurrent) {
+      // Not the current token. Accept the just-retired token within the grace
+      // window (concurrent refreshes from multiple tabs); anything older is a
+      // replay of a retired token, so treat it as theft and revoke.
+      const prevJti = await getPreviousJti(userId, sid);
+      if (prevJti !== jti) {
+        await deleteSession(userId, sid);
+        res.status(401).json({ message: 'Session revoked, please log in' });
+        return;
+      }
     }
 
     const user = await prisma.user.findUnique({
@@ -213,12 +222,19 @@ export async function refreshAccessToken(req: Request, res: Response) {
       return;
     }
 
-    // Rotate: issue a new token id, make it the only valid one, set the cookie.
-    const nextJti = newId();
-    await storeSession(userId, sid, nextJti);
+    // On the current token, rotate (new id, remember the retired one for the
+    // grace window). On a grace hit, re-issue the current token without
+    // rotating, so the racing request lands on the same token.
+    let cookieJti = storedJti;
+    if (isCurrent) {
+      cookieJti = newId();
+      await storeSession(userId, sid, cookieJti);
+      await storePreviousJti(userId, sid, jti);
+    }
+
     setRefreshCookie(
       res,
-      signRefreshToken(userId, user.username, user.profilePic, sid, nextJti),
+      signRefreshToken(userId, user.username, user.profilePic, sid, cookieJti),
     );
 
     res.status(200).json({
