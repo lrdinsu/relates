@@ -63,9 +63,16 @@ model Post {
   saves         Save[]
   notifications Notification[]
 
+  // Full-text search vector, generated from `text` in the database (see the
+  // migration). Marked Unsupported so Prisma never tries to write it; we query
+  // it with raw SQL (to_tsquery + ts_rank).
+  searchVector Unsupported("tsvector")?
+
   // Trigram index so case-insensitive substring search (ILIKE '%term%') can use
   // an index instead of scanning every row.
   @@index([text(ops: raw("gin_trgm_ops"))], type: Gin)
+  // GIN index over the full-text vector for ranked text search.
+  @@index([searchVector], type: Gin)
 }
 
 model Like {
