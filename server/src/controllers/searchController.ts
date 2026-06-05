@@ -1,6 +1,29 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db';
+import { isEsEnabled } from '../search/esClient.js';
+import { searchPostIds } from '../search/postIndex.js';
 import { SearchQuerySchema } from '../types/validation/schemas.js';
+
+// Ranked matching post ids from Postgres full-text search (offset-paged). Used
+// when Elasticsearch isn't configured (e.g. production).
+async function ftsRankedPostIds(
+  q: string,
+  offset: number,
+  limit: number,
+): Promise<number[]> {
+  const ranked = await prisma.$queryRaw<{ id: number }[]>`
+    SELECT id
+    FROM "Post"
+    WHERE "isDeleted" = false
+      AND "searchVector" @@ websearch_to_tsquery('english', ${q})
+    ORDER BY
+      ts_rank("searchVector", websearch_to_tsquery('english', ${q})) DESC,
+      id DESC
+    OFFSET ${offset}
+    LIMIT ${limit}
+  `;
+  return ranked.map((row) => row.id);
+}
 
 export async function searchPosts(req: Request, res: Response) {
   try {
@@ -13,23 +36,15 @@ export async function searchPosts(req: Request, res: Response) {
     const { q, cursor, limit } = input.data;
     const currentUserId = req.user?.id;
 
-    // Full-text search ranked by relevance. The cursor is treated as an offset
-    // here (results are rank-ordered, not id-ordered, so an id cursor wouldn't
-    // page correctly). Step 1: rank + page the matching ids via the GIN-indexed
-    // tsvector; step 2: hydrate the bodies with Prisma, preserving rank order.
+    // Search is rank-ordered, so the cursor is treated as an offset (an id
+    // cursor can't page ranked results). Get matching ids from Elasticsearch
+    // when it's configured (local/demo), otherwise from Postgres full-text
+    // search (production). Either way, hydrate the bodies with Prisma, preserving
+    // rank order.
     const offset = cursor ?? 0;
-    const ranked = await prisma.$queryRaw<{ id: number }[]>`
-      SELECT id
-      FROM "Post"
-      WHERE "isDeleted" = false
-        AND "searchVector" @@ websearch_to_tsquery('english', ${q})
-      ORDER BY
-        ts_rank("searchVector", websearch_to_tsquery('english', ${q})) DESC,
-        id DESC
-      OFFSET ${offset}
-      LIMIT ${limit}
-    `;
-    const ids = ranked.map((row) => row.id);
+    const ids = isEsEnabled()
+      ? await searchPostIds(q, offset, limit)
+      : await ftsRankedPostIds(q, offset, limit);
 
     if (ids.length === 0) {
       res.status(200).json({ posts: [], nextCursor: null });
