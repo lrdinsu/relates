@@ -76,6 +76,23 @@ const router = createBrowserRouter(
           },
           hydrateFallbackElement: <Loading />,
         },
+        {
+          path: 'notifications',
+          async lazy() {
+            const { NotificationsPage } = await import(
+              '../pages/NotificationsPage.tsx'
+            );
+            const { ProtectedRoute } = await import('./ProtectedRoute.tsx');
+            return {
+              Component: () => (
+                <ProtectedRoute>
+                  <NotificationsPage />
+                </ProtectedRoute>
+              ),
+            };
+          },
+          hydrateFallbackElement: <Loading />,
+        },
         ...PostsRoutes(),
         ...UserRoutes(),
         {
