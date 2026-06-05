@@ -56,7 +56,9 @@ export const ModelName = {
   Post: 'Post',
   Like: 'Like',
   Repost: 'Repost',
-  Save: 'Save'
+  Save: 'Save',
+  Outbox: 'Outbox',
+  Notification: 'Notification'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -150,12 +152,44 @@ export const SaveScalarFieldEnum = {
 export type SaveScalarFieldEnum = (typeof SaveScalarFieldEnum)[keyof typeof SaveScalarFieldEnum]
 
 
+export const OutboxScalarFieldEnum = {
+  id: 'id',
+  eventType: 'eventType',
+  payload: 'payload',
+  createdAt: 'createdAt',
+  publishedAt: 'publishedAt'
+} as const
+
+export type OutboxScalarFieldEnum = (typeof OutboxScalarFieldEnum)[keyof typeof OutboxScalarFieldEnum]
+
+
+export const NotificationScalarFieldEnum = {
+  id: 'id',
+  eventId: 'eventId',
+  type: 'type',
+  recipientId: 'recipientId',
+  actorId: 'actorId',
+  postId: 'postId',
+  read: 'read',
+  createdAt: 'createdAt'
+} as const
+
+export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -172,4 +206,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

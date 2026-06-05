@@ -47,3 +47,13 @@ export type Repost = Prisma.RepostModel
  * 
  */
 export type Save = Prisma.SaveModel
+/**
+ * Model Outbox
+ * 
+ */
+export type Outbox = Prisma.OutboxModel
+/**
+ * Model Notification
+ * 
+ */
+export type Notification = Prisma.NotificationModel
