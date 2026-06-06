@@ -1,164 +1,195 @@
 # Relates
 
-Relates is a high-performance, full-stack social media platform inspired by modern threads-style interaction. Built with `React`, `TypeScript`, `Vite`, `Express`, `PostgreSQL`, and `Redis`, it features a sophisticated UI, real-time optimistic updates, and a robust search engine.
+A full-stack, threads-style social media platform that started as a synchronous CRUD app and was deliberately evolved into an **event-driven, derived-state architecture**, the way the system-design playbook teaches it: PostgreSQL owns correctness, committed changes become events, and consumers build the read-optimized views each feature needs.
+
+**Stack:** TypeScript · React · Express · PostgreSQL · Prisma · Redis · Kafka (Redpanda) · Elasticsearch · Docker · AWS EC2
+
+**Status:** Deployed to AWS EC2 behind Cloudflare + Caddy, serving active users. The heavier streaming/search-cluster pieces run locally by design (see [Production vs. local](#production-vs-local)).
+
+---
+
+## Highlights
+
+- **Event backbone:** a transactional **outbox** publishes domain events to **Kafka**; **idempotent consumers** build derived state, with at-least-once delivery handled honestly.
+- **Feed fan-out on write** into per-follower **Redis** sorted sets, including the **celebrity/hot-key hybrid** and a read-time fallback.
+- **Search index kept in sync via CDC** (Debezium reading the Postgres WAL) into **Elasticsearch**, plus relevance-ranked Postgres full-text search benchmarked **sub-millisecond at 1M posts**.
+- **Correctness at the source of truth:** denormalized counters maintained in **transactions**, idempotent via unique constraints.
+- **Stateless, horizontally scalable API** behind a Caddy load balancer with health checks and graceful shutdown.
+- **Redis-backed auth:** refresh-token rotation, reuse detection, and lookup-free request validation.
+- **Tested at the seams** with Vitest + Testcontainers (Postgres, Redis, Kafka, Elasticsearch) and gated by CI.
 
 ## Table of Contents
 
-- [Core Features](#core-features)
-- [Client Architecture](#client-architecture)
-  - [Technologies](#technologies)
-  - [Key Features](#key-features)
-- [Server Architecture](#server-architecture)
-  - [Technologies](#technologies-1)
-  - [Key Features](#key-features-1)
-- [Packages](#packages)
+- [Architecture](#architecture)
+- [Backend engineering](#backend-engineering)
 - [Performance](#performance)
-- [Horizontal Scaling](#horizontal-scaling)
-- [Getting Started](#getting-started)
+- [Frontend](#frontend)
+- [Production vs. local](#production-vs-local)
+- [Testing](#testing)
+- [Local demos](#local-demos)
+- [Getting started](#getting-started)
 - [License](#license)
 
-## Core Features
+---
 
-- **Dynamic Content Discovery**: "For You" and "Following" feeds with intelligent navigation.
-- **Universal Search**: Real-time debounced search for both users and post content.
-- **Sophisticated Media Experience**: Full-screen image viewer with multi-image navigation and keyboard shortcuts.
-- **Optimistic UI Interaction**: Zero-latency feedback for Likes and interactions via React Query.
-- **Full Post Lifecycle**: Create, Edit, and Soft-Delete capabilities for posts and nested replies.
-- **Advanced Profile Management**: Live profile editing (Name, Bio, Avatar URL) with instant cross-app synchronization.
-- **Secure Authentication**: JWT auth with refresh-token rotation and reuse detection, backed by a Redis session store, with log-out-everywhere support.
-- **Responsive Design**: Polished mobile and desktop layouts featuring a smart navigation system and unified "Menu" button.
+## Architecture
 
-## Client Architecture
+PostgreSQL is the single source of truth. State changes are captured as events (via an application-level outbox, or via CDC off the write-ahead log) and flow through Kafka to consumers that maintain derived views: notifications, precomputed feeds, and a search index. Reads are served from the view best suited to them (Redis for feeds, Elasticsearch for search) instead of recomputing against the primary.
 
-The client is a modern SPA designed for speed and responsiveness.
+```mermaid
+flowchart LR
+  Client -->|HTTP| Caddy[Caddy LB]
+  Caddy --> API[Express API]
+  API -->|source of truth| PG[(PostgreSQL)]
+  API -->|sessions| REDIS[(Redis)]
 
-### Technologies
+  PG -->|transactional outbox| K[(Kafka / Redpanda)]
+  PG -->|CDC: Debezium reads WAL| K
 
-- **React 19** & **TypeScript**
-- **Vite** for optimized bundling
-- **Mantine UI** for professional-grade component architecture
-- **React Query** for state synchronization and optimistic updates
-- **Zustand** for lightweight global state management
-- **React Router v7** with advanced lazy loading and path-aware navigation
+  K --> NOTI[Notifications consumer] --> PG
+  K --> FAN[Feed fan-out consumer] --> REDIS
+  K --> IDX[Search indexer] --> ES[(Elasticsearch)]
 
-### Key Features
+  API -->|feed read| REDIS
+  API -->|search| ES
+```
 
-- **Smart Navigation**: Header tabs that dynamically sync with home routes and hide during search/profile views.
-- **Unified Post Component**: Single versatile component handling creation, replies, and edits.
-- **Portal-based Modals**: Clean, accessible modals for profile editing and post management.
-- **Intelligent Back Button**: Context-aware visibility logic based on navigation history.
-- **Theme Engine**: Seamless light/dark mode transitions with persistent user preferences.
+Every derived view is a **rebuildable cache of a derivable thing**, never the truth: feeds warm from Postgres on a miss, the search index can be fully reindexed, and serving falls back to a direct Postgres query when a view is unavailable.
 
-## Server Architecture
+---
 
-A scalable Express backend focused on data integrity and performance.
+## Backend engineering
 
-### Technologies
+### Event backbone: outbox → Kafka → idempotent consumers
+On a like or follow, the event is written to an **outbox table in the same transaction** as the state change, so there is no dual write to Postgres and the broker. A relay publishes outbox rows to Kafka; a consumer turns `LIKE_CREATED` / `FOLLOW_CREATED` events into notifications. Delivery is at-least-once, so the consumer is **idempotent** (it dedupes on a unique event id), which means a redelivered event can never create a duplicate notification.
 
-- **Express** & **TypeScript**
-- **Prisma ORM** for type-safe database operations
-- **PostgreSQL** for relational data storage
-- **Redis** for session storage and refresh-token rotation
-- **Zod** for end-to-end type safety and validation
-- **Argon2** for industry-standard password hashing
+### Feed fan-out on write (the centerpiece)
+A new post emits a `POST_CREATED` event; a fan-out consumer writes the post id into each follower's feed, a **Redis sorted set** scored by post id (chronological order plus cursor-friendly paging). The home feed becomes a fast cache read instead of a query across everyone you follow.
+- **Celebrity / hot-key hybrid:** authors above a follower threshold are not fanned out (write amplification); their posts are merged in at read time instead.
+- **Resilience:** a cold feed is rebuilt from Postgres on demand; if Redis is unavailable, serving falls back to the read-time query (and that fallback fails fast so a Redis blip can't hang requests).
 
-### Key Features
+### Search: Postgres full-text + CDC to Elasticsearch
+Post search uses a generated **`tsvector`** column with a GIN index, matched with `websearch_to_tsquery` and ranked by **`ts_rank`** so a strong match outranks an incidental mention. An **Elasticsearch** index is kept in sync through **Change Data Capture**: Debezium reads the Postgres WAL and streams row changes to a consumer that updates the index, eliminating the dual-write problem. Search prefers Elasticsearch when configured and falls back to Postgres full-text otherwise.
 
-- **Soft-Delete System**: Database-safe post removal ensuring data integrity and relationship stability.
-- **Blended Feed Logic**: Complex Prisma queries for fetching network-relevant content.
-- **Ranked Full-Text Search**: Post search uses a PostgreSQL `tsvector` (a generated column kept in sync with the post text, GIN-indexed) and ranks results by relevance with `ts_rank`, so a strong text match surfaces above an incidental mention. User search remains case-insensitive partial matching.
-- **Search Index via Change Data Capture**: An Elasticsearch index of posts kept in sync through CDC: Debezium reads the Postgres write-ahead log, a consumer applies each change to the index, and a full reindex can rebuild it from Postgres. Search uses Elasticsearch when configured and falls back to the Postgres full-text search otherwise, so there's no dual write to keep the index consistent.
-- **Consistent Counters**: Denormalized counts (likes, reposts, followers, comments) are updated together with their underlying rows inside a transaction, so a partial failure can never leave a count out of step; concurrent duplicate actions are idempotent via unique constraints.
-- **Event-Driven Notifications**: Likes and follows record an event in a transactional outbox within the same transaction as the write (no dual-write to the broker). A relay publishes outbox events over the Kafka protocol (Redpanda locally), and an idempotent consumer turns them into notifications, deduped on the event id so at-least-once delivery can't double-notify.
-- **Fan-out-on-write Feed**: New posts emit an event that a consumer fans out into each follower's precomputed feed (a Redis sorted set), so the following feed is a fast cache read instead of a query across everyone you follow. Celebrity authors are skipped and merged in at read time (the hot-key hybrid), the feed is a rebuildable view (warmed from Postgres on a miss), and serving falls back to the read-time query when the cache is unavailable.
-- **Rotating Sessions**: Refresh tokens rotate on every use with reuse detection (a replayed token revokes the session); per-request auth validates the signed token without a database lookup.
-- **Stateless & Horizontally Scalable**: No per-request state in process memory (sessions live in Redis), so the API runs behind a load balancer as identical replicas; a `/api/v1/health` liveness probe and graceful `SIGTERM` draining let replicas be added or removed without dropping requests.
-- **Modular Controllers**: Clean separation of concerns for Auth, Post, User, and Search logic.
+### Correctness at the source of truth
+Denormalized counters (likes, reposts, followers, comments) are updated **together with their rows inside a `prisma.$transaction`**, so a partial failure can never leave a count out of step. Concurrent duplicate actions (double-tap like, racing follow) are **idempotent** via `@@unique` constraints, caught and treated as no-ops rather than errors.
 
-## Packages
+### Authentication
+JWT access/refresh auth with **refresh-token rotation and reuse detection** (a replayed, retired token revokes the session), backed by a **Redis session store** with log-out-everywhere. Per-request authorization validates the signed access token **without a database lookup**; revocation happens at the refresh boundary.
 
-### Validation
+### Horizontal scalability
+The API holds no per-request state in process memory (sessions live in Redis), so it runs as **identical stateless replicas** behind a Caddy load balancer, no sticky sessions needed. A `/api/v1/health` liveness probe and graceful `SIGTERM` draining let replicas be added or removed without dropping in-flight requests.
 
-Shared Zod schemas located in `packages/validation/`. This ensures the client and server are always in sync regarding data structures, reducing runtime errors.
+### Foundations
+Monorepo with **shared Zod schemas** (`packages/validation`) giving end-to-end type safety between API contracts and the frontend; Prisma ORM; Argon2 password hashing; soft-deletes for referential safety; Docker Compose; GitHub Actions CI/CD that runs the test suite before building and deploying.
 
-- **Sync Schemas**: One source of truth for Users, Posts, Searches, and Interactions.
+---
 
 ## Performance
 
-Benchmarked with a synthetic dataset (up to 100k users / 1M posts, seeded via PostgreSQL's `generate_series`) against local PostgreSQL 16. Median / p95 end-to-end latency:
+Benchmarked with a synthetic dataset (up to 100k users / 1M posts, seeded via PostgreSQL `generate_series`) against local PostgreSQL 16. Median / p95 end-to-end latency:
 
-| Endpoint        | 10k posts | 100k posts | 1M posts     |
-|-----------------|-----------|------------|--------------|
-| For You feed    | 8 / 10 ms | 14 / 17 ms | 60 / 76 ms   |
-| Following feed  | 5 / 6 ms  | 11 / 13 ms | 50 / 59 ms   |
-| Hot feed        | 4 / 5 ms  | 11 / 12 ms | 61 / 68 ms   |
-| Search (FTS)    | 3 / 5 ms  | 3 / 8 ms   | 5 / 9 ms     |
+| Endpoint        | 10k posts | 100k posts | 1M posts   |
+|-----------------|-----------|------------|------------|
+| For You feed    | 8 / 10 ms | 14 / 17 ms | 60 / 76 ms |
+| Following feed  | 5 / 6 ms  | 11 / 13 ms | 50 / 59 ms |
+| Hot feed        | 4 / 5 ms  | 11 / 12 ms | 61 / 68 ms |
+| Search (FTS)    | 3 / 5 ms  | 3 / 8 ms   | 5 / 9 ms   |
 
-Search uses PostgreSQL full-text search: a generated `tsvector` column with a GIN index, matched with `websearch_to_tsquery` and ranked by `ts_rank`. `EXPLAIN ANALYZE` confirms a bitmap index scan on the tsvector index, with **sub-millisecond** query execution even at 1M posts (0.06 ms at 10k, ~0.8 ms at 1M); the few-ms end-to-end figures above are HTTP and result hydration, not the search itself.
-
-Originally search was `text ILIKE '%term%'`, a sequential scan that read every row (~290 ms at 1M). A `pg_trgm` GIN index fixed the latency (substring matching via a bitmap index scan), and full-text search then added relevance ranking on top at the same sub-millisecond cost, a strong match now outranks an incidental mention, which `ILIKE` could not do. Numbers are from local hardware and are directional. Reproduce with:
+Search originally used `text ILIKE '%term%'`, a sequential scan that read every row (~290 ms at 1M). A `pg_trgm` GIN index cut that to a bitmap index scan (~100x), and full-text search then added relevance ranking on top at the same cost. `EXPLAIN ANALYZE` confirms the tsvector GIN index with **sub-millisecond** query execution even at 1M posts (~0.8 ms); the few-ms end-to-end figures are HTTP and result hydration, not the search itself. Numbers are from local hardware and are directional. Reproduce with:
 
 ```bash
 BENCH_DATABASE_URL=postgresql://user:pass@localhost:5432/relates_bench pnpm --filter server bench
 ```
 
-## Horizontal Scaling
+---
 
-Because sessions live in Redis rather than in process memory, the API is stateless: any replica can serve any request, so it scales horizontally by simply running more copies behind a load balancer. No sticky sessions are needed.
+## Frontend
 
-A local-only demo stack (`docker-compose.lb.yml` + `Caddyfile.lb`) runs two `server` replicas behind Caddy:
+A React 19 SPA focused on speed and a polished feel.
+
+- **React Query** for server-state sync and **optimistic updates** (likes, reposts) with rollback on error.
+- **Mantine UI** components, light/dark theme engine, responsive mobile + desktop layouts.
+- **React Router v7** with lazy-loaded routes and context-aware navigation.
+- **Zustand** for lightweight global state.
+- Real-time debounced universal search, a full-screen multi-image viewer, full post lifecycle (create / reply / edit / soft-delete), reposts surfaced on the profile, and a notifications bell with an unread indicator.
+
+---
+
+## Production vs. local
+
+A deliberate cost decision on a small VPS: the correctness-critical pieces run in production, and the JVM-heavy or operationally heavy pieces are built and demoed **locally**, because at this scale they would be cost without benefit. The architecture is ready to flip them on; the README and code are honest about where that line is.
+
+| Runs in production | Built and run locally (with a production-safe fallback) |
+|---|---|
+| Core API, posts, interactions, profiles | Kafka (Redpanda) event backbone + outbox + notifications consumer |
+| Redis-backed auth (rotation, reuse detection, sessions) | Feed fan-out on write (prod serves the read-time feed) |
+| Transactional counters | Elasticsearch + CDC search index (prod serves Postgres full-text) |
+| Postgres full-text search | Multi-replica load-balancing demo (prod runs a single replica) |
+| Stateless API, CI/CD, AWS EC2 deploy | |
+
+> Note on Kafka: the broker is **Redpanda**, which is Kafka-API-compatible (same protocol and `kafkajs` client), chosen for a lighter footprint; it is swappable to Apache Kafka with a config change.
+
+The guiding principle throughout: build the streaming/derived-view version to understand the pattern, keep the simple transactional/read-time version as the default at this scale, and be explicit about the threshold where you would switch.
+
+---
+
+## Testing
+
+Integration tests run against **real dependencies via Testcontainers**, because the async pipelines here (consumers, eventual consistency, idempotency, fan-out) are exactly where bugs hide silently.
+
+- Vitest + Supertest against the real Express app.
+- Testcontainers spins up Postgres, Redis, Kafka (Redpanda), and Elasticsearch.
+- Coverage targets the signature risk of each feature: refresh-token reuse detection, counter consistency under concurrency, consumer idempotency on redelivery, feed fan-out correctness (and the celebrity merge), and search ranking / index sync.
+- GitHub Actions runs the suite and gates build + deploy.
+
+---
+
+## Local demos
+
+The local-only pipelines each have a self-contained Compose stack:
 
 ```bash
-docker compose -f docker-compose.lb.yml up --build   # http://localhost:8080
-docker kill relates-lb-server-1                       # traffic shifts to the survivor, no downtime
+# Event backbone (Redpanda broker for notifications + feed fan-out)
+docker compose -f docker-compose.events.yml up -d
+
+# Load balancing: two stateless replicas behind Caddy
+docker compose -f docker-compose.lb.yml up --build       # http://localhost:8080
+docker kill relates-lb-server-1                           # traffic shifts to the survivor
+
+# Search index: Postgres (logical WAL) -> Debezium -> Redpanda -> Elasticsearch
+docker compose -f docker-compose.search.yml up -d
 ```
 
-Caddy balances `/api/v1/*` across the replicas round-robin, polls each one's `/api/v1/health` liveness probe, and pulls a failing replica out of rotation (re-adding it on recovery). On shutdown each replica handles `SIGTERM` by draining in-flight requests before exiting, so removing one drops no requests.
+---
 
-
-## Getting Started
+## Getting started
 
 ### Prerequisites
+- Node.js v22+
+- pnpm
+- Docker & Docker Compose
 
-- **Node.js** (v22+)
-- **pnpm** (preferred)
-- **Docker** & **Docker Compose**
-
-### Installation
-
-1. **Clone & Install**:
-    ```bash
-    git clone `repository-url`
-    cd relates
-    pnpm install
-    ```
-
-2. **Environment**:
-    - Configure `.env` in the root using the provided samples.
-
-3. **Database**:
-    - Ensure PostgreSQL is running (or use Docker).
-    - Generate the client and apply migrations (from the repo root):
-      ```bash
-      pnpm --filter server exec prisma generate
-      pnpm --filter server exec prisma migrate dev
-      ```
-
-### Running the Application
-
-**Using Docker** (runs the published images from the registry):
+### Setup
 ```bash
-docker compose up -d
+git clone <repository-url>
+cd relates
+pnpm install
+
+# configure root .env from the provided sample, then:
+pnpm --filter server exec prisma generate
+pnpm --filter server exec prisma migrate dev
 ```
 
-**Development Mode**:
+### Run in development
 ```bash
-# Terminal 1 (Client)
-cd client && pnpm dev
-
-# Terminal 2 (Server)
-cd server && pnpm dev
+pnpm --filter client dev    # client
+pnpm --filter server dev    # server
 ```
+
+Run `prisma migrate deploy` after pulling new migrations so the local schema (e.g. the search vector column) stays current.
+
+---
 
 ## License
 
