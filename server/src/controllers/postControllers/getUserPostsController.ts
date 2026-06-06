@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 
 import { prisma } from '../../db';
 import { PostQuerySchema } from '../../types/validation/schemas.js';
+import { getRepostedSet } from '../../utils/repostStatus.js';
 
 export async function getPostsByUsername(
   req: Request<{ username: string }>,
@@ -55,9 +56,14 @@ export async function getPostsByUsername(
       cursor: cursor ? { id: cursor } : undefined,
     });
 
+    const reposted = await getRepostedSet(
+      currentUserId,
+      posts.map((p) => p.id),
+    );
     const postsWithIsLiked = posts.map((post) => ({
       ...post,
       isLiked: (post.likes?.length ?? 0) > 0,
+      isReposted: reposted.has(post.id),
       likes: undefined,
     }));
 
@@ -127,9 +133,14 @@ export async function getCommentsByUsername(
       cursor: cursor ? { id: cursor } : undefined,
     });
 
+    const reposted = await getRepostedSet(
+      currentUserId,
+      comments.map((c) => c.id),
+    );
     const commentsWithIsLiked = comments.map((comment) => ({
       ...comment,
       isLiked: (comment.likes?.length ?? 0) > 0,
+      isReposted: reposted.has(comment.id),
       likes: undefined,
     }));
 

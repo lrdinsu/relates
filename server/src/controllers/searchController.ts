@@ -3,6 +3,7 @@ import { prisma } from '../db';
 import { isEsEnabled } from '../search/esClient.js';
 import { searchPostIds } from '../search/postIndex.js';
 import { SearchQuerySchema } from '../types/validation/schemas.js';
+import { getRepostedSet } from '../utils/repostStatus.js';
 
 // Ranked matching post ids from Postgres full-text search (offset-paged). Used
 // when Elasticsearch isn't configured (e.g. production).
@@ -81,6 +82,10 @@ export async function searchPosts(req: Request, res: Response) {
     });
 
     // findMany doesn't preserve the `in` order, so restore the rank order.
+    const reposted = await getRepostedSet(
+      currentUserId,
+      posts.map((post) => post.id),
+    );
     const byId = new Map(posts.map((post) => [post.id, post]));
     const postsWithIsLiked = ids
       .map((id) => byId.get(id))
@@ -88,6 +93,7 @@ export async function searchPosts(req: Request, res: Response) {
       .map((post) => ({
         ...post,
         isLiked: (post.likes?.length ?? 0) > 0,
+        isReposted: reposted.has(post.id),
         likes: undefined,
       }));
 

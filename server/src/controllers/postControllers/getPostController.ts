@@ -11,6 +11,7 @@ import {
   PostParamsSchema,
   PostQuerySchema,
 } from '../../types/validation/schemas.js';
+import { getRepostedSet } from '../../utils/repostStatus.js';
 
 export async function getHotPosts(req: Request, res: Response) {
   try {
@@ -60,9 +61,14 @@ export async function getHotPosts(req: Request, res: Response) {
       cursor: cursor ? { id: cursor } : undefined,
     });
 
+    const reposted = await getRepostedSet(
+      currentUserId,
+      posts.map((p) => p.id),
+    );
     const postsWithIsLiked = posts.map((post) => ({
       ...post,
       isLiked: (post.likes?.length ?? 0) > 0,
+      isReposted: reposted.has(post.id),
       likes: undefined,
     }));
 
@@ -143,9 +149,14 @@ export async function getForYouPosts(req: Request, res: Response) {
       },
     });
 
+    const reposted = await getRepostedSet(
+      currentUserId,
+      posts.map((p) => p.id),
+    );
     const postsWithIsLiked = posts.map((post) => ({
       ...post,
       isLiked: post.likes.length > 0,
+      isReposted: reposted.has(post.id),
       likes: undefined,
     }));
 
@@ -180,9 +191,14 @@ async function hydratePostsByIds(ids: number[], currentUserId: number) {
     },
   });
 
+  const reposted = await getRepostedSet(
+    currentUserId,
+    posts.map((p) => p.id),
+  );
   return posts.map((post) => ({
     ...post,
     isLiked: post.likes.length > 0,
+    isReposted: reposted.has(post.id),
     likes: undefined,
   }));
 }
@@ -255,9 +271,14 @@ async function readTimeFollowingFeed(
     },
   });
 
+  const reposted = await getRepostedSet(
+    currentUserId,
+    posts.map((p) => p.id),
+  );
   const shaped = posts.map((post) => ({
     ...post,
     isLiked: post.likes.length > 0,
+    isReposted: reposted.has(post.id),
     likes: undefined,
   }));
   const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
@@ -368,9 +389,14 @@ export async function getLikedPosts(req: Request, res: Response) {
       },
     });
 
+    const reposted = await getRepostedSet(
+      currentUserId,
+      posts.map((p) => p.id),
+    );
     const postsWithIsLiked = posts.map((post) => ({
       ...post,
       isLiked: true,
+      isReposted: reposted.has(post.id),
     }));
 
     const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
@@ -434,9 +460,14 @@ export async function getSavedPosts(req: Request, res: Response) {
       },
     });
 
+    const reposted = await getRepostedSet(
+      currentUserId,
+      posts.map((p) => p.id),
+    );
     const postsWithIsLiked = posts.map((post) => ({
       ...post,
       isLiked: post.likes.length > 0,
+      isReposted: reposted.has(post.id),
       likes: undefined,
     }));
 
@@ -502,6 +533,7 @@ export async function getPostById(req: Request, res: Response): Promise<void> {
     const postWithIsLiked = {
       ...post,
       isLiked: (post.likes?.length ?? 0) > 0,
+      isReposted: (await getRepostedSet(currentUserId, [post.id])).has(post.id),
       likes: undefined,
     };
 
@@ -533,6 +565,9 @@ export async function getPostById(req: Request, res: Response): Promise<void> {
       ancestors.unshift({
         ...parent,
         isLiked: (parent.likes?.length ?? 0) > 0,
+        isReposted: (await getRepostedSet(currentUserId, [parent.id])).has(
+          parent.id,
+        ),
         likes: undefined,
       });
       currentParentPostId = parent.parentPostId;
@@ -595,9 +630,14 @@ export async function getPostComments(req: Request, res: Response) {
       },
     });
 
+    const reposted = await getRepostedSet(
+      currentUserId,
+      comments.map((c) => c.id),
+    );
     const commentsWithIsLiked = comments.map((comment) => ({
       ...comment,
       isLiked: (comment.likes?.length ?? 0) > 0,
+      isReposted: reposted.has(comment.id),
       likes: undefined,
     }));
 
