@@ -44,7 +44,7 @@ export function UserPage() {
     <>
       <UserHeader
         tab={activeTab}
-        onTabChange={(tab) => navigate(`/profile/${tab}`)}
+        onTabChange={(tab) => navigate(`/user/${username}/${tab}`)}
         user={user}
       />
       <PostList endpoint={endPoint} />
