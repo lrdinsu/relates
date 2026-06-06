@@ -66,6 +66,41 @@ describe('post interactions and authorization', () => {
     expect(res.body.post.likesCount).toBe(2);
   });
 
+  it('reflects the viewer repost state via isReposted', async () => {
+    const { alice, bob } = await setupTwoUsers();
+    const postId = (await createPost(alice.accessToken, { text: 'hi' })).body
+      .post.id;
+
+    await request(app)
+      .put(`/api/v1/posts/${postId}/repost`)
+      .set('Authorization', bearer(bob.accessToken))
+      .expect(204);
+
+    // The reposter sees isReposted true; the author (who didn't repost) sees false.
+    let res = await request(app)
+      .get(`/api/v1/posts/${postId}`)
+      .set('Authorization', bearer(bob.accessToken));
+    expect(res.body.post.isReposted).toBe(true);
+    expect(res.body.post.repostsCount).toBe(1);
+
+    res = await request(app)
+      .get(`/api/v1/posts/${postId}`)
+      .set('Authorization', bearer(alice.accessToken));
+    expect(res.body.post.isReposted).toBe(false);
+    expect(res.body.post.repostsCount).toBe(1);
+
+    // Unrepost flips it back.
+    await request(app)
+      .put(`/api/v1/posts/${postId}/repost`)
+      .set('Authorization', bearer(bob.accessToken))
+      .expect(204);
+    res = await request(app)
+      .get(`/api/v1/posts/${postId}`)
+      .set('Authorization', bearer(bob.accessToken));
+    expect(res.body.post.isReposted).toBe(false);
+    expect(res.body.post.repostsCount).toBe(0);
+  });
+
   it("rejects editing another user's post", async () => {
     const { alice, bob } = await setupTwoUsers();
     const postId = (await createPost(alice.accessToken, { text: 'mine' })).body
