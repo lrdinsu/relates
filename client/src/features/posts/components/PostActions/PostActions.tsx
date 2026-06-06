@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+
 import { Center, Group, Text } from '@mantine/core';
 import {
   IconHeart,
@@ -26,6 +28,7 @@ export function PostActions({ post }: PostActionsProps) {
   const openCreatePostModal = useCreatePostModal();
   const { mutate: likePost } = useLikePost();
   const { mutate: repostPost } = useRepostPost();
+  const navigate = useNavigate();
 
   const { likesCount, commentsCount, repostsCount, isLiked, isReposted, id } =
     post;
@@ -79,7 +82,11 @@ export function PostActions({ post }: PostActionsProps) {
           color="green"
           onClick={() => {
             if (!isAuthenticated) return openLoginModal();
+            const willRepost = !isReposted;
             repostPost(id);
+            // On a repost (not an undo), open the post so the user sees it as
+            // "their" reposted post; unreposting stays put.
+            if (willRepost) void navigate(`/posts/${id}`);
           }}
         >
           <IconRepeat className={isReposted ? classes.reposted : ''} />

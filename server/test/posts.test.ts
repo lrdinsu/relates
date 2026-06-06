@@ -2,7 +2,7 @@ import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { app } from '../src/app';
-import { createPost, secondUser, signup } from './helpers';
+import { createPost, secondUser, signup, validUser } from './helpers';
 import { resetDatabase } from './setup/resetDb';
 
 async function setupTwoUsers() {
@@ -99,6 +99,42 @@ describe('post interactions and authorization', () => {
       .set('Authorization', bearer(bob.accessToken));
     expect(res.body.post.isReposted).toBe(false);
     expect(res.body.post.repostsCount).toBe(0);
+  });
+
+  it("shows a reposted post on the reposter's profile, attributed to them", async () => {
+    const { alice, bob } = await setupTwoUsers();
+    const postId = (await createPost(alice.accessToken, { text: 'alice post' }))
+      .body.post.id;
+
+    await request(app)
+      .put(`/api/v1/posts/${postId}/repost`)
+      .set('Authorization', bearer(bob.accessToken))
+      .expect(204);
+
+    // Bob authored nothing, but his profile shows the post he reposted,
+    // attributed to him while still crediting the original author.
+    let res = await request(app)
+      .get(`/api/v1/posts/user/${secondUser.username}/posts`)
+      .set('Authorization', bearer(bob.accessToken));
+    expect(res.status).toBe(200);
+    const item = res.body.posts.find(
+      (post: { id: number }) => post.id === postId,
+    );
+    expect(item).toBeDefined();
+    expect(item.repostedBy).toBe(secondUser.username);
+    expect(item.postedBy.username).toBe(validUser.username);
+
+    // Unreposting removes it from his profile again.
+    await request(app)
+      .put(`/api/v1/posts/${postId}/repost`)
+      .set('Authorization', bearer(bob.accessToken))
+      .expect(204);
+    res = await request(app)
+      .get(`/api/v1/posts/user/${secondUser.username}/posts`)
+      .set('Authorization', bearer(bob.accessToken));
+    expect(
+      res.body.posts.find((post: { id: number }) => post.id === postId),
+    ).toBeUndefined();
   });
 
   it("rejects editing another user's post", async () => {
