@@ -24,6 +24,8 @@ export type Post = PostType & {
   };
   isLiked: boolean;
   isReposted: boolean;
+  // Set on profile feeds when this item is a repost by the profile's owner.
+  repostedBy?: string | null;
 };
 
 export function usePostsList(endpoint = location.pathname) {

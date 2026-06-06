@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 
 import { convertPostTime } from '@/utils/convertPostTime.ts';
-import { Divider, Flex } from '@mantine/core';
+import { Divider, Flex, Text } from '@mantine/core';
+import { IconRepeat } from '@tabler/icons-react';
 
 import { Post } from '../../hooks/usePostList.ts';
 import { PostActions } from '../PostActions/PostActions.tsx';
@@ -26,6 +27,12 @@ export function PostItem({ post, withLine, hideDivider }: PostProps) {
         onClick={() => navigate(`/posts/${post.id}`)}
         className={classes.postItem}
       >
+        {post.repostedBy && (
+          <Flex align="center" gap={6} c="gray.6" mb={4} ml={48}>
+            <IconRepeat size={14} />
+            <Text size="xs">Reposted by {post.repostedBy}</Text>
+          </Flex>
+        )}
         <Flex gap={12}>
           <PostLeftBar
             username={post.postedBy.username}
