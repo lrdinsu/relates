@@ -12,7 +12,9 @@ import { Post } from '../../hooks/usePostList.ts';
 import { useCreatePostModal } from '@/hooks/useCreatePostModal.tsx';
 import { useAuthStore } from '@/stores/authStore.ts';
 import { useLoginModal } from '@/hooks/useLoginModal.tsx';
+import { showNotificationSuccess } from '@/utils/showNotifications.tsx';
 import { useLikePost } from '../../hooks/useLikePost.ts';
+import { useRepostPost } from '../../hooks/useRepostPost.ts';
 
 type PostActionsProps = {
   post: Post;
@@ -23,8 +25,24 @@ export function PostActions({ post }: PostActionsProps) {
   const openLoginModal = useLoginModal();
   const openCreatePostModal = useCreatePostModal();
   const { mutate: likePost } = useLikePost();
+  const { mutate: repostPost } = useRepostPost();
 
-  const { likesCount, commentsCount, repostsCount, isLiked, id } = post;
+  const { likesCount, commentsCount, repostsCount, isLiked, isReposted, id } =
+    post;
+
+  async function handleShare() {
+    const url = `${window.location.origin}/posts/${id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      showNotificationSuccess({
+        title: 'Link copied',
+        message: 'Post link copied to your clipboard.',
+      });
+    } catch {
+      // Clipboard can be unavailable (e.g. non-HTTPS); show the link to copy.
+      showNotificationSuccess({ title: 'Share', message: url });
+    }
+  }
 
   return (
     <Group ml={-6} gap={12}>
@@ -61,10 +79,10 @@ export function PostActions({ post }: PostActionsProps) {
           color="green"
           onClick={() => {
             if (!isAuthenticated) return openLoginModal();
-            console.log('repost');
+            repostPost(id);
           }}
         >
-          <IconRepeat />
+          <IconRepeat className={isReposted ? classes.reposted : ''} />
         </PostAction>
         <Text className={classes.count}>
           {repostsCount === 0 ? '' : repostsCount}
@@ -73,8 +91,7 @@ export function PostActions({ post }: PostActionsProps) {
       <PostAction
         color="yellow"
         onClick={() => {
-          if (!isAuthenticated) return openLoginModal();
-          console.log('share');
+          void handleShare();
         }}
       >
         <IconSend />
