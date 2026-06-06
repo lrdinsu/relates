@@ -16,6 +16,32 @@ function feedKey(userId: number): string {
   return `feed:${userId}`;
 }
 
+// Fail the feed's Redis reads fast. When Redis is unreachable, ioredis can take
+// several seconds (queueing + reconnect backoff) before a command rejects,
+// which would stall every following-feed request before the read-time fallback
+// kicks in. A short timeout makes the serving path degrade quickly instead.
+function feedRedisTimeoutMs(): number {
+  return Number(process.env.FEED_REDIS_TIMEOUT_MS ?? 500);
+}
+
+export function withFeedTimeout<T>(
+  promise: Promise<T>,
+  label: string,
+): Promise<T> {
+  const ms = feedRedisTimeoutMs();
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      const timer = setTimeout(
+        () => reject(new Error(`feed redis ${label} timed out after ${ms}ms`)),
+        ms,
+      );
+      // Don't let the timer keep the process alive on its own.
+      timer.unref();
+    }),
+  ]);
+}
+
 // Add one post id into many users' feeds and trim each back to FEED_CAP.
 // Idempotent: re-adding the same id just rewrites the identical score, so a
 // redelivered event can't duplicate a post in a feed.
@@ -66,19 +92,19 @@ export async function getFeedPage(
   limit: number,
 ): Promise<number[]> {
   const max = cursor ? `(${cursor}` : '+inf';
-  const ids = await redis.zrevrangebyscore(
-    feedKey(userId),
-    max,
-    '-inf',
-    'LIMIT',
-    0,
-    limit,
+  const ids = await withFeedTimeout(
+    redis.zrevrangebyscore(feedKey(userId), max, '-inf', 'LIMIT', 0, limit),
+    'getFeedPage',
   );
   return ids.map(Number);
 }
 
 export async function feedExists(userId: number): Promise<boolean> {
-  return (await redis.exists(feedKey(userId))) === 1;
+  const result = await withFeedTimeout(
+    redis.exists(feedKey(userId)),
+    'feedExists',
+  );
+  return result === 1;
 }
 
 // Rebuild a feed from Postgres: the recent root posts of the non-celebrity
