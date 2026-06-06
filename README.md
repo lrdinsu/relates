@@ -92,11 +92,11 @@ Benchmarked with a synthetic dataset (up to 100k users / 1M posts, seeded via Po
 | For You feed    | 8 / 10 ms | 14 / 17 ms | 60 / 76 ms   |
 | Following feed  | 5 / 6 ms  | 11 / 13 ms | 50 / 59 ms   |
 | Hot feed        | 4 / 5 ms  | 11 / 12 ms | 61 / 68 ms   |
-| Search          | 11 / 15 ms| 37 / 45 ms | 292 / 353 ms |
+| Search (FTS)    | 3 / 5 ms  | 3 / 8 ms   | 5 / 9 ms     |
 
-`EXPLAIN ANALYZE` showed search doing a sequential scan, a leading-wildcard `ILIKE` can't use a B-tree index, so Postgres reads every row. Relates adds a `pg_trgm` GIN index on post text, so the same query uses a bitmap index scan instead, cutting search at 1M posts from ~290 ms to ~3 ms (about 100x). The feeds sort on unindexed columns; indexes help at moderate scale, and a precomputed (fan-out-on-write) feed is the direction beyond that.
+Search uses PostgreSQL full-text search: a generated `tsvector` column with a GIN index, matched with `websearch_to_tsquery` and ranked by `ts_rank`. `EXPLAIN ANALYZE` confirms a bitmap index scan on the tsvector index, with **sub-millisecond** query execution even at 1M posts (0.06 ms at 10k, ~0.8 ms at 1M); the few-ms end-to-end figures above are HTTP and result hydration, not the search itself.
 
-The Search column above is the pre-index baseline that motivated the fix; with the shipped trigram index, search stays in the low single-digit milliseconds. (The benchmark applies all migrations, so re-running it reflects the indexed search.) Numbers are from local hardware and are directional. Reproduce with:
+Originally search was `text ILIKE '%term%'`, a sequential scan that read every row (~290 ms at 1M). A `pg_trgm` GIN index fixed the latency (substring matching via a bitmap index scan), and full-text search then added relevance ranking on top at the same sub-millisecond cost, a strong match now outranks an incidental mention, which `ILIKE` could not do. Numbers are from local hardware and are directional. Reproduce with:
 
 ```bash
 BENCH_DATABASE_URL=postgresql://user:pass@localhost:5432/relates_bench pnpm --filter server bench

@@ -94,7 +94,7 @@ async function main() {
       { label: 'For You feed', run: () => request(app).get('/api/v1/posts/for-you?limit=10').set(auth) },
       { label: 'Following feed', run: () => request(app).get('/api/v1/posts/following?limit=10').set(auth) },
       { label: 'Hot feed', run: () => request(app).get('/api/v1/posts/hot?limit=10') },
-      { label: 'Search posts', run: () => request(app).get('/api/v1/search/posts?q=raremarker&limit=10').set(auth) },
+      { label: 'Search posts (FTS)', run: () => request(app).get('/api/v1/search/posts?q=raremarker&limit=10').set(auth) },
     ];
 
     for (const ep of endpoints) {
@@ -114,7 +114,11 @@ async function main() {
       for (const r of rows) console.log('    ' + r['QUERY PLAN']);
     };
     await explain(
-      'search (text ILIKE)',
+      'search (FTS tsvector + ts_rank)',
+      `SELECT id FROM "Post" WHERE "isDeleted" = false AND "searchVector" @@ websearch_to_tsquery('english', 'raremarker') ORDER BY ts_rank("searchVector", websearch_to_tsquery('english', 'raremarker')) DESC, id DESC LIMIT 10`,
+    );
+    await explain(
+      'search (text ILIKE, trigram) — prior approach for contrast',
       `SELECT id FROM "Post" WHERE text ILIKE '%raremarker%' AND "isDeleted" = false ORDER BY "createdAt" DESC LIMIT 10`,
     );
     await explain(
