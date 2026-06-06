@@ -7,6 +7,7 @@ import { handleEvent } from '../src/events/consumer';
 import {
   CELEBRITY_FOLLOWER_THRESHOLD,
   getFeedPage,
+  withFeedTimeout,
 } from '../src/feed/feedStore';
 import { createPost, secondUser, signup } from './helpers';
 import { resetDatabase } from './setup/resetDb';
@@ -141,5 +142,23 @@ describe('feed fan-out', () => {
     expect(res.status).toBe(200);
     const ids = res.body.posts.map((post: { id: number }) => post.id);
     expect(ids).toContain(postId);
+  });
+});
+
+describe('feed redis fast-fail', () => {
+  it('rejects when a feed redis read exceeds the timeout', async () => {
+    process.env.FEED_REDIS_TIMEOUT_MS = '20';
+    try {
+      // A promise that never settles stands in for a hung Redis call.
+      await expect(
+        withFeedTimeout(new Promise(() => {}), 'test'),
+      ).rejects.toThrow(/timed out/);
+    } finally {
+      delete process.env.FEED_REDIS_TIMEOUT_MS;
+    }
+  });
+
+  it('resolves normally when the read is fast', async () => {
+    await expect(withFeedTimeout(Promise.resolve(42), 'test')).resolves.toBe(42);
   });
 });
