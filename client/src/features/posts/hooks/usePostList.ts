@@ -23,6 +23,7 @@ export type Post = PostType & {
     };
   };
   isLiked: boolean;
+  isReposted: boolean;
 };
 
 export function usePostsList(endpoint = location.pathname) {
