@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { FormError } from '@/components/FormError/FormError.tsx';
 import { SignupSchema } from '@/types/schemas.ts';
@@ -38,7 +38,17 @@ export function Signup() {
   return (
     <>
       <Title ta="center" size="h1" p={15}>
-        Create Your Account
+        Create Your{' '}
+        <Anchor
+          component={Link}
+          to="/"
+          c="my-green"
+          inherit
+          aria-label="Go to Relates home page"
+        >
+          Relates
+        </Anchor>{' '}
+        Account
       </Title>
       <Text c="dimmed" size="sm" ta="center">
         Already have an account?{' '}
