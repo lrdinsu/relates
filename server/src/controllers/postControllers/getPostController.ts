@@ -159,6 +159,29 @@ type ForYouCursor = {
   id: number;
 };
 
+const FOR_YOU_RECENT_CANDIDATE_FLOOR = 200;
+const FOR_YOU_RECENT_CANDIDATE_MULTIPLIER = 20;
+const FOR_YOU_POPULAR_LIKES_THRESHOLD = 5;
+const FOR_YOU_POPULAR_REPOSTS_THRESHOLD = 2;
+const FOR_YOU_POPULAR_COMMENTS_THRESHOLD = 3;
+
+const FOR_YOU_SCORE_OWN_POST = 75;
+const FOR_YOU_SCORE_FOLLOWED_AUTHOR = 70;
+const FOR_YOU_SCORE_REPOSTED_BY_FOLLOWED = 50;
+const FOR_YOU_SCORE_LIKED_BY_FOLLOWED = 45;
+const FOR_YOU_SCORE_AFFINITY_AUTHOR = 35;
+const FOR_YOU_SCORE_POPULAR = 25;
+const FOR_YOU_SCORE_RECENT = 15;
+
+const FOR_YOU_MAX_LIKE_BOOST = 25;
+const FOR_YOU_LIKE_BOOST_WEIGHT = 6;
+const FOR_YOU_MAX_REPOST_BOOST = 18;
+const FOR_YOU_REPOST_BOOST_WEIGHT = 7;
+const FOR_YOU_MAX_COMMENT_BOOST = 16;
+const FOR_YOU_COMMENT_BOOST_WEIGHT = 5;
+const FOR_YOU_MAX_RECENCY_BOOST = 20;
+const FOR_YOU_RECENCY_ID_WEIGHT = 0.001;
+
 function encodeForYouCursor(cursor: ForYouCursor): string {
   return Buffer.from(JSON.stringify(cursor)).toString('base64url');
 }
@@ -191,6 +214,10 @@ async function rankedForYouPostIds(
   limit: number,
 ): Promise<{ rows: RankedPostRow[] }> {
   const decodedCursor = decodeForYouCursor(cursor);
+  const recentCandidateLimit = Math.max(
+    limit * FOR_YOU_RECENT_CANDIDATE_MULTIPLIER,
+    FOR_YOU_RECENT_CANDIDATE_FLOOR,
+  );
   const rankedCursorFilter = decodedCursor
     ? Prisma.sql`
         WHERE (
@@ -227,7 +254,7 @@ async function rankedForYouPostIds(
       WHERE comments."postedById" = ${currentUserId}
     ),
     candidates AS (
-      SELECT p.id, 75.0 AS source_score
+      SELECT p.id, ${FOR_YOU_SCORE_OWN_POST}::double precision AS source_score
       FROM "Post" p
       WHERE p."postedById" = ${currentUserId}
         AND p."parentPostId" IS NULL
@@ -235,7 +262,7 @@ async function rankedForYouPostIds(
 
       UNION ALL
 
-      SELECT p.id, 70.0 AS source_score
+      SELECT p.id, ${FOR_YOU_SCORE_FOLLOWED_AUTHOR}::double precision AS source_score
       FROM "Post" p
       JOIN followed f ON f.user_id = p."postedById"
       WHERE p."parentPostId" IS NULL
@@ -243,7 +270,7 @@ async function rankedForYouPostIds(
 
       UNION ALL
 
-      SELECT p.id, 50.0 AS source_score
+      SELECT p.id, ${FOR_YOU_SCORE_REPOSTED_BY_FOLLOWED}::double precision AS source_score
       FROM "Post" p
       JOIN "Repost" r ON r."postId" = p.id
       JOIN followed f ON f.user_id = r."userId"
@@ -252,7 +279,7 @@ async function rankedForYouPostIds(
 
       UNION ALL
 
-      SELECT p.id, 45.0 AS source_score
+      SELECT p.id, ${FOR_YOU_SCORE_LIKED_BY_FOLLOWED}::double precision AS source_score
       FROM "Post" p
       JOIN "Like" l ON l."postId" = p.id
       JOIN followed f ON f.user_id = l."userId"
@@ -261,7 +288,7 @@ async function rankedForYouPostIds(
 
       UNION ALL
 
-      SELECT p.id, 35.0 AS source_score
+      SELECT p.id, ${FOR_YOU_SCORE_AFFINITY_AUTHOR}::double precision AS source_score
       FROM "Post" p
       JOIN affinity_authors a ON a.user_id = p."postedById"
       WHERE p."postedById" <> ${currentUserId}
@@ -270,26 +297,26 @@ async function rankedForYouPostIds(
 
       UNION ALL
 
-      SELECT p.id, 25.0 AS source_score
+      SELECT p.id, ${FOR_YOU_SCORE_POPULAR}::double precision AS source_score
       FROM "Post" p
       WHERE p."parentPostId" IS NULL
         AND p."isDeleted" = false
         AND (
-          p."likesCount" >= 5
-          OR p."repostsCount" >= 2
-          OR p."commentsCount" >= 3
+          p."likesCount" >= ${FOR_YOU_POPULAR_LIKES_THRESHOLD}
+          OR p."repostsCount" >= ${FOR_YOU_POPULAR_REPOSTS_THRESHOLD}
+          OR p."commentsCount" >= ${FOR_YOU_POPULAR_COMMENTS_THRESHOLD}
         )
 
       UNION ALL
 
-      SELECT recent.id, 15.0 AS source_score
+      SELECT recent.id, ${FOR_YOU_SCORE_RECENT}::double precision AS source_score
       FROM (
         SELECT p.id
         FROM "Post" p
         WHERE p."parentPostId" IS NULL
           AND p."isDeleted" = false
         ORDER BY p.id DESC
-        LIMIT ${Math.max(limit * 20, 200)}
+        LIMIT ${recentCandidateLimit}
       ) recent
     ),
     scored AS (
@@ -297,10 +324,22 @@ async function rankedForYouPostIds(
         p.id,
         (
           MAX(c.source_score)
-          + LEAST(25.0, LN(1 + p."likesCount") * 6)
-          + LEAST(18.0, LN(1 + p."repostsCount") * 7)
-          + LEAST(16.0, LN(1 + p."commentsCount") * 5)
-          + LEAST(20.0, p.id::double precision * 0.001)
+          + LEAST(
+              ${FOR_YOU_MAX_LIKE_BOOST}::double precision,
+              LN(1 + p."likesCount") * ${FOR_YOU_LIKE_BOOST_WEIGHT}
+            )
+          + LEAST(
+              ${FOR_YOU_MAX_REPOST_BOOST}::double precision,
+              LN(1 + p."repostsCount") * ${FOR_YOU_REPOST_BOOST_WEIGHT}
+            )
+          + LEAST(
+              ${FOR_YOU_MAX_COMMENT_BOOST}::double precision,
+              LN(1 + p."commentsCount") * ${FOR_YOU_COMMENT_BOOST_WEIGHT}
+            )
+          + LEAST(
+              ${FOR_YOU_MAX_RECENCY_BOOST}::double precision,
+              p.id::double precision * ${FOR_YOU_RECENCY_ID_WEIGHT}
+            )
         )::double precision AS score
       FROM candidates c
       JOIN "Post" p ON p.id = c.id

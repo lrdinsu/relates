@@ -23,6 +23,10 @@ function forYouPage(token: string, limit: number, cursor?: string) {
     .set('Authorization', bearer(token));
 }
 
+function postIds(res: request.Response): number[] {
+  return res.body.posts.map((post: { id: number }) => post.id);
+}
+
 describe('for-you ranking', () => {
   beforeEach(async () => {
     await resetDatabase();
@@ -38,9 +42,7 @@ describe('for-you ranking', () => {
     const res = await forYou(alice.accessToken);
 
     expect(res.status).toBe(200);
-    expect(res.body.posts.map((post: { id: number }) => post.id)).toContain(
-      bobPostId,
-    );
+    expect(postIds(res)).toContain(bobPostId);
   });
 
   it('includes posts liked by people the viewer follows', async () => {
@@ -71,9 +73,7 @@ describe('for-you ranking', () => {
     const res = await forYou(alice.accessToken);
 
     expect(res.status).toBe(200);
-    expect(res.body.posts.map((post: { id: number }) => post.id)).toContain(
-      carolPostId,
-    );
+    expect(postIds(res)).toContain(carolPostId);
   });
 
   it('excludes comments from the candidate pool', async () => {
@@ -97,8 +97,114 @@ describe('for-you ranking', () => {
     const res = await forYou(alice.accessToken);
 
     expect(res.status).toBe(200);
-    expect(res.body.posts.map((post: { id: number }) => post.id)).not.toContain(
-      commentId,
+    expect(postIds(res)).not.toContain(commentId);
+  });
+
+  it('ranks followed-author posts above ordinary recent posts', async () => {
+    const alice = (await signup()).body;
+    const bob = (await signup(secondUser)).body;
+    const carol = (
+      await signup({
+        username: 'carol',
+        email: 'carol@example.com',
+        name: 'Carol',
+      })
+    ).body;
+
+    const followedPostId = (
+      await createPost(bob.accessToken, { text: 'followed author' })
+    ).body.post.id;
+    const ordinaryPostId = (
+      await createPost(carol.accessToken, { text: 'ordinary recent' })
+    ).body.post.id;
+
+    await request(app)
+      .put(`/api/v1/users/follow/${bob.userId}`)
+      .set('Authorization', bearer(alice.accessToken))
+      .expect(204);
+
+    const res = await forYou(alice.accessToken);
+
+    expect(res.status).toBe(200);
+    const ids = postIds(res);
+    expect(ids.indexOf(followedPostId)).toBeLessThan(
+      ids.indexOf(ordinaryPostId),
+    );
+  });
+
+  it('ranks high-engagement posts above ordinary recent posts for cold start', async () => {
+    const alice = (await signup()).body;
+    const bob = (await signup(secondUser)).body;
+    const carol = (
+      await signup({
+        username: 'carol',
+        email: 'carol@example.com',
+        name: 'Carol',
+      })
+    ).body;
+
+    const popularPostId = (
+      await createPost(bob.accessToken, { text: 'popular post' })
+    ).body.post.id;
+    const ordinaryPostId = (
+      await createPost(carol.accessToken, { text: 'ordinary recent' })
+    ).body.post.id;
+
+    await prisma.post.update({
+      where: { id: popularPostId },
+      data: { likesCount: 12, commentsCount: 4, repostsCount: 3 },
+    });
+
+    const res = await forYou(alice.accessToken);
+
+    expect(res.status).toBe(200);
+    const ids = postIds(res);
+    expect(ids.indexOf(popularPostId)).toBeLessThan(
+      ids.indexOf(ordinaryPostId),
+    );
+  });
+
+  it('ranks posts liked by followed users above ordinary recent posts', async () => {
+    const alice = (await signup()).body;
+    const bob = (await signup(secondUser)).body;
+    const carol = (
+      await signup({
+        username: 'carol',
+        email: 'carol@example.com',
+        name: 'Carol',
+      })
+    ).body;
+    const dave = (
+      await signup({
+        username: 'dave',
+        email: 'dave@example.com',
+        name: 'Dave',
+      })
+    ).body;
+
+    await request(app)
+      .put(`/api/v1/users/follow/${bob.userId}`)
+      .set('Authorization', bearer(alice.accessToken))
+      .expect(204);
+
+    const socialProofPostId = (
+      await createPost(carol.accessToken, { text: 'liked by bob' })
+    ).body.post.id;
+    const ordinaryPostId = (
+      await createPost(dave.accessToken, { text: 'ordinary recent' })
+    ).body.post.id;
+
+    await request(app)
+      .put(`/api/v1/posts/${socialProofPostId}/like`)
+      .set('Authorization', bearer(bob.accessToken))
+      .expect(204);
+
+    const res = await forYou(alice.accessToken);
+
+    expect(res.status).toBe(200);
+    const ids = postIds(res);
+    expect(ids.indexOf(socialProofPostId)).toBeLessThan(
+      ids.indexOf(ordinaryPostId),
     );
   });
 
@@ -123,10 +229,8 @@ describe('for-you ranking', () => {
     expect(secondPage.status).toBe(200);
     expect(secondPage.body.posts).toHaveLength(3);
 
-    const firstIds = firstPage.body.posts.map((post: { id: number }) => post.id);
-    const secondIds = secondPage.body.posts.map(
-      (post: { id: number }) => post.id,
-    );
+    const firstIds = postIds(firstPage);
+    const secondIds = postIds(secondPage);
 
     expect(new Set([...firstIds, ...secondIds]).size).toBe(6);
   });
