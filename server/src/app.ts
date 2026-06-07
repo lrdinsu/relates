@@ -8,8 +8,11 @@ import { notificationRouter } from './routes/notificationRoutes.js';
 import { postRouter } from './routes/postRoutes.js';
 import { userRouter } from './routes/userRoutes.js';
 import { searchRouter } from './routes/searchRoutes.js';
+import { generalApiRateLimit } from './middlewares/rateLimit.js';
 
 export const app: Express = express();
+
+app.set('trust proxy', 1);
 
 // Liveness probe for the load balancer's health checks. Deliberately does NOT
 // touch Postgres or Redis: it answers "is this process up and accepting HTTP?"
@@ -26,6 +29,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Routes
+app.use('/api/v1', generalApiRateLimit);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/posts', postRouter);
 app.use('/api/v1/auth', authRouter);
