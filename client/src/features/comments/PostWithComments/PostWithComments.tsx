@@ -46,7 +46,11 @@ export function PostWithComments() {
       {/* Render Ancestor (only the immediate parent) */}
       {ancestors.length > 0 && (
         <Box pb="md">
-          <PostItem post={ancestors[ancestors.length - 1]} hideDivider />
+          <PostItem
+            post={ancestors[ancestors.length - 1]}
+            hideDivider
+            replaceOnClick
+          />
           <Divider mx={-16} mt="md" />
         </Box>
       )}
@@ -54,7 +58,11 @@ export function PostWithComments() {
       {/* Render Current Post */}
       {parentPost && (
         <Box pt="md" pb="md">
-          <PostItem post={parentPost} hideDivider />
+          <PostItem
+            post={parentPost}
+            hideDivider
+            clickTarget={null}
+          />
         </Box>
       )}
 
@@ -70,7 +78,9 @@ export function PostWithComments() {
       {/* Render Child Posts */}
       <Stack gap="md">
         {childPostsData?.pages.map((page) =>
-          page.comments.map((post) => <PostItem post={post} key={post.id} />),
+          page.comments.map((post) => (
+            <PostItem post={post} key={post.id} replaceOnClick />
+          )),
         )}
       </Stack>
 

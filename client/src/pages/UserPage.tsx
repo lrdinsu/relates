@@ -26,6 +26,10 @@ export function UserPage() {
   }, [user, currentUser, setTitle]);
 
   const activeTab = tab == 'comments' ? 'comments' : 'posts';
+  const handleTabChange = (nextTab: string) => {
+    if (nextTab === activeTab) return;
+    navigate(`/user/${username}/${nextTab}`, { replace: true });
+  };
 
   if (isLoading) {
     return <Loading />;
@@ -44,7 +48,7 @@ export function UserPage() {
     <>
       <UserHeader
         tab={activeTab}
-        onTabChange={(tab) => navigate(`/user/${username}/${tab}`)}
+        onTabChange={handleTabChange}
         user={user}
       />
       <PostList endpoint={endPoint} />
