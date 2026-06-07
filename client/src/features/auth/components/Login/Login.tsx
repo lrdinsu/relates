@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LoginSchema, LoginType } from 'validation';
 
 import { FormError } from '@/components/FormError/FormError.tsx';
@@ -39,7 +39,17 @@ export function Login() {
   return (
     <>
       <Title ta="center" p={15} size="h1">
-        Welcome To Relates!
+        Welcome To{' '}
+        <Anchor
+          component={Link}
+          to="/"
+          c="my-green"
+          inherit
+          aria-label="Go to Relates home page"
+        >
+          Relates
+        </Anchor>
+        !
       </Title>
       <Text c="dimmed" size="sm" ta="center">
         Do not have an account yet?{' '}
