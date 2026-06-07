@@ -2,9 +2,10 @@ import express, { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { app } from '../src/app';
-import { redis } from '../src/db/redis';
-import { createRateLimit } from '../src/middlewares/rateLimit';
+import { app } from '@/app';
+import { redis } from '@/db/redis';
+import { createRateLimit } from '@/middlewares/rateLimit';
+
 import { signup, validUser } from './helpers';
 import { resetDatabase } from './setup/resetDb';
 
@@ -59,7 +60,9 @@ describe('rate limits', () => {
 
     expect(third.status).toBe(429);
     expect(third.headers['retry-after']).toBeDefined();
-    expect(third.body.message).toBe('Too many requests, please try again later.');
+    expect(third.body.message).toBe(
+      'Too many requests, please try again later.',
+    );
   });
 
   it('uses the authenticated user id when one is available', async () => {
@@ -85,7 +88,9 @@ describe('rate limits', () => {
   });
 
   it('fails open when Redis is unavailable', async () => {
-    vi.spyOn(redis, 'incr').mockRejectedValueOnce(new Error('redis unavailable'));
+    vi.spyOn(redis, 'incr').mockRejectedValueOnce(
+      new Error('redis unavailable'),
+    );
 
     const res = await request(testApp()).get('/limited');
 
