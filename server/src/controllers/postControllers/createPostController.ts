@@ -4,6 +4,7 @@ import { PostCreateSchema } from 'validation';
 import { Prisma } from '../../../generated/prisma/client';
 import { prisma } from '../../db';
 import { POST_CREATED, PostCreatedPayload } from '../../events/events.js';
+import { fanOutPost } from '../../feed/feedStore.js';
 import { PostCreateParamsSchema } from '../../types/validation/schemas.js';
 
 export async function createPost(req: Request, res: Response): Promise<void> {
@@ -83,6 +84,14 @@ export async function createPost(req: Request, res: Response): Promise<void> {
         });
         return created;
       });
+
+      if (!process.env.KAFKA_BROKERS) {
+        try {
+          await fanOutPost(post.id, currentUserId);
+        } catch (err) {
+          console.error('Inline feed fan-out failed:', err);
+        }
+      }
     }
 
     res.status(201).json({ post });
