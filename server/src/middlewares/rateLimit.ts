@@ -24,7 +24,7 @@ function defaultKey(req: Request): string {
     return `user:${req.user.id}`;
   }
 
-  return `ip:${req.ip || req.socket.remoteAddress || 'unknown'}`;
+  return `ip:${req.ip ?? req.socket.remoteAddress ?? 'unknown'}`;
 }
 
 export function createRateLimit({

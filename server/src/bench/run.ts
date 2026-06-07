@@ -47,8 +47,10 @@ async function main() {
 
   // The app reads these at import; set them before importing app/db.
   process.env.DATABASE_URL = benchUrl;
-  process.env.ACCESS_TOKEN_SECRET ||= 'bench-access-secret';
-  process.env.REFRESH_TOKEN_SECRET ||= 'bench-refresh-secret';
+  const accessTokenSecret =
+    process.env.ACCESS_TOKEN_SECRET ?? 'bench-access-secret';
+  process.env.ACCESS_TOKEN_SECRET = accessTokenSecret;
+  process.env.REFRESH_TOKEN_SECRET ??= 'bench-refresh-secret';
 
   console.log('Applying schema...');
   execSync('npx prisma migrate deploy', {
@@ -85,7 +87,7 @@ async function main() {
       'TRUNCATE TABLE "Like", "Repost", "Save", "UserFollows", "Post", "User" RESTART IDENTITY CASCADE',
     );
     const focalId = await seedDatabase(prisma, counts);
-    const token = jwt.sign({ userId: focalId }, process.env.ACCESS_TOKEN_SECRET!, {
+    const token = jwt.sign({ userId: focalId }, accessTokenSecret, {
       expiresIn: '1h',
     });
     const auth = { Authorization: `Bearer ${token}` };

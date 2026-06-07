@@ -12,23 +12,23 @@ export type EventType =
   | typeof POST_CREATED;
 
 // Someone liked recipient's post.
-export interface LikeCreatedPayload {
+export type LikeCreatedPayload = {
   actorId: number;
   recipientId: number;
   postId: number;
-}
+};
 
 // Someone followed recipient.
-export interface FollowCreatedPayload {
+export type FollowCreatedPayload = {
   actorId: number;
   recipientId: number;
-}
+};
 
 // A root post was created; drives feed fan-out.
-export interface PostCreatedPayload {
+export type PostCreatedPayload = {
   postId: number;
   authorId: number;
-}
+};
 
 export type EventPayload =
   | LikeCreatedPayload

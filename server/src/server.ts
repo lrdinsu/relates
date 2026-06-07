@@ -43,7 +43,7 @@ if (process.env.KAFKA_BROKERS) {
 // connection refuses to drain.
 let shuttingDown = false;
 
-async function shutdown(signal: string): Promise<void> {
+function shutdown(signal: string): void {
   if (shuttingDown) return;
   shuttingDown = true;
   console.log(`${signal} received, shutting down gracefully...`);
@@ -68,5 +68,5 @@ async function shutdown(signal: string): Promise<void> {
   });
 }
 
-process.on('SIGTERM', () => void shutdown('SIGTERM'));
-process.on('SIGINT', () => void shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

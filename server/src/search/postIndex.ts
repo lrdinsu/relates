@@ -4,13 +4,13 @@ import { getEsClient } from './esClient.js';
 export const POST_INDEX = 'posts';
 
 // The minimal post shape the indexer and reindex need.
-export interface IndexablePost {
+export type IndexablePost = {
   id: number;
   text: string | null;
   postedById: number;
   createdAt: Date | string;
   isDeleted: boolean;
-}
+};
 
 // Create the index with an explicit mapping if it isn't there yet.
 export async function ensurePostIndex(): Promise<void> {
