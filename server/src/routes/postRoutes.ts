@@ -1,6 +1,6 @@
 import express, { Router } from 'express';
 
-import { createPost } from '@/controllers/postControllers/createPostController';
+import { createPost } from '../controllers/postControllers/createPostController.js';
 import {
   getFollowingPosts,
   getForYouPosts,
@@ -9,20 +9,20 @@ import {
   getPostById,
   getPostComments,
   getSavedPosts,
-} from '@/controllers/postControllers/getPostController';
+} from '../controllers/postControllers/getPostController.js';
 import {
   getCommentsByUsername,
   getPostsByUsername,
-} from '@/controllers/postControllers/getUserPostsController';
+} from '../controllers/postControllers/getUserPostsController.js';
 import {
   deletePostById,
   likeUnlikePost,
   repostUnrepost,
   saveUnsavePost,
   updatePost,
-} from '@/controllers/postControllers/updatePostController';
-import { optionalProtectRoute, protectRoute } from '@/middlewares/protectRoute';
-import { writeActionRateLimit } from '@/middlewares/rateLimit';
+} from '../controllers/postControllers/updatePostController.js';
+import { optionalProtectRoute, protectRoute } from '../middlewares/protectRoute.js';
+import { writeActionRateLimit } from '../middlewares/rateLimit.js';
 
 export const postRouter: Router = express.Router();
 

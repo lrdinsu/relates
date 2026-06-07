@@ -2,9 +2,9 @@ import express, { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { app } from '@/app';
-import { redis } from '@/db/redis';
-import { createRateLimit } from '@/middlewares/rateLimit';
+import { app } from '../src/app';
+import { redis } from '../src/db/redis';
+import { createRateLimit } from '../src/middlewares/rateLimit';
 
 import { signup, validUser } from './helpers';
 import { resetDatabase } from './setup/resetDb';

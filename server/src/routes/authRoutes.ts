@@ -6,9 +6,9 @@ import {
   logoutUser,
   refreshAccessToken,
   signupUser,
-} from '@/controllers/authController';
-import { protectRoute } from '@/middlewares/protectRoute';
-import { authRateLimit } from '@/middlewares/rateLimit';
+} from '../controllers/authController.js';
+import { protectRoute } from '../middlewares/protectRoute.js';
+import { authRateLimit } from '../middlewares/rateLimit.js';
 
 export const authRouter: Router = express.Router();
 

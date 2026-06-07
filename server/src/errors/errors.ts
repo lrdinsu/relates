@@ -1,4 +1,4 @@
-import { HttpStatusCode } from '@/constants/constant.js';
+import { HttpStatusCode } from '../constants/constant.js';
 
 export class JWTError extends Error {
   constructor(message: string) {

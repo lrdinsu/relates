@@ -1,6 +1,6 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 
-import { redis } from '@/db/redis';
+import { redis } from '../db/redis.js';
 
 type RateLimitOptions = {
   name: string;
