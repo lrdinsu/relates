@@ -10,7 +10,7 @@ import {
 
 export function Logo() {
   const navigate = useNavigate();
-  const computedColorScheme = useComputedColorScheme('dark');
+  const computedColorScheme = useComputedColorScheme('light');
 
   return (
     <Flex justify="center">

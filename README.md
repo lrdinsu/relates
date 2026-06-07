@@ -1,10 +1,12 @@
 # Relates
 
-A full-stack, threads-style social media platform that started as a synchronous CRUD app and was deliberately evolved into an **event-driven, derived-state architecture**, the way the system-design playbook teaches it: PostgreSQL owns correctness, committed changes become events, and consumers build the read-optimized views each feature needs.
+A full-stack social media platform that started as a synchronous CRUD app and was deliberately evolved into an **event-driven, derived-state architecture**, the way the system-design playbook teaches it: PostgreSQL owns correctness, committed changes become events, and consumers build the read-optimized views each feature needs.
 
 **Stack:** TypeScript · React · Express · PostgreSQL · Prisma · Redis · Kafka (Redpanda) · Elasticsearch · Docker · AWS EC2
 
 **Status:** Deployed to AWS EC2 behind Cloudflare + Caddy, serving active users. The heavier streaming/search-cluster pieces run locally by design (see [Production vs. local](#production-vs-local)).
+
+**Live demo:** https://relatesapp.com
 
 ---
 

@@ -19,7 +19,7 @@ import classes from './NavBarButtons.module.css';
 export function NavBar() {
   const navigate = useNavigate();
   const { setColorScheme } = useMantineColorScheme();
-  const computedColorScheme = useComputedColorScheme('dark');
+  const computedColorScheme = useComputedColorScheme('light');
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const toggleColorScheme = () => {
@@ -63,7 +63,7 @@ export function NavBar() {
               }
               onClick={toggleColorScheme}
             >
-              Appearance
+              {computedColorScheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </Menu.Item>
             {isAuthenticated && (
               <>
