@@ -1,6 +1,6 @@
 import express, { Router } from 'express';
 
-import { createPost } from '../controllers/postControllers/createPostController.js';
+import { createPost } from '@/controllers/postControllers/createPostController';
 import {
   getFollowingPosts,
   getForYouPosts,
@@ -9,20 +9,20 @@ import {
   getPostById,
   getPostComments,
   getSavedPosts,
-} from '../controllers/postControllers/getPostController.js';
+} from '@/controllers/postControllers/getPostController';
 import {
   getCommentsByUsername,
   getPostsByUsername,
-} from '../controllers/postControllers/getUserPostsController.js';
+} from '@/controllers/postControllers/getUserPostsController';
 import {
   deletePostById,
   likeUnlikePost,
   repostUnrepost,
   saveUnsavePost,
   updatePost,
-} from '../controllers/postControllers/updatePostController.js';
-import { optionalProtectRoute, protectRoute } from '../middlewares/protectRoute.js';
-import { writeActionRateLimit } from '../middlewares/rateLimit.js';
+} from '@/controllers/postControllers/updatePostController';
+import { optionalProtectRoute, protectRoute } from '@/middlewares/protectRoute';
+import { writeActionRateLimit } from '@/middlewares/rateLimit';
 
 export const postRouter: Router = express.Router();
 
@@ -72,5 +72,13 @@ postRouter.put(
 );
 
 // get posts/comments by username
-postRouter.get('/user/:username/posts', optionalProtectRoute, getPostsByUsername);
-postRouter.get('/user/:username/comments', optionalProtectRoute, getCommentsByUsername);
+postRouter.get(
+  '/user/:username/posts',
+  optionalProtectRoute,
+  getPostsByUsername,
+);
+postRouter.get(
+  '/user/:username/comments',
+  optionalProtectRoute,
+  getCommentsByUsername,
+);

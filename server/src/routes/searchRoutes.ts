@@ -1,7 +1,8 @@
 import express, { Router } from 'express';
-import { searchPosts, searchUsers } from '../controllers/searchController.js';
-import { optionalProtectRoute } from '../middlewares/protectRoute.js';
-import { searchRateLimit } from '../middlewares/rateLimit.js';
+
+import { searchPosts, searchUsers } from '@/controllers/searchController';
+import { optionalProtectRoute } from '@/middlewares/protectRoute';
+import { searchRateLimit } from '@/middlewares/rateLimit';
 
 export const searchRouter: Router = express.Router();
 

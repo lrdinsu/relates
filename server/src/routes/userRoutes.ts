@@ -5,9 +5,9 @@ import {
   getMyData,
   getUserProfile,
   updateUser,
-} from '../controllers/userController.js';
-import { protectRoute } from '../middlewares/protectRoute.js';
-import { writeActionRateLimit } from '../middlewares/rateLimit.js';
+} from '@/controllers/userController';
+import { protectRoute } from '@/middlewares/protectRoute';
+import { writeActionRateLimit } from '@/middlewares/rateLimit';
 
 export const userRouter: Router = express.Router();
 
@@ -18,11 +18,6 @@ userRouter.put(
   writeActionRateLimit,
   followUnfollowUser,
 );
-userRouter.put(
-  '/me/profile',
-  protectRoute,
-  writeActionRateLimit,
-  updateUser,
-);
+userRouter.put('/me/profile', protectRoute, writeActionRateLimit, updateUser);
 userRouter.get('/me', protectRoute, getMyData);
 userRouter.get('/:username', getUserProfile);
