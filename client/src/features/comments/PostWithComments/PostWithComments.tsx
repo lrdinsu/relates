@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 import { Loading } from '@/components/Loading/Loading.tsx';
@@ -11,6 +11,7 @@ import { usePostwithChildPosts } from '../../posts/hooks/usePostwithChildPosts.t
 
 export function PostWithComments() {
   const { ref, inView } = useInView();
+  const currentPostRef = useRef<HTMLDivElement>(null);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const {
@@ -26,12 +27,27 @@ export function PostWithComments() {
 
   const parentPost = data?.post;
   const ancestors = data?.ancestors ?? [];
+  const isViewingComment = Boolean(parentPost?.parentPostId);
 
   useEffect(() => {
     if (inView && hasNextPage) {
       void fetchNextPage();
     }
   }, [inView, hasNextPage, fetchNextPage]);
+
+  useEffect(() => {
+    if (!parentPost) return;
+
+    requestAnimationFrame(() => {
+      const top = currentPostRef.current?.getBoundingClientRect().top;
+      if (top == null) return;
+
+      window.scrollBy({
+        top: top - 72,
+        behavior: 'auto',
+      });
+    });
+  }, [parentPost?.id]);
 
   if (isParentLoading) {
     return <Loading />;
@@ -50,19 +66,15 @@ export function PostWithComments() {
             post={ancestors[ancestors.length - 1]}
             hideDivider
             replaceOnClick
+            withLine
           />
-          <Divider mx={-16} mt="md" />
         </Box>
       )}
 
       {/* Render Current Post */}
       {parentPost && (
-        <Box pt="md" pb="md">
-          <PostItem
-            post={parentPost}
-            hideDivider
-            clickTarget={null}
-          />
+        <Box ref={currentPostRef} pt="md" pb="md">
+          <PostItem post={parentPost} hideDivider clickTarget={null} />
         </Box>
       )}
 
@@ -97,6 +109,8 @@ export function PostWithComments() {
 
       {/* Error Handling for Child Posts */}
       {isChildError && <div>Error loading child posts</div>}
+
+      {isViewingComment && <Box h="calc(100vh - 120px)" />}
     </Stack>
   );
 }

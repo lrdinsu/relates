@@ -121,6 +121,133 @@ export function CreatePost({ parentPost, editingPost, inline, onClose }: CreateP
 
   const isReply = !!parentPost;
 
+  if (inline && isReply && !isEditing) {
+    return (
+      <Stack gap={8} className={classes.inlineContainer}>
+        <Flex gap={10} align="center" className={classes.inlineReplyPill}>
+          <UserPic
+            username={userData?.username ?? ''}
+            avatar={userData?.profilePic ?? ''}
+            size="sm"
+          />
+          <Textarea
+            autosize
+            minRows={1}
+            maxRows={3}
+            placeholder={`Reply to ${parentPost.postedBy.username}...`}
+            className={classes.inlineReplyInput}
+            variant="unstyled"
+            value={text}
+            onChange={(e) => setText(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if ((text.trim() || images.length > 0) && !isPending) {
+                  void handleSubmit();
+                }
+              }
+            }}
+          />
+          <Popover
+            opened={imagePopoverOpen}
+            onChange={setImagePopoverOpen}
+            width={300}
+            position="bottom-end"
+            shadow="md"
+            withArrow
+          >
+            <Popover.Target>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="lg"
+                onClick={() => setImagePopoverOpen((o) => !o)}
+                radius="xl"
+                disabled={images.length >= MAX_IMAGES}
+              >
+                <IconPhoto size={20} />
+              </ActionIcon>
+            </Popover.Target>
+
+            <Popover.Dropdown>
+              <Text size="xs" fw={500} mb={6}>
+                Paste image URL
+              </Text>
+              <Group gap={8}>
+                <TextInput
+                  placeholder="https://example.com/image.jpg"
+                  size="xs"
+                  style={{ flex: 1 }}
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.currentTarget.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addImageUrl();
+                    }
+                  }}
+                  autoFocus
+                />
+                <ActionIcon
+                  size="sm"
+                  radius="xl"
+                  onClick={addImageUrl}
+                  variant="filled"
+                  disabled={!imageUrl.trim()}
+                >
+                  <IconPlus size={16} />
+                </ActionIcon>
+              </Group>
+            </Popover.Dropdown>
+          </Popover>
+          <Button
+            className={classes.inlineReplyButton}
+            onClick={handleSubmit}
+            loading={isPending}
+            disabled={(!text.trim() && images.length === 0) || isPending}
+            radius="xl"
+            size="xs"
+          >
+            Reply
+          </Button>
+        </Flex>
+
+        {images.length > 0 && (
+          <SimpleGrid cols={images.length === 1 ? 1 : 2} spacing="xs">
+            {images.map((url) => (
+              <Box key={url} pos="relative">
+                <Image
+                  src={url}
+                  alt="attachment"
+                  radius="md"
+                  h={images.length === 1 ? 220 : 140}
+                  fit="cover"
+                  fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
+                />
+                <CloseButton
+                  size="sm"
+                  variant="filled"
+                  pos="absolute"
+                  top={6}
+                  right={6}
+                  onClick={() => removeImage(url)}
+                  aria-label="Remove image"
+                  className={classes.removeImageIcon}
+                />
+              </Box>
+            ))}
+          </SimpleGrid>
+        )}
+
+        {error && (
+          <Text c="red" size="sm" px="xs">
+            {error}
+          </Text>
+        )}
+      </Stack>
+    );
+  }
+
   return (
     <Stack gap={0} className={inline ? classes.inlineContainer : ''}>
       {isReply && !inline && (
