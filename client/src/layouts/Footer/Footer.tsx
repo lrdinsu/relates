@@ -10,7 +10,7 @@ import classes from '../Navbar/NavBarButtons.module.css';
 export function Footer() {
   const navigate = useNavigate();
   const { setColorScheme } = useMantineColorScheme();
-  const computedColorScheme = useComputedColorScheme('dark');
+  const computedColorScheme = useComputedColorScheme('light');
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const mutation = useLogoutMutation();
 
@@ -56,7 +56,7 @@ export function Footer() {
             }
             onClick={toggleColorScheme}
           >
-            Appearance
+            {computedColorScheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
           </Menu.Item>
           {isAuthenticated && (
             <>
