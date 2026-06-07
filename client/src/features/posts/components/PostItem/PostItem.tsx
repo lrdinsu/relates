@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { convertPostTime } from '@/utils/convertPostTime.ts';
 import { Divider, Flex, Text } from '@mantine/core';
@@ -16,16 +16,32 @@ type PostProps = {
   post: Post;
   withLine?: boolean;
   hideDivider?: boolean;
+  clickTarget?: string | null;
+  replaceOnClick?: boolean;
 };
 
-export function PostItem({ post, withLine, hideDivider }: PostProps) {
+export function PostItem({
+  post,
+  withLine,
+  hideDivider,
+  clickTarget,
+  replaceOnClick,
+}: PostProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const postPath = clickTarget === undefined ? `/posts/${post.id}` : clickTarget;
+
+  const openPost = () => {
+    if (!postPath || location.pathname === postPath) return;
+    void navigate(postPath, { replace: replaceOnClick });
+  };
 
   return (
     <>
       <div
-        onClick={() => navigate(`/posts/${post.id}`)}
+        onClick={openPost}
         className={classes.postItem}
+        data-clickable={postPath ? true : undefined}
       >
         {post.repostedBy && (
           <Flex align="center" gap={6} c="gray.6" mb={4} ml={48}>
