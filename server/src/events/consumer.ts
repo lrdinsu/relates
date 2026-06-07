@@ -20,11 +20,11 @@ import { TOPIC, kafka } from './kafka.js';
 export const consumer: Consumer = kafka.consumer({ groupId: 'notifications' });
 
 // The shape the publisher writes to each message value.
-interface OutboxMessage {
+type OutboxMessage = {
   id: string;
   eventType: string;
   payload: unknown;
-}
+};
 
 // Turn one event into a notification, idempotently. Exported so tests can drive
 // it directly without standing up a running consumer.

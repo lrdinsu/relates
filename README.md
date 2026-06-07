@@ -18,6 +18,7 @@ A full-stack social media platform that started as a synchronous CRUD app and wa
 - **Correctness at the source of truth:** denormalized counters maintained in **transactions**, idempotent via unique constraints.
 - **Stateless, horizontally scalable API** behind a Caddy load balancer with health checks and graceful shutdown.
 - **Redis-backed auth:** refresh-token rotation, reuse detection, and lookup-free request validation.
+- **Redis-backed API rate limits** split by route risk: auth, writes, search, and general traffic.
 - **Tested at the seams** with Vitest + Testcontainers (Postgres, Redis, Kafka, Elasticsearch) and gated by CI.
 
 ## Table of Contents
@@ -79,6 +80,9 @@ Denormalized counters (likes, reposts, followers, comments) are updated **togeth
 ### Authentication
 JWT access/refresh auth with **refresh-token rotation and reuse detection** (a replayed, retired token revokes the session), backed by a **Redis session store** with log-out-everywhere. Per-request authorization validates the signed access token **without a database lookup**; revocation happens at the refresh boundary.
 
+### Rate limiting
+API rate limits are backed by **Redis**, so the counters work across multiple stateless server replicas instead of only inside one Node process. Limits are split by endpoint risk: stricter limits for signup/login/refresh, moderate limits for write actions, a separate search budget, and a loose general API fallback. When Redis is unavailable, the limiter fails open and logs the skipped check so normal traffic is not locked out by protective infrastructure.
+
 ### Horizontal scalability
 The API holds no per-request state in process memory (sessions live in Redis), so it runs as **identical stateless replicas** behind a Caddy load balancer, no sticky sessions needed. A `/api/v1/health` liveness probe and graceful `SIGTERM` draining let replicas be added or removed without dropping in-flight requests.
 
@@ -125,7 +129,7 @@ A deliberate cost decision on a small VPS: the correctness-critical pieces run i
 | Runs in production | Built and run locally (with a production-safe fallback) |
 |---|---|
 | Core API, posts, interactions, profiles | Kafka (Redpanda) event backbone + outbox + notifications consumer |
-| Redis-backed auth (rotation, reuse detection, sessions) | Feed fan-out on write (prod serves the read-time feed) |
+| Redis-backed auth and API rate limits | Feed fan-out on write (prod serves the read-time feed) |
 | Transactional counters | Elasticsearch + CDC search index (prod serves Postgres full-text) |
 | Postgres full-text search | Multi-replica load-balancing demo (prod runs a single replica) |
 | Stateless API, CI/CD, AWS EC2 deploy | |
@@ -142,7 +146,7 @@ Integration tests run against **real dependencies via Testcontainers**, because 
 
 - Vitest + Supertest against the real Express app.
 - Testcontainers spins up Postgres, Redis, Kafka (Redpanda), and Elasticsearch.
-- Coverage targets the signature risk of each feature: refresh-token reuse detection, counter consistency under concurrency, consumer idempotency on redelivery, feed fan-out correctness (and the celebrity merge), and search ranking / index sync.
+- Coverage targets the signature risk of each feature: refresh-token reuse detection, Redis-backed rate-limit enforcement and fail-open behavior, counter consistency under concurrency, consumer idempotency on redelivery, feed fan-out correctness (and the celebrity merge), and search ranking / index sync.
 - GitHub Actions runs the suite and gates build + deploy.
 
 ---
