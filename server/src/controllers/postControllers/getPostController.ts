@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 
+import { Prisma } from '../../../generated/prisma/client';
 import { prisma } from '../../db';
 import {
   CELEBRITY_FOLLOWER_THRESHOLD,
@@ -92,38 +93,10 @@ export async function getForYouPosts(req: Request, res: Response) {
 
     const { cursor, limit } = input.data;
 
-    // 1. In-Network: Get followed users
-    const followedUsers = await prisma.userFollows.findMany({
-      where: { followerId: currentUserId },
-      select: { followingId: true },
-    });
-    const followedIds = followedUsers.map((f) => f.followingId);
+    const candidateIds = await rankedForYouPostIds(currentUserId, cursor, limit);
 
-    // 2. Extended Network: Posts liked by the people you follow
-    const likedByFollowed = await prisma.like.findMany({
-      where: { userId: { in: followedIds } },
-      select: { postId: true },
-    });
-    const likedPostIdsByFollowed = likedByFollowed.map((l) => l.postId);
-
-    // 3. Blended Fetch
     const posts = await prisma.post.findMany({
-      where: {
-        OR: [
-          { postedById: { in: followedIds } }, // In-Network
-          { id: { in: likedPostIdsByFollowed } }, // Extended Network
-          { likesCount: { gte: 5 } }, // Out-of-Network (Popular fallback)
-        ],
-        isDeleted: false,
-      },
-      orderBy: [
-        { createdAt: 'desc' },
-        { likesCount: 'desc' },
-        { commentsCount: 'desc' },
-      ],
-      take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
+      where: { id: { in: candidateIds }, isDeleted: false },
       include: {
         postedBy: {
           select: {
@@ -148,6 +121,8 @@ export async function getForYouPosts(req: Request, res: Response) {
         },
       },
     });
+    const order = new Map(candidateIds.map((id, index) => [id, index]));
+    posts.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
 
     const reposted = await getRepostedSet(
       currentUserId,
@@ -167,6 +142,139 @@ export async function getForYouPosts(req: Request, res: Response) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get for you posts:', error);
   }
+}
+
+type RankedPostRow = {
+  id: number;
+};
+
+async function rankedForYouPostIds(
+  currentUserId: number,
+  cursor: number | undefined,
+  limit: number,
+): Promise<number[]> {
+  const cursorFilter = cursor
+    ? Prisma.sql`AND p.id < ${cursor}`
+    : Prisma.empty;
+
+  const rows = await prisma.$queryRaw<RankedPostRow[]>`
+    WITH followed AS (
+      SELECT "followingId" AS user_id
+      FROM "UserFollows"
+      WHERE "followerId" = ${currentUserId}
+    ),
+    affinity_authors AS (
+      SELECT DISTINCT source_posts."postedById" AS user_id
+      FROM "Like" l
+      JOIN "Post" source_posts ON source_posts.id = l."postId"
+      WHERE l."userId" = ${currentUserId}
+
+      UNION
+
+      SELECT DISTINCT source_posts."postedById" AS user_id
+      FROM "Repost" r
+      JOIN "Post" source_posts ON source_posts.id = r."postId"
+      WHERE r."userId" = ${currentUserId}
+
+      UNION
+
+      SELECT DISTINCT parent_posts."postedById" AS user_id
+      FROM "Post" comments
+      JOIN "Post" parent_posts ON parent_posts.id = comments."parentPostId"
+      WHERE comments."postedById" = ${currentUserId}
+    ),
+    candidates AS (
+      SELECT p.id, 75.0 AS source_score
+      FROM "Post" p
+      WHERE p."postedById" = ${currentUserId}
+        AND p."parentPostId" IS NULL
+        AND p."isDeleted" = false
+        ${cursorFilter}
+
+      UNION ALL
+
+      SELECT p.id, 70.0 AS source_score
+      FROM "Post" p
+      JOIN followed f ON f.user_id = p."postedById"
+      WHERE p."parentPostId" IS NULL
+        AND p."isDeleted" = false
+        ${cursorFilter}
+
+      UNION ALL
+
+      SELECT p.id, 50.0 AS source_score
+      FROM "Post" p
+      JOIN "Repost" r ON r."postId" = p.id
+      JOIN followed f ON f.user_id = r."userId"
+      WHERE p."parentPostId" IS NULL
+        AND p."isDeleted" = false
+        ${cursorFilter}
+
+      UNION ALL
+
+      SELECT p.id, 45.0 AS source_score
+      FROM "Post" p
+      JOIN "Like" l ON l."postId" = p.id
+      JOIN followed f ON f.user_id = l."userId"
+      WHERE p."parentPostId" IS NULL
+        AND p."isDeleted" = false
+        ${cursorFilter}
+
+      UNION ALL
+
+      SELECT p.id, 35.0 AS source_score
+      FROM "Post" p
+      JOIN affinity_authors a ON a.user_id = p."postedById"
+      WHERE p."postedById" <> ${currentUserId}
+        AND p."parentPostId" IS NULL
+        AND p."isDeleted" = false
+        ${cursorFilter}
+
+      UNION ALL
+
+      SELECT p.id, 25.0 AS source_score
+      FROM "Post" p
+      WHERE p."parentPostId" IS NULL
+        AND p."isDeleted" = false
+        AND (
+          p."likesCount" >= 5
+          OR p."repostsCount" >= 2
+          OR p."commentsCount" >= 3
+        )
+        ${cursorFilter}
+
+      UNION ALL
+
+      SELECT p.id, 15.0 AS source_score
+      FROM "Post" p
+      WHERE p."parentPostId" IS NULL
+        AND p."isDeleted" = false
+        ${cursorFilter}
+      ORDER BY id DESC
+      LIMIT ${limit * 8}
+    ),
+    scored AS (
+      SELECT
+        p.id,
+        MAX(c.source_score)
+          + LEAST(25.0, LN(1 + p."likesCount") * 6)
+          + LEAST(18.0, LN(1 + p."repostsCount") * 7)
+          + LEAST(16.0, LN(1 + p."commentsCount") * 5)
+          + GREATEST(
+              0.0,
+              20.0 - (EXTRACT(EPOCH FROM (now() - p."createdAt")) / 3600.0)
+            ) AS score
+      FROM candidates c
+      JOIN "Post" p ON p.id = c.id
+      GROUP BY p.id
+    )
+    SELECT id
+    FROM scored
+    ORDER BY score DESC, id DESC
+    LIMIT ${limit}
+  `;
+
+  return rows.map((row) => row.id);
 }
 
 // Turn a set of post ids into full posts (newest-first), dropping any deleted
