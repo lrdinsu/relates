@@ -143,6 +143,42 @@ describe('feed fan-out', () => {
     const ids = res.body.posts.map((post: { id: number }) => post.id);
     expect(ids).toContain(postId);
   });
+
+  it('keeps a warm feed current when the broker is not configured', async () => {
+    const originalBrokers = process.env.KAFKA_BROKERS;
+    delete process.env.KAFKA_BROKERS;
+
+    try {
+      const alice = (await signup()).body;
+      const bob = (await signup(secondUser)).body;
+      await follow(bob.accessToken, alice.userId);
+
+      const oldPostId = (await createPost(alice.accessToken, { text: 'old' }))
+        .body.post.id;
+      const warmFeed = await request(app)
+        .get('/api/v1/posts/following')
+        .set('Authorization', bearer(bob.accessToken));
+      expect(warmFeed.status).toBe(200);
+      expect(warmFeed.body.posts.map((post: { id: number }) => post.id)).toContain(
+        oldPostId,
+      );
+
+      const newPostId = (await createPost(alice.accessToken, { text: 'new' }))
+        .body.post.id;
+      const refreshedFeed = await request(app)
+        .get('/api/v1/posts/following')
+        .set('Authorization', bearer(bob.accessToken));
+
+      expect(refreshedFeed.status).toBe(200);
+      expect(
+        refreshedFeed.body.posts.map((post: { id: number }) => post.id),
+      ).toContain(newPostId);
+    } finally {
+      if (originalBrokers) {
+        process.env.KAFKA_BROKERS = originalBrokers;
+      }
+    }
+  });
 });
 
 describe('feed redis fast-fail', () => {
