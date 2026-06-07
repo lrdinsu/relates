@@ -3,12 +3,14 @@ import { PostType } from 'validation';
 
 import { axiosInstance } from '@/api/axiosConfig.ts';
 import { useAuthStore } from '@/stores/authStore.ts';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { InfiniteData, useInfiniteQuery } from '@tanstack/react-query';
 
 type PostsResponse = {
   posts: Post[];
-  nextCursor: number | null;
+  nextCursor: number | string | null;
 };
+
+type PostListCursor = number | string;
 
 export type Post = PostType & {
   postedBy: {
@@ -33,7 +35,13 @@ export function usePostsList(endpoint = location.pathname) {
   const location = useLocation();
 
   const { data, isPending, isError, hasNextPage, fetchNextPage } =
-    useInfiniteQuery({
+    useInfiniteQuery<
+      PostsResponse,
+      Error,
+      InfiniteData<PostsResponse>,
+      (string | boolean)[],
+      PostListCursor
+    >({
       queryKey: ['posts', isAuthenticated, location.pathname, endpoint],
       queryFn: async ({ pageParam }): Promise<PostsResponse> => {
         let fetchUrl = '';

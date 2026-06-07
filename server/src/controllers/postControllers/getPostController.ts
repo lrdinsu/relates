@@ -9,6 +9,7 @@ import {
   rebuildFeed,
 } from '../../feed/feedStore.js';
 import {
+  ForYouPostQuerySchema,
   PostParamsSchema,
   PostQuerySchema,
 } from '../../types/validation/schemas.js';
@@ -85,7 +86,7 @@ export async function getHotPosts(req: Request, res: Response) {
 export async function getForYouPosts(req: Request, res: Response) {
   try {
     const currentUserId = req.user!.id;
-    const input = PostQuerySchema.safeParse(req.query);
+    const input = ForYouPostQuerySchema.safeParse(req.query);
     if (!input.success) {
       res.status(400).json({ message: 'Invalid query params' });
       return;
@@ -93,7 +94,8 @@ export async function getForYouPosts(req: Request, res: Response) {
 
     const { cursor, limit } = input.data;
 
-    const candidateIds = await rankedForYouPostIds(currentUserId, cursor, limit);
+    const rankedPage = await rankedForYouPostIds(currentUserId, cursor, limit);
+    const candidateIds = rankedPage.rows.map((row) => row.id);
 
     const posts = await prisma.post.findMany({
       where: { id: { in: candidateIds }, isDeleted: false },
@@ -135,7 +137,10 @@ export async function getForYouPosts(req: Request, res: Response) {
       likes: undefined,
     }));
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+    const nextCursor =
+      rankedPage.rows.length === limit
+        ? encodeForYouCursor(rankedPage.rows[rankedPage.rows.length - 1])
+        : null;
 
     res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
@@ -146,15 +151,53 @@ export async function getForYouPosts(req: Request, res: Response) {
 
 type RankedPostRow = {
   id: number;
+  score: number;
 };
+
+type ForYouCursor = {
+  score: number;
+  id: number;
+};
+
+function encodeForYouCursor(cursor: ForYouCursor): string {
+  return Buffer.from(JSON.stringify(cursor)).toString('base64url');
+}
+
+function decodeForYouCursor(raw: string | undefined): ForYouCursor | null {
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8')) as
+      | Partial<ForYouCursor>
+      | null;
+
+    if (
+      !parsed ||
+      typeof parsed.score !== 'number' ||
+      typeof parsed.id !== 'number'
+    ) {
+      return null;
+    }
+
+    return { score: parsed.score, id: parsed.id };
+  } catch {
+    return null;
+  }
+}
 
 async function rankedForYouPostIds(
   currentUserId: number,
-  cursor: number | undefined,
+  cursor: string | undefined,
   limit: number,
-): Promise<number[]> {
-  const cursorFilter = cursor
-    ? Prisma.sql`AND p.id < ${cursor}`
+): Promise<{ rows: RankedPostRow[] }> {
+  const decodedCursor = decodeForYouCursor(cursor);
+  const rankedCursorFilter = decodedCursor
+    ? Prisma.sql`
+        WHERE (
+          score < ${decodedCursor.score}
+          OR (score = ${decodedCursor.score} AND id < ${decodedCursor.id})
+        )
+      `
     : Prisma.empty;
 
   const rows = await prisma.$queryRaw<RankedPostRow[]>`
@@ -189,7 +232,6 @@ async function rankedForYouPostIds(
       WHERE p."postedById" = ${currentUserId}
         AND p."parentPostId" IS NULL
         AND p."isDeleted" = false
-        ${cursorFilter}
 
       UNION ALL
 
@@ -198,7 +240,6 @@ async function rankedForYouPostIds(
       JOIN followed f ON f.user_id = p."postedById"
       WHERE p."parentPostId" IS NULL
         AND p."isDeleted" = false
-        ${cursorFilter}
 
       UNION ALL
 
@@ -208,7 +249,6 @@ async function rankedForYouPostIds(
       JOIN followed f ON f.user_id = r."userId"
       WHERE p."parentPostId" IS NULL
         AND p."isDeleted" = false
-        ${cursorFilter}
 
       UNION ALL
 
@@ -218,7 +258,6 @@ async function rankedForYouPostIds(
       JOIN followed f ON f.user_id = l."userId"
       WHERE p."parentPostId" IS NULL
         AND p."isDeleted" = false
-        ${cursorFilter}
 
       UNION ALL
 
@@ -228,7 +267,6 @@ async function rankedForYouPostIds(
       WHERE p."postedById" <> ${currentUserId}
         AND p."parentPostId" IS NULL
         AND p."isDeleted" = false
-        ${cursorFilter}
 
       UNION ALL
 
@@ -241,40 +279,41 @@ async function rankedForYouPostIds(
           OR p."repostsCount" >= 2
           OR p."commentsCount" >= 3
         )
-        ${cursorFilter}
 
       UNION ALL
 
-      SELECT p.id, 15.0 AS source_score
-      FROM "Post" p
-      WHERE p."parentPostId" IS NULL
-        AND p."isDeleted" = false
-        ${cursorFilter}
-      ORDER BY id DESC
-      LIMIT ${limit * 8}
+      SELECT recent.id, 15.0 AS source_score
+      FROM (
+        SELECT p.id
+        FROM "Post" p
+        WHERE p."parentPostId" IS NULL
+          AND p."isDeleted" = false
+        ORDER BY p.id DESC
+        LIMIT ${Math.max(limit * 20, 200)}
+      ) recent
     ),
     scored AS (
       SELECT
         p.id,
-        MAX(c.source_score)
+        (
+          MAX(c.source_score)
           + LEAST(25.0, LN(1 + p."likesCount") * 6)
           + LEAST(18.0, LN(1 + p."repostsCount") * 7)
           + LEAST(16.0, LN(1 + p."commentsCount") * 5)
-          + GREATEST(
-              0.0,
-              20.0 - (EXTRACT(EPOCH FROM (now() - p."createdAt")) / 3600.0)
-            ) AS score
+          + LEAST(20.0, p.id::double precision * 0.001)
+        )::double precision AS score
       FROM candidates c
       JOIN "Post" p ON p.id = c.id
       GROUP BY p.id
     )
-    SELECT id
+    SELECT id, score
     FROM scored
+    ${rankedCursorFilter}
     ORDER BY score DESC, id DESC
     LIMIT ${limit}
   `;
 
-  return rows.map((row) => row.id);
+  return { rows };
 }
 
 // Turn a set of post ids into full posts (newest-first), dropping any deleted
