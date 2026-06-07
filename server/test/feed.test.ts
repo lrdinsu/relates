@@ -179,6 +179,42 @@ describe('feed fan-out', () => {
       }
     }
   });
+
+  it('does not treat inline fan-out as a fully rebuilt feed', async () => {
+    const originalBrokers = process.env.KAFKA_BROKERS;
+    delete process.env.KAFKA_BROKERS;
+
+    try {
+      const alice = (await signup()).body;
+      const bob = (await signup(secondUser)).body;
+
+      const aliceOldPostId = (
+        await createPost(alice.accessToken, { text: 'alice old' })
+      ).body.post.id;
+      const bobOldPostId = (await createPost(bob.accessToken, { text: 'bob old' }))
+        .body.post.id;
+
+      await follow(alice.accessToken, bob.userId);
+
+      const aliceNewPostId = (
+        await createPost(alice.accessToken, { text: 'alice new' })
+      ).body.post.id;
+
+      const res = await request(app)
+        .get('/api/v1/posts/following')
+        .set('Authorization', bearer(alice.accessToken));
+
+      expect(res.status).toBe(200);
+      const ids = res.body.posts.map((post: { id: number }) => post.id);
+      expect(ids).toContain(aliceNewPostId);
+      expect(ids).toContain(aliceOldPostId);
+      expect(ids).toContain(bobOldPostId);
+    } finally {
+      if (originalBrokers) {
+        process.env.KAFKA_BROKERS = originalBrokers;
+      }
+    }
+  });
 });
 
 describe('feed redis fast-fail', () => {

@@ -16,6 +16,10 @@ function feedKey(userId: number): string {
   return `feed:${userId}`;
 }
 
+function feedInitializedKey(userId: number): string {
+  return `feed:${userId}:initialized`;
+}
+
 // Fail the feed's Redis reads fast. When Redis is unreachable, ioredis can take
 // several seconds (queueing + reconnect backoff) before a command rejects,
 // which would stall every following-feed request before the read-time fallback
@@ -101,7 +105,7 @@ export async function getFeedPage(
 
 export async function feedExists(userId: number): Promise<boolean> {
   const result = await withFeedTimeout(
-    redis.exists(feedKey(userId)),
+    redis.exists(feedInitializedKey(userId)),
     'feedExists',
   );
   return result === 1;
@@ -130,12 +134,12 @@ export async function rebuildFeed(userId: number): Promise<void> {
     select: { id: true },
   });
 
-  if (posts.length === 0) return;
-
   const pipeline = redis.pipeline();
   const key = feedKey(userId);
+  pipeline.del(key);
   for (const post of posts) {
     pipeline.zadd(key, post.id, String(post.id));
   }
+  pipeline.set(feedInitializedKey(userId), '1');
   await pipeline.exec();
 }
