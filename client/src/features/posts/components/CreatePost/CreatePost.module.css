@@ -54,5 +54,33 @@
 }
 
 .inlineContainer {
-  padding: 16px 0;
+  padding: 12px 0;
+}
+
+.inlineReplyPill {
+  min-height: 54px;
+  padding: 8px 10px;
+  border: 1px solid var(--mantine-color-gray-3);
+  border-radius: 999px;
+  background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+}
+
+.inlineReplyInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.inlineReplyInput textarea {
+  padding: 6px 0;
+  font-size: 1rem;
+  line-height: 1.35;
+  min-height: 32px;
+}
+
+.inlineReplyInput textarea::placeholder {
+  color: var(--mantine-color-gray-6);
+}
+
+.inlineReplyButton {
+  font-weight: 700;
 }
