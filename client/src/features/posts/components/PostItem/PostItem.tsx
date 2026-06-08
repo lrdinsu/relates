@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { saveFeedScrollSnapshot } from '@/utils/feedScrollMemory.ts';
 import { convertPostTime } from '@/utils/convertPostTime.ts';
 import { Divider, Flex, Text } from '@mantine/core';
 import { IconRepeat } from '@tabler/icons-react';
@@ -18,6 +19,7 @@ type PostProps = {
   hideDivider?: boolean;
   clickTarget?: string | null;
   replaceOnClick?: boolean;
+  feedScrollKey?: string | null;
 };
 
 export function PostItem({
@@ -26,6 +28,7 @@ export function PostItem({
   hideDivider,
   clickTarget,
   replaceOnClick,
+  feedScrollKey,
 }: PostProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,6 +36,16 @@ export function PostItem({
 
   const openPost = () => {
     if (!postPath || location.pathname === postPath) return;
+    const postElement = document.querySelector<HTMLElement>(
+      `[data-post-id="${post.id}"]`,
+    );
+
+    saveFeedScrollSnapshot(
+      feedScrollKey ?? null,
+      post.id,
+      postElement?.getBoundingClientRect().top ?? 0,
+    );
+
     void navigate(postPath, { replace: replaceOnClick });
   };
 
@@ -41,6 +54,7 @@ export function PostItem({
       <div
         onClick={openPost}
         className={classes.postItem}
+        data-post-id={post.id}
         data-clickable={postPath ? true : undefined}
       >
         {post.repostedBy && (
