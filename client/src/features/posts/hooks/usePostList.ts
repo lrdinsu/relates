@@ -62,6 +62,7 @@ export function usePostsList(endpoint = location.pathname) {
       },
       initialPageParam: 0,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
+      staleTime: 1000 * 60,
     });
 
   return {
