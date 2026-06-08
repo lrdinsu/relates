@@ -14,6 +14,7 @@ A full-stack social media platform that started as a synchronous CRUD app and wa
 
 - **Event backbone:** a transactional **outbox** publishes domain events to **Kafka**; **idempotent consumers** build derived state, with at-least-once delivery handled honestly.
 - **Feed fan-out on write** into per-follower **Redis** sorted sets, including the **celebrity/hot-key hybrid** and a read-time fallback.
+- **For You recommendations** use candidate generation plus score-based ranking across social graph, social proof, engagement, affinity, and freshness signals.
 - **Search index kept in sync via CDC** (Debezium reading the Postgres WAL) into **Elasticsearch**, plus relevance-ranked Postgres full-text search benchmarked **sub-millisecond at 1M posts**.
 - **Correctness at the source of truth:** denormalized counters maintained in **transactions**, idempotent via unique constraints.
 - **Stateless, horizontally scalable API** behind a Caddy load balancer with health checks and graceful shutdown.
@@ -70,6 +71,9 @@ On a like or follow, the event is written to an **outbox table in the same trans
 A new post emits a `POST_CREATED` event; a fan-out consumer writes the post id into each follower's feed, a **Redis sorted set** scored by post id (chronological order plus cursor-friendly paging). The home feed becomes a fast cache read instead of a query across everyone you follow.
 - **Celebrity / hot-key hybrid:** authors above a follower threshold are not fanned out (write amplification); their posts are merged in at read time instead.
 - **Resilience:** a cold feed is rebuilt from Postgres on demand; if Redis is unavailable, serving falls back to the read-time query (and that fallback fails fast so a Redis blip can't hang requests).
+
+### For You recommendations
+The For You feed is a lightweight recommendation pipeline, not a single hard-coded query. It first generates candidates from several sources: the viewer's own posts, followed authors, posts liked/reposted by followed users, authors the viewer has interacted with before, high-engagement posts, and recent public posts for cold start. It then ranks candidates with a score that combines source strength, likes/reposts/comments, and freshness. Pagination uses an opaque score cursor so scrolling remains stable even though the feed is ranked by score rather than simple post id.
 
 ### Search: Postgres full-text + CDC to Elasticsearch
 Post search uses a generated **`tsvector`** column with a GIN index, matched with `websearch_to_tsquery` and ranked by **`ts_rank`** so a strong match outranks an incidental mention. An **Elasticsearch** index is kept in sync through **Change Data Capture**: Debezium reads the Postgres WAL and streams row changes to a consumer that updates the index, eliminating the dual-write problem. Search prefers Elasticsearch when configured and falls back to Postgres full-text otherwise.
@@ -146,7 +150,7 @@ Integration tests run against **real dependencies via Testcontainers**, because 
 
 - Vitest + Supertest against the real Express app.
 - Testcontainers spins up Postgres, Redis, Kafka (Redpanda), and Elasticsearch.
-- Coverage targets the signature risk of each feature: refresh-token reuse detection, Redis-backed rate-limit enforcement and fail-open behavior, counter consistency under concurrency, consumer idempotency on redelivery, feed fan-out correctness (and the celebrity merge), and search ranking / index sync.
+- Coverage targets the signature risk of each feature: refresh-token reuse detection, Redis-backed rate-limit enforcement and fail-open behavior, counter consistency under concurrency, consumer idempotency on redelivery, feed fan-out correctness (and the celebrity merge), For You ranking/cursor behavior, and search ranking / index sync.
 - GitHub Actions runs the suite and gates build + deploy.
 
 ---
