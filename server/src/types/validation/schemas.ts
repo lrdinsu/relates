@@ -6,6 +6,11 @@ export const PostQuerySchema = z.object({
   limit: z.coerce.number().int().positive().default(10),
 });
 
+export const ForYouPostQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().positive().default(10),
+});
+
 export const SearchQuerySchema = z.object({
   q: z.string().min(1),
   cursor: z.coerce.number().int().positive().optional(),

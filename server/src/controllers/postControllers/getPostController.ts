@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 
+import { Prisma } from '../../../generated/prisma/client';
 import { prisma } from '../../db';
 import {
   CELEBRITY_FOLLOWER_THRESHOLD,
@@ -8,6 +9,7 @@ import {
   rebuildFeed,
 } from '../../feed/feedStore.js';
 import {
+  ForYouPostQuerySchema,
   PostParamsSchema,
   PostQuerySchema,
 } from '../../types/validation/schemas.js';
@@ -84,7 +86,7 @@ export async function getHotPosts(req: Request, res: Response) {
 export async function getForYouPosts(req: Request, res: Response) {
   try {
     const currentUserId = req.user!.id;
-    const input = PostQuerySchema.safeParse(req.query);
+    const input = ForYouPostQuerySchema.safeParse(req.query);
     if (!input.success) {
       res.status(400).json({ message: 'Invalid query params' });
       return;
@@ -92,38 +94,11 @@ export async function getForYouPosts(req: Request, res: Response) {
 
     const { cursor, limit } = input.data;
 
-    // 1. In-Network: Get followed users
-    const followedUsers = await prisma.userFollows.findMany({
-      where: { followerId: currentUserId },
-      select: { followingId: true },
-    });
-    const followedIds = followedUsers.map((f) => f.followingId);
+    const rankedPage = await rankedForYouPostIds(currentUserId, cursor, limit);
+    const candidateIds = rankedPage.rows.map((row) => row.id);
 
-    // 2. Extended Network: Posts liked by the people you follow
-    const likedByFollowed = await prisma.like.findMany({
-      where: { userId: { in: followedIds } },
-      select: { postId: true },
-    });
-    const likedPostIdsByFollowed = likedByFollowed.map((l) => l.postId);
-
-    // 3. Blended Fetch
     const posts = await prisma.post.findMany({
-      where: {
-        OR: [
-          { postedById: { in: followedIds } }, // In-Network
-          { id: { in: likedPostIdsByFollowed } }, // Extended Network
-          { likesCount: { gte: 5 } }, // Out-of-Network (Popular fallback)
-        ],
-        isDeleted: false,
-      },
-      orderBy: [
-        { createdAt: 'desc' },
-        { likesCount: 'desc' },
-        { commentsCount: 'desc' },
-      ],
-      take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
+      where: { id: { in: candidateIds }, isDeleted: false },
       include: {
         postedBy: {
           select: {
@@ -148,6 +123,8 @@ export async function getForYouPosts(req: Request, res: Response) {
         },
       },
     });
+    const order = new Map(candidateIds.map((id, index) => [id, index]));
+    posts.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
 
     const reposted = await getRepostedSet(
       currentUserId,
@@ -160,13 +137,222 @@ export async function getForYouPosts(req: Request, res: Response) {
       likes: undefined,
     }));
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+    const nextCursor =
+      rankedPage.rows.length === limit
+        ? encodeForYouCursor(rankedPage.rows[rankedPage.rows.length - 1])
+        : null;
 
     res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'Unknown error occurred!' });
     console.error('Error in get for you posts:', error);
   }
+}
+
+type RankedPostRow = {
+  id: number;
+  score: number;
+};
+
+type ForYouCursor = {
+  score: number;
+  id: number;
+};
+
+const FOR_YOU_RECENT_CANDIDATE_FLOOR = 200;
+const FOR_YOU_RECENT_CANDIDATE_MULTIPLIER = 20;
+const FOR_YOU_POPULAR_LIKES_THRESHOLD = 5;
+const FOR_YOU_POPULAR_REPOSTS_THRESHOLD = 2;
+const FOR_YOU_POPULAR_COMMENTS_THRESHOLD = 3;
+
+const FOR_YOU_SCORE_OWN_POST = 75;
+const FOR_YOU_SCORE_FOLLOWED_AUTHOR = 70;
+const FOR_YOU_SCORE_REPOSTED_BY_FOLLOWED = 50;
+const FOR_YOU_SCORE_LIKED_BY_FOLLOWED = 45;
+const FOR_YOU_SCORE_AFFINITY_AUTHOR = 35;
+const FOR_YOU_SCORE_POPULAR = 25;
+const FOR_YOU_SCORE_RECENT = 15;
+
+const FOR_YOU_MAX_LIKE_BOOST = 25;
+const FOR_YOU_LIKE_BOOST_WEIGHT = 6;
+const FOR_YOU_MAX_REPOST_BOOST = 18;
+const FOR_YOU_REPOST_BOOST_WEIGHT = 7;
+const FOR_YOU_MAX_COMMENT_BOOST = 16;
+const FOR_YOU_COMMENT_BOOST_WEIGHT = 5;
+const FOR_YOU_MAX_RECENCY_BOOST = 20;
+const FOR_YOU_RECENCY_ID_WEIGHT = 0.001;
+
+function encodeForYouCursor(cursor: ForYouCursor): string {
+  return Buffer.from(JSON.stringify(cursor)).toString('base64url');
+}
+
+function decodeForYouCursor(raw: string | undefined): ForYouCursor | null {
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8')) as
+      | Partial<ForYouCursor>
+      | null;
+
+    if (
+      !parsed ||
+      typeof parsed.score !== 'number' ||
+      typeof parsed.id !== 'number'
+    ) {
+      return null;
+    }
+
+    return { score: parsed.score, id: parsed.id };
+  } catch {
+    return null;
+  }
+}
+
+async function rankedForYouPostIds(
+  currentUserId: number,
+  cursor: string | undefined,
+  limit: number,
+): Promise<{ rows: RankedPostRow[] }> {
+  const decodedCursor = decodeForYouCursor(cursor);
+  const recentCandidateLimit = Math.max(
+    limit * FOR_YOU_RECENT_CANDIDATE_MULTIPLIER,
+    FOR_YOU_RECENT_CANDIDATE_FLOOR,
+  );
+  const rankedCursorFilter = decodedCursor
+    ? Prisma.sql`
+        WHERE (
+          score < ${decodedCursor.score}
+          OR (score = ${decodedCursor.score} AND id < ${decodedCursor.id})
+        )
+      `
+    : Prisma.empty;
+
+  const rows = await prisma.$queryRaw<RankedPostRow[]>`
+    WITH followed AS (
+      SELECT "followingId" AS user_id
+      FROM "UserFollows"
+      WHERE "followerId" = ${currentUserId}
+    ),
+    affinity_authors AS (
+      SELECT DISTINCT source_posts."postedById" AS user_id
+      FROM "Like" l
+      JOIN "Post" source_posts ON source_posts.id = l."postId"
+      WHERE l."userId" = ${currentUserId}
+
+      UNION
+
+      SELECT DISTINCT source_posts."postedById" AS user_id
+      FROM "Repost" r
+      JOIN "Post" source_posts ON source_posts.id = r."postId"
+      WHERE r."userId" = ${currentUserId}
+
+      UNION
+
+      SELECT DISTINCT parent_posts."postedById" AS user_id
+      FROM "Post" comments
+      JOIN "Post" parent_posts ON parent_posts.id = comments."parentPostId"
+      WHERE comments."postedById" = ${currentUserId}
+    ),
+    candidates AS (
+      SELECT p.id, ${FOR_YOU_SCORE_OWN_POST}::double precision AS source_score
+      FROM "Post" p
+      WHERE p."postedById" = ${currentUserId}
+        AND p."parentPostId" IS NULL
+        AND p."isDeleted" = false
+
+      UNION ALL
+
+      SELECT p.id, ${FOR_YOU_SCORE_FOLLOWED_AUTHOR}::double precision AS source_score
+      FROM "Post" p
+      JOIN followed f ON f.user_id = p."postedById"
+      WHERE p."parentPostId" IS NULL
+        AND p."isDeleted" = false
+
+      UNION ALL
+
+      SELECT p.id, ${FOR_YOU_SCORE_REPOSTED_BY_FOLLOWED}::double precision AS source_score
+      FROM "Post" p
+      JOIN "Repost" r ON r."postId" = p.id
+      JOIN followed f ON f.user_id = r."userId"
+      WHERE p."parentPostId" IS NULL
+        AND p."isDeleted" = false
+
+      UNION ALL
+
+      SELECT p.id, ${FOR_YOU_SCORE_LIKED_BY_FOLLOWED}::double precision AS source_score
+      FROM "Post" p
+      JOIN "Like" l ON l."postId" = p.id
+      JOIN followed f ON f.user_id = l."userId"
+      WHERE p."parentPostId" IS NULL
+        AND p."isDeleted" = false
+
+      UNION ALL
+
+      SELECT p.id, ${FOR_YOU_SCORE_AFFINITY_AUTHOR}::double precision AS source_score
+      FROM "Post" p
+      JOIN affinity_authors a ON a.user_id = p."postedById"
+      WHERE p."postedById" <> ${currentUserId}
+        AND p."parentPostId" IS NULL
+        AND p."isDeleted" = false
+
+      UNION ALL
+
+      SELECT p.id, ${FOR_YOU_SCORE_POPULAR}::double precision AS source_score
+      FROM "Post" p
+      WHERE p."parentPostId" IS NULL
+        AND p."isDeleted" = false
+        AND (
+          p."likesCount" >= ${FOR_YOU_POPULAR_LIKES_THRESHOLD}
+          OR p."repostsCount" >= ${FOR_YOU_POPULAR_REPOSTS_THRESHOLD}
+          OR p."commentsCount" >= ${FOR_YOU_POPULAR_COMMENTS_THRESHOLD}
+        )
+
+      UNION ALL
+
+      SELECT recent.id, ${FOR_YOU_SCORE_RECENT}::double precision AS source_score
+      FROM (
+        SELECT p.id
+        FROM "Post" p
+        WHERE p."parentPostId" IS NULL
+          AND p."isDeleted" = false
+        ORDER BY p.id DESC
+        LIMIT ${recentCandidateLimit}
+      ) recent
+    ),
+    scored AS (
+      SELECT
+        p.id,
+        (
+          MAX(c.source_score)
+          + LEAST(
+              ${FOR_YOU_MAX_LIKE_BOOST}::double precision,
+              LN(1 + p."likesCount") * ${FOR_YOU_LIKE_BOOST_WEIGHT}
+            )
+          + LEAST(
+              ${FOR_YOU_MAX_REPOST_BOOST}::double precision,
+              LN(1 + p."repostsCount") * ${FOR_YOU_REPOST_BOOST_WEIGHT}
+            )
+          + LEAST(
+              ${FOR_YOU_MAX_COMMENT_BOOST}::double precision,
+              LN(1 + p."commentsCount") * ${FOR_YOU_COMMENT_BOOST_WEIGHT}
+            )
+          + LEAST(
+              ${FOR_YOU_MAX_RECENCY_BOOST}::double precision,
+              p.id::double precision * ${FOR_YOU_RECENCY_ID_WEIGHT}
+            )
+        )::double precision AS score
+      FROM candidates c
+      JOIN "Post" p ON p.id = c.id
+      GROUP BY p.id
+    )
+    SELECT id, score
+    FROM scored
+    ${rankedCursorFilter}
+    ORDER BY score DESC, id DESC
+    LIMIT ${limit}
+  `;
+
+  return { rows };
 }
 
 // Turn a set of post ids into full posts (newest-first), dropping any deleted
