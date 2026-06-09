@@ -1,10 +1,23 @@
 # Relates
 
-A full-stack social media platform that started as a synchronous CRUD app and was deliberately evolved into an **event-driven, derived-state architecture**, the way the system-design playbook teaches it: PostgreSQL owns correctness, committed changes become events, and consumers build the read-optimized views each feature needs.
+[![CI/CD](https://img.shields.io/github/actions/workflow/status/lrdinsu/relates/deploy.yml?branch=main&label=CI%2FCD)](https://github.com/lrdinsu/relates/actions/workflows/deploy.yml)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178c6?style=flat&logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169e1?style=flat&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-dc382d?style=flat&logo=redis&logoColor=white)
+![Kafka](https://img.shields.io/badge/Kafka-231f20?style=flat&logo=apachekafka&logoColor=white)
+![Elasticsearch](https://img.shields.io/badge/Elasticsearch-005571?style=flat&logo=elasticsearch&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ed?style=flat&logo=docker&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS_EC2-ff9900?style=flat&logo=amazonaws&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+
+Relates is a production full-stack social media platform with a React frontend, stateless Express API, PostgreSQL source of truth, Redis-backed sessions and feeds, event-driven background processing, and search infrastructure.
+
+The project is designed around derived state: PostgreSQL owns correctness, committed changes become events, and consumers build read-optimized views for feeds, notifications, and search.
 
 **Stack:** TypeScript · React · Express · PostgreSQL · Prisma · Redis · Kafka (Redpanda) · Elasticsearch · Docker · AWS EC2
 
-**Status:** Deployed to AWS EC2 behind Cloudflare + Caddy, serving active users. The heavier streaming/search-cluster pieces run locally by design (see [Production vs. local](#production-vs-local)).
+**Status:** Deployed to AWS EC2 behind Cloudflare + Caddy, serving active users.
 
 **Live demo:** https://relatesapp.com
 
